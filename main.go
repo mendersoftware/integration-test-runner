@@ -86,6 +86,7 @@ func getConfig() (*config, error) {
 			"tenantadm",
 			"deployments-enterprise",
 			"useradm-enterprise",
+			"mender-helm",
 		}
 
 	watchRepositories := os.Getenv("WATCH_REPOS")
