@@ -1033,6 +1033,7 @@ func getBuildParameters(conf *config, build *buildOptions) ([]*gitlab.PipelineVa
 	// is master, in which case we rely on the default.
 	if build.repo == "meta-mender" && build.baseBranch != "master" {
 		buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter("poky"), Value: build.baseBranch})
+		buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter("meta_openembedded"), Value: build.baseBranch})
 	}
 
 	// set the rest of the jenkins build parameters
