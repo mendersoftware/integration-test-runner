@@ -92,6 +92,8 @@ var defaultWatchRepositoriesSync = []string{
 	"devicemonitor",
 	// client
 	"mender-binary-delta",
+	// Monitoring
+	"monitor-client",
 	// docs
 	"mender-docs-site",
 	"mender-api-docs",
@@ -105,8 +107,6 @@ var defaultWatchRepositoriesSync = []string{
 	// websites
 	"mender.io",
 	"northern-tech-web",
-	// tmp repo - it is private but will be merged/removed later
-	"mender-python-client-dev",
 }
 
 var qemuBuildRepositories = []string{
