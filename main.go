@@ -92,6 +92,8 @@ var defaultWatchRepositoriesSync = []string{
 	"devicemonitor",
 	// client
 	"mender-binary-delta",
+	// Monitoring
+	"monitor-client",
 	// docs
 	"mender-docs-site",
 	"mender-api-docs",
