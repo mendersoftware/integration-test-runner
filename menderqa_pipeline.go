@@ -14,6 +14,7 @@ import (
 	"github.com/xanzy/go-gitlab"
 
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
+	clientgitlab "github.com/mendersoftware/integration-test-runner/client/gitlab"
 )
 
 func parsePullRequest(log *logrus.Entry, conf *config, action string, pr *github.PullRequestEvent) []buildOptions {
@@ -100,8 +101,7 @@ func getBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEvent) []b
 }
 
 func triggerBuild(log *logrus.Entry, conf *config, build *buildOptions, pr *github.PullRequestEvent) error {
-	gitlabClient := gitlab.NewClient(nil, conf.gitlabToken)
-	err := gitlabClient.SetBaseURL(conf.gitlabBaseURL)
+	gitlabClient, err := clientgitlab.NewGitLabClient(conf.gitlabToken, conf.gitlabBaseURL)
 	if err != nil {
 		return err
 	}
@@ -128,7 +128,7 @@ func triggerBuild(log *logrus.Entry, conf *config, build *buildOptions, pr *gith
 	}
 	log.Infof("Creating pipeline in project %s:%s with variables: %s", integrationPipelinePath, *opt.Ref, variablesString)
 
-	pipeline, _, err := gitlabClient.Pipelines.CreatePipeline(integrationPipelinePath, opt, nil)
+	pipeline, err := gitlabClient.CreatePipeline(integrationPipelinePath, opt)
 	if err != nil {
 		log.Errorf("Could not create pipeline: %s", err.Error())
 	}
@@ -179,7 +179,7 @@ Hello :smile_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}]
 	return err
 }
 
-func stopStalePipelines(log *logrus.Entry, client *gitlab.Client, vars []*gitlab.PipelineVariable) {
+func stopStalePipelines(log *logrus.Entry, client clientgitlab.Client, vars []*gitlab.PipelineVariable) {
 	integrationPipelinePath := "Northern.tech/Mender/mender-qa"
 
 	sort.SliceStable(vars, func(i, j int) bool {
@@ -193,7 +193,7 @@ func stopStalePipelines(log *logrus.Entry, client *gitlab.Client, vars []*gitlab
 		Status:   &status,
 	}
 
-	pipelinesPending, _, err := client.Pipelines.ListProjectPipelines(integrationPipelinePath, opt, nil)
+	pipelinesPending, err := client.ListProjectPipelines(integrationPipelinePath, opt)
 	if err != nil {
 		log.Errorf("stopStalePipelines: Could not list pending pipelines: %s", err.Error())
 	}
@@ -204,14 +204,14 @@ func stopStalePipelines(log *logrus.Entry, client *gitlab.Client, vars []*gitlab
 		Status:   &status,
 	}
 
-	pipelinesRunning, _, err := client.Pipelines.ListProjectPipelines(integrationPipelinePath, opt, nil)
+	pipelinesRunning, err := client.ListProjectPipelines(integrationPipelinePath, opt)
 	if err != nil {
 		log.Errorf("stopStalePipelines: Could not list running pipelines: %s", err.Error())
 	}
 
 	for _, pipeline := range append(pipelinesPending, pipelinesRunning...) {
 
-		variables, _, err := client.Pipelines.GetPipelineVariables(integrationPipelinePath, pipeline.ID, nil)
+		variables, err := client.GetPipelineVariables(integrationPipelinePath, pipeline.ID)
 		if err != nil {
 			log.Errorf("stopStalePipelines: Could not get variables for pipeline: %s", err.Error())
 			continue
@@ -224,7 +224,7 @@ func stopStalePipelines(log *logrus.Entry, client *gitlab.Client, vars []*gitlab
 		if reflect.DeepEqual(vars, variables) {
 			log.Infof("Cancelling stale pipeline %d, url: %s", pipeline.ID, pipeline.WebURL)
 
-			_, _, err := client.Pipelines.CancelPipelineBuild(integrationPipelinePath, pipeline.ID, nil)
+			err := client.CancelPipelineBuild(integrationPipelinePath, pipeline.ID)
 			if err != nil {
 				log.Errorf("stopStalePipelines: Could not cancel pipeline: %s", err.Error())
 			}
@@ -235,12 +235,7 @@ func stopStalePipelines(log *logrus.Entry, client *gitlab.Client, vars []*gitlab
 }
 
 func getBuildParameters(log *logrus.Entry, conf *config, build *buildOptions) ([]*gitlab.PipelineVariable, error) {
-	gitlabClient := gitlab.NewClient(nil, conf.gitlabToken)
-	err := gitlabClient.SetBaseURL(conf.gitlabBaseURL)
-	if err != nil {
-		return nil, err
-	}
-
+	var err error
 	readHead := "pull/" + build.pr + "/head"
 	var buildParameters []*gitlab.PipelineVariable
 
@@ -344,10 +339,8 @@ func stopBuildsOfStalePRs(log *logrus.Entry, pr *github.PullRequestEvent, conf *
 
 	for _, build := range getBuilds(log, conf, pr) {
 
-		gitlabClient := gitlab.NewClient(nil, conf.gitlabToken)
-		err := gitlabClient.SetBaseURL(conf.gitlabBaseURL)
+		gitlabClient, err := clientgitlab.NewGitLabClient(conf.gitlabToken, conf.gitlabBaseURL)
 		if err != nil {
-			log.Debug("stopBuildsOfStalePRs: Failed to set the BaseURL of the gitlabClient")
 			return err
 		}
 
