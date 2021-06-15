@@ -1,6 +1,10 @@
 package gitlab
 
 import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/mendersoftware/integration-test-runner/logger"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -38,6 +42,14 @@ func (c *gitLabClient) CancelPipelineBuild(path string, id int) error {
 
 // CreatePipeline creates a pipeline
 func (c *gitLabClient) CreatePipeline(path string, options *gitlab.CreatePipelineOptions) (*gitlab.Pipeline, error) {
+	if c.dryRunMode {
+		optionsJSON, _ := json.Marshal(options)
+		msg := fmt.Sprintf("gitlab.CreatePipeline: path=%s,options=%s",
+			path, string(optionsJSON),
+		)
+		logger.GetRequestLogger().Push(msg)
+		return &gitlab.Pipeline{}, nil
+	}
 	pipeline, _, err := c.client.Pipelines.CreatePipeline(path, options, nil)
 	return pipeline, err
 }

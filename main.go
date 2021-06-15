@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-github/v28/github"
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 	"github.com/mendersoftware/integration-test-runner/git"
+	"github.com/mendersoftware/integration-test-runner/logger"
 
 	"github.com/sirupsen/logrus"
 )
@@ -201,7 +202,6 @@ func processGitHubWebhook(ctx *gin.Context, webhookType string, webhookEvent int
 
 func main() {
 	conf, err := getConfig()
-
 	if err != nil {
 		logrus.Fatalf("failed to load config: %s", err.Error())
 	}
@@ -212,6 +212,9 @@ func main() {
 
 	githubClient := clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
 	r := gin.Default()
+
+	requestLogger := logger.NewRequestLogger()
+	logger.SetRequestLogger(requestLogger)
 
 	// webhook for GitHub
 	r.POST("/", func(context *gin.Context) {
@@ -228,6 +231,19 @@ func main() {
 
 	// 200 replay for the loadbalancer
 	r.GET("/", func(_ *gin.Context) {})
+
+	// dry-run mode, end-point to retrieve and clear logs
+	if conf.dryRunMode {
+		r.GET("/logs", func(context *gin.Context) {
+			logs := requestLogger.Get()
+			context.JSON(http.StatusOK, logs)
+		})
+
+		r.DELETE("/logs", func(context *gin.Context) {
+			requestLogger.Clear()
+			context.Writer.WriteHeader(http.StatusNoContent)
+		})
+	}
 
 	_ = r.Run("0.0.0.0:8080")
 }

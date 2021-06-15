@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+
+	"github.com/mendersoftware/integration-test-runner/logger"
 )
 
 var dryRunMode bool
@@ -64,6 +66,13 @@ func Command(args ...string) *gitCmd {
 }
 
 func (g *gitCmd) Run() error {
+	if dryRunMode {
+		msg := fmt.Sprintf("git.Run: dir=%s,cmd=%s",
+			g.Dir, g.cmd,
+		)
+		logger.GetRequestLogger().Push(msg)
+		return nil
+	}
 	if g.Dir != "" {
 		g.cmd.Dir = g.Dir
 	}

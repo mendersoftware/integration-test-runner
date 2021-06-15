@@ -2,8 +2,11 @@ package github
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"github.com/google/go-github/v28/github"
+	"github.com/mendersoftware/integration-test-runner/logger"
 	"golang.org/x/oauth2"
 )
 
@@ -36,6 +39,14 @@ func NewGitHubClient(accessToken string, dryRunMode bool) Client {
 }
 
 func (c *gitHubClient) CreateComment(ctx context.Context, org string, repo string, number int, comment *github.IssueComment) error {
+	if c.dryRunMode {
+		commentJSON, _ := json.Marshal(comment)
+		msg := fmt.Sprintf("github.CreateComment: org=%s,repo=%s,number=%d,comment=%s",
+			org, repo, number, string(commentJSON),
+		)
+		logger.GetRequestLogger().Push(msg)
+		return nil
+	}
 	_, _, err := c.client.Issues.CreateComment(ctx, org, repo, number, comment)
 	return err
 }
@@ -46,6 +57,14 @@ func (c *gitHubClient) IsOrganizationMember(ctx context.Context, org string, use
 }
 
 func (c *gitHubClient) CreatePullRequest(ctx context.Context, org string, repo string, pr *github.NewPullRequest) (*github.PullRequest, error) {
+	if c.dryRunMode {
+		prJSON, _ := json.Marshal(pr)
+		msg := fmt.Sprintf("github.CreatePullRequest: org=%s,repo=%s,pr=%s",
+			org, repo, string(prJSON),
+		)
+		logger.GetRequestLogger().Push(msg)
+		return &github.PullRequest{}, nil
+	}
 	newPR, _, err := c.client.PullRequests.Create(ctx, org, repo, pr)
 	return newPR, err
 }
