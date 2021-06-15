@@ -7,6 +7,16 @@ import (
 	"os/exec"
 )
 
+var dryRunMode bool
+
+func init() {
+	dryRunMode = false
+}
+
+func SetDryRunMode(value bool) {
+	dryRunMode = value
+}
+
 type gitCmd struct {
 	Dir string
 	cmd *exec.Cmd

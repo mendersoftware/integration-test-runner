@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v28/github"
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
+	"github.com/mendersoftware/integration-test-runner/git"
 
 	"github.com/sirupsen/logrus"
 )
@@ -18,6 +19,7 @@ import (
 var mutex = &sync.Mutex{}
 
 type config struct {
+	dryRunMode                       bool
 	githubSecret                     []byte
 	githubProtocol                   GitProtocol
 	githubToken                      string
@@ -102,6 +104,7 @@ const (
 
 func getConfig() (*config, error) {
 	var repositoryWatchListPipeline []string
+	dryRunMode := os.Getenv("DRY_RUN") != ""
 	githubSecret := os.Getenv("GITHUB_SECRET")
 	githubToken := os.Getenv("GITHUB_TOKEN")
 	gitlabToken := os.Getenv("GITLAB_TOKEN")
@@ -142,6 +145,7 @@ func getConfig() (*config, error) {
 	}
 
 	return &config{
+		dryRunMode:                       dryRunMode,
 		githubSecret:                     []byte(githubSecret),
 		githubProtocol:                   GitProtocolSSH,
 		githubToken:                      githubToken,
@@ -202,9 +206,11 @@ func main() {
 		logrus.Fatalf("failed to load config: %s", err.Error())
 	}
 
+	git.SetDryRunMode(conf.dryRunMode)
+
 	logrus.Infoln("using settings: ", spew.Sdump(conf))
 
-	githubClient := clientgithub.NewGitHubClient(conf.githubToken)
+	githubClient := clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
 	r := gin.Default()
 
 	// webhook for GitHub

@@ -13,18 +13,20 @@ type Client interface {
 }
 
 type gitLabClient struct {
-	client *gitlab.Client
+	client     *gitlab.Client
+	dryRunMode bool
 }
 
 // NewGitLabClient returns a new GitLabClient for the given conf
-func NewGitLabClient(accessToken string, baseURL string) (Client, error) {
+func NewGitLabClient(accessToken string, baseURL string, dryRunMode bool) (Client, error) {
 	gitlabClient := gitlab.NewClient(nil, accessToken)
 	err := gitlabClient.SetBaseURL(baseURL)
 	if err != nil {
 		return nil, err
 	}
 	return &gitLabClient{
-		client: gitlabClient,
+		client:     gitlabClient,
+		dryRunMode: dryRunMode,
 	}, nil
 }
 

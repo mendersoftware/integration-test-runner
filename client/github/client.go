@@ -17,11 +17,12 @@ type Client interface {
 }
 
 type gitHubClient struct {
-	client *github.Client
+	client     *github.Client
+	dryRunMode bool
 }
 
 // NewGitHubClient returns a new GitHubClient for the given conf
-func NewGitHubClient(accessToken string) Client {
+func NewGitHubClient(accessToken string, dryRunMode bool) Client {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: accessToken},
@@ -29,7 +30,8 @@ func NewGitHubClient(accessToken string) Client {
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
 	return &gitHubClient{
-		client: client,
+		client:     client,
+		dryRunMode: dryRunMode,
 	}
 }
 

@@ -218,7 +218,7 @@ func createPullRequestFromTestBotFork(args createPRArgs) (*github.PullRequest, e
 		MaintainerCanModify: github.Bool(true),
 	}
 
-	client := clientgithub.NewGitHubClient(args.conf.githubToken)
+	client := clientgithub.NewGitHubClient(args.conf.githubToken, args.conf.dryRunMode)
 	pr, err := client.CreatePullRequest(context.Background(), githubOrganization, args.repo, newPR)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create the PR for: (%s) %v", args.repo, err)
@@ -303,6 +303,6 @@ This can be done by following:
 		Body: &commentBody,
 	}
 
-	client := clientgithub.NewGitHubClient(args.conf.githubToken)
+	client := clientgithub.NewGitHubClient(args.conf.githubToken, args.conf.dryRunMode)
 	return client.CreateComment(context.Background(), githubOrganization, args.repo, args.pr.GetNumber(), &comment)
 }

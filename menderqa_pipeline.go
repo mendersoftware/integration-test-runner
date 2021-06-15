@@ -101,7 +101,7 @@ func getBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEvent) []b
 }
 
 func triggerBuild(log *logrus.Entry, conf *config, build *buildOptions, pr *github.PullRequestEvent) error {
-	gitlabClient, err := clientgitlab.NewGitLabClient(conf.gitlabToken, conf.gitlabBaseURL)
+	gitlabClient, err := clientgitlab.NewGitLabClient(conf.gitlabToken, conf.gitlabBaseURL, conf.dryRunMode)
 	if err != nil {
 		return err
 	}
@@ -169,7 +169,7 @@ Hello :smile_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}]
 		Body: &commentBody,
 	}
 
-	client := clientgithub.NewGitHubClient(conf.githubToken)
+	client := clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
 	err = client.CreateComment(context.Background(),
 		githubOrganization, pr.GetRepo().GetName(), pr.GetNumber(), &comment)
 	if err != nil {
@@ -339,7 +339,7 @@ func stopBuildsOfStalePRs(log *logrus.Entry, pr *github.PullRequestEvent, conf *
 
 	for _, build := range getBuilds(log, conf, pr) {
 
-		gitlabClient, err := clientgitlab.NewGitLabClient(conf.gitlabToken, conf.gitlabBaseURL)
+		gitlabClient, err := clientgitlab.NewGitLabClient(conf.gitlabToken, conf.gitlabBaseURL, conf.dryRunMode)
 		if err != nil {
 			return err
 		}
