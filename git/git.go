@@ -15,35 +15,37 @@ func init() {
 	dryRunMode = false
 }
 
+// SetDryRunMode sets the dry run mode
 func SetDryRunMode(value bool) {
 	dryRunMode = value
 }
 
-type gitCmd struct {
+// Cmd is a git command
+type Cmd struct {
 	Dir string
 	cmd *exec.Cmd
 }
 
-func (g *gitCmd) With(s *State) *gitCmd {
+// With sets the git command state
+func (g *Cmd) With(s *State) *Cmd {
 	g.Dir = s.Dir
 	return g
 }
 
+// State holds the git command state
 type State struct {
 	Dir string
 }
 
+// Cleanup cleans up the statee
 func (s *State) Cleanup() {
 	if s.Dir != "" {
 		os.RemoveAll(s.Dir)
 	}
 }
 
-func cleanupTempDir(dir string) func() {
-	return func() { os.RemoveAll(dir) }
-}
-
-func Commands(cmds ...*gitCmd) (*State, error) {
+// Commands runs multiple git commands
+func Commands(cmds ...*Cmd) (*State, error) {
 	tdir, err := ioutil.TempDir("", "gitcmd")
 	if err != nil {
 		return &State{}, err
@@ -59,13 +61,15 @@ func Commands(cmds ...*gitCmd) (*State, error) {
 	return s, nil
 }
 
-func Command(args ...string) *gitCmd {
-	return &gitCmd{
+// Command creates a new git command
+func Command(args ...string) *Cmd {
+	return &Cmd{
 		cmd: exec.Command("git", args...),
 	}
 }
 
-func (g *gitCmd) Run() error {
+// Run runs a git command
+func (g *Cmd) Run() error {
 	if dryRunMode {
 		msg := fmt.Sprintf("git.Run: dir=%s,cmd=%s",
 			g.Dir, g.cmd,

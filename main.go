@@ -22,7 +22,7 @@ var mutex = &sync.Mutex{}
 type config struct {
 	dryRunMode                       bool
 	githubSecret                     []byte
-	githubProtocol                   GitProtocol
+	githubProtocol                   gitProtocol
 	githubToken                      string
 	gitlabToken                      string
 	gitlabBaseURL                    string
@@ -87,7 +87,7 @@ var qemuBuildRepositories = []string{
 }
 
 const (
-	GIT_OPERATION_TIMEOUT = 30
+	gitOperationTimeout = 30
 )
 
 const (
@@ -148,7 +148,7 @@ func getConfig() (*config, error) {
 	return &config{
 		dryRunMode:                       dryRunMode,
 		githubSecret:                     []byte(githubSecret),
-		githubProtocol:                   GitProtocolSSH,
+		githubProtocol:                   gitProtocolSSH,
 		githubToken:                      githubToken,
 		gitlabToken:                      gitlabToken,
 		gitlabBaseURL:                    gitlabBaseURL,

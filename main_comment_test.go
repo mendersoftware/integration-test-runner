@@ -195,7 +195,7 @@ func TestProcessGitHubWebhook(t *testing.T) {
 			}
 
 			conf := &config{
-				githubProtocol: GitProtocolHTTP,
+				githubProtocol: gitProtocolHTTP,
 			}
 
 			ctx := &gin.Context{}

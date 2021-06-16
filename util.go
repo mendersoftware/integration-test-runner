@@ -4,17 +4,17 @@ import (
 	"fmt"
 )
 
-type GitProtocol int
+type gitProtocol int
 
 const (
-	GitProtocolSSH GitProtocol = iota
-	GitProtocolHTTP
+	gitProtocolSSH gitProtocol = iota
+	gitProtocolHTTP
 )
 
-func getRemoteURLGitHub(proto GitProtocol, org, repo string) string {
-	if proto == GitProtocolSSH {
+func getRemoteURLGitHub(proto gitProtocol, org, repo string) string {
+	if proto == gitProtocolSSH {
 		return "git@github.com:/" + org + "/" + repo + ".git"
-	} else if proto == GitProtocolHTTP {
+	} else if proto == gitProtocolHTTP {
 		return "https://github.com/" + org + "/" + repo
 	}
 	return ""

@@ -10,7 +10,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// GitHubClient represents a GitHub client
+// Client represents a GitHub client
 type Client interface {
 	CreateComment(ctx context.Context, org string, repo string, number int, comment *github.IssueComment) error
 	IsOrganizationMember(ctx context.Context, org string, user string) bool

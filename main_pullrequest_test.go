@@ -58,7 +58,7 @@ func TestBotHasAlreadyCommentedOnPR(t *testing.T) {
 			},
 			returnVals: returnValues{
 				issueComments: []*github.IssueComment{
-					&github.IssueComment{
+					{
 						Body: commentString,
 					},
 				},

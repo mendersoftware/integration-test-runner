@@ -8,7 +8,7 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-// GitLabClient represents a GitLab client
+// Client represents a GitLab client
 type Client interface {
 	CancelPipelineBuild(path string, id int) error
 	CreatePipeline(path string, options *gitlab.CreatePipelineOptions) (*gitlab.Pipeline, error)
