@@ -1,0 +1,21 @@
+version: '2.1'
+services:
+
+  integration-test-runner:
+    build: ..
+    ports:
+      - "8080:8080"
+    environment:
+      DRY_RUN: 1
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      GITLAB_BASE_URL: https://gitlab.com/api/v4
+      GITLAB_TOKEN: ${GITLAB_TOKEN}
+      INTEGRATION_DIRECTORY: /integration
+      INTEGRATION_TEST_RUNNER_LOG_LEVEL: debug
+    networks:
+      acceptance-tests:
+        aliases:
+          - integration-test-runner
+
+networks:
+    acceptance-tests:

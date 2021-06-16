@@ -22,8 +22,18 @@ func SetDryRunMode(value bool) {
 
 // Cmd is a git command
 type Cmd struct {
-	Dir string
-	cmd *exec.Cmd
+	Dir     string
+	Args    []string
+	Process *cmdProcess
+	cmd     *exec.Cmd
+	out     []byte
+	err     error
+}
+
+type cmdProcess struct{}
+
+func (p *cmdProcess) Kill() error {
+	return nil
 }
 
 // With sets the git command state
@@ -64,25 +74,33 @@ func Commands(cmds ...*Cmd) (*State, error) {
 // Command creates a new git command
 func Command(args ...string) *Cmd {
 	return &Cmd{
-		cmd: exec.Command("git", args...),
+		cmd:     exec.Command("git", args...),
+		Args:    args,
+		Process: &cmdProcess{},
 	}
 }
 
 // Run runs a git command
 func (g *Cmd) Run() error {
 	if dryRunMode {
-		msg := fmt.Sprintf("git.Run: dir=%s,cmd=%s",
-			g.Dir, g.cmd,
-		)
+		msg := fmt.Sprintf("git.Run: %s", g.cmd)
 		logger.GetRequestLogger().Push(msg)
+		g.out = []byte{}
 		return nil
 	}
 	if g.Dir != "" {
 		g.cmd.Dir = g.Dir
 	}
 	out, err := g.cmd.CombinedOutput()
+	g.out = out
+	g.err = err
 	if err != nil {
 		return fmt.Errorf("%v returned error: %s: %s", g.cmd.Args, out, err.Error())
 	}
 	return nil
+}
+
+func (g *Cmd) CombinedOutput() ([]byte, error) {
+	g.Run()
+	return g.out, g.err
 }

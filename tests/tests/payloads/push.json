@@ -1,0 +1,239 @@
+{
+  "ref": "refs/heads/master",
+  "before": "3b10d9aa52b2d8630cfd545d3e9c29c6995742a3",
+  "after": "b25c56ec4dd6dce42d202eac64f6d2d399a0539d",
+  "repository": {
+    "id": 244735075,
+    "node_id": "MDEwOlJlcG9zaXRvcnkyNDQ3MzUwNzU=",
+    "name": "workflows-enterprise",
+    "full_name": "mendersoftware/workflows-enterprise",
+    "private": true,
+    "owner": {
+      "name": "mendersoftware",
+      "email": "contact@northern.tech",
+      "login": "mendersoftware",
+      "id": 15040539,
+      "node_id": "MDEyOk9yZ2FuaXphdGlvbjE1MDQwNTM5",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15040539?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/mendersoftware",
+      "html_url": "https://github.com/mendersoftware",
+      "followers_url": "https://api.github.com/users/mendersoftware/followers",
+      "following_url": "https://api.github.com/users/mendersoftware/following{/other_user}",
+      "gists_url": "https://api.github.com/users/mendersoftware/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/mendersoftware/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/mendersoftware/subscriptions",
+      "organizations_url": "https://api.github.com/users/mendersoftware/orgs",
+      "repos_url": "https://api.github.com/users/mendersoftware/repos",
+      "events_url": "https://api.github.com/users/mendersoftware/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/mendersoftware/received_events",
+      "type": "Organization",
+      "site_admin": false
+    },
+    "html_url": "https://github.com/mendersoftware/workflows-enterprise",
+    "description": "Workflow orchestrator for Mender",
+    "fork": false,
+    "url": "https://github.com/mendersoftware/workflows-enterprise",
+    "forks_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/forks",
+    "keys_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/keys{/key_id}",
+    "collaborators_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/collaborators{/collaborator}",
+    "teams_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/teams",
+    "hooks_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/hooks",
+    "issue_events_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/issues/events{/number}",
+    "events_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/events",
+    "assignees_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/assignees{/user}",
+    "branches_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/branches{/branch}",
+    "tags_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/tags",
+    "blobs_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/git/blobs{/sha}",
+    "git_tags_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/git/tags{/sha}",
+    "git_refs_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/git/refs{/sha}",
+    "trees_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/git/trees{/sha}",
+    "statuses_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/statuses/{sha}",
+    "languages_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/languages",
+    "stargazers_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/stargazers",
+    "contributors_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/contributors",
+    "subscribers_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/subscribers",
+    "subscription_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/subscription",
+    "commits_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/commits{/sha}",
+    "git_commits_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/git/commits{/sha}",
+    "comments_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/comments{/number}",
+    "issue_comment_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/issues/comments{/number}",
+    "contents_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/contents/{+path}",
+    "compare_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/compare/{base}...{head}",
+    "merges_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/merges",
+    "archive_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/{archive_format}{/ref}",
+    "downloads_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/downloads",
+    "issues_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/issues{/number}",
+    "pulls_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/pulls{/number}",
+    "milestones_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/milestones{/number}",
+    "notifications_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/notifications{?since,all,participating}",
+    "labels_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/labels{/name}",
+    "releases_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/releases{/id}",
+    "deployments_url": "https://api.github.com/repos/mendersoftware/workflows-enterprise/deployments",
+    "created_at": 1583267341,
+    "updated_at": "2021-06-10T07:57:03Z",
+    "pushed_at": 1623671411,
+    "git_url": "git://github.com/mendersoftware/workflows-enterprise.git",
+    "ssh_url": "git@github.com:mendersoftware/workflows-enterprise.git",
+    "clone_url": "https://github.com/mendersoftware/workflows-enterprise.git",
+    "svn_url": "https://github.com/mendersoftware/workflows-enterprise",
+    "homepage": "http://mender.io",
+    "size": 8793,
+    "stargazers_count": 0,
+    "watchers_count": 0,
+    "language": "Go",
+    "has_issues": true,
+    "has_projects": true,
+    "has_downloads": true,
+    "has_wiki": true,
+    "has_pages": false,
+    "forks_count": 11,
+    "mirror_url": null,
+    "archived": false,
+    "disabled": false,
+    "open_issues_count": 0,
+    "license": {
+      "key": "other",
+      "name": "Other",
+      "spdx_id": "NOASSERTION",
+      "url": null,
+      "node_id": "MDc6TGljZW5zZTA="
+    },
+    "forks": 11,
+    "open_issues": 0,
+    "watchers": 0,
+    "default_branch": "master",
+    "stargazers": 0,
+    "master_branch": "master",
+    "organization": "mendersoftware"
+  },
+  "pusher": {
+    "name": "tranchitella",
+    "email": "fabio@tranchitella.eu"
+  },
+  "organization": {
+    "login": "mendersoftware",
+    "id": 15040539,
+    "node_id": "MDEyOk9yZ2FuaXphdGlvbjE1MDQwNTM5",
+    "url": "https://api.github.com/orgs/mendersoftware",
+    "repos_url": "https://api.github.com/orgs/mendersoftware/repos",
+    "events_url": "https://api.github.com/orgs/mendersoftware/events",
+    "hooks_url": "https://api.github.com/orgs/mendersoftware/hooks",
+    "issues_url": "https://api.github.com/orgs/mendersoftware/issues",
+    "members_url": "https://api.github.com/orgs/mendersoftware/members{/member}",
+    "public_members_url": "https://api.github.com/orgs/mendersoftware/public_members{/member}",
+    "avatar_url": "https://avatars.githubusercontent.com/u/15040539?v=4",
+    "description": "Mender is an end-to-end open source update manager for IoT"
+  },
+  "sender": {
+    "login": "tranchitella",
+    "id": 1295287,
+    "node_id": "MDQ6VXNlcjEyOTUyODc=",
+    "avatar_url": "https://avatars.githubusercontent.com/u/1295287?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/tranchitella",
+    "html_url": "https://github.com/tranchitella",
+    "followers_url": "https://api.github.com/users/tranchitella/followers",
+    "following_url": "https://api.github.com/users/tranchitella/following{/other_user}",
+    "gists_url": "https://api.github.com/users/tranchitella/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/tranchitella/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/tranchitella/subscriptions",
+    "organizations_url": "https://api.github.com/users/tranchitella/orgs",
+    "repos_url": "https://api.github.com/users/tranchitella/repos",
+    "events_url": "https://api.github.com/users/tranchitella/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/tranchitella/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "created": false,
+  "deleted": false,
+  "forced": false,
+  "base_ref": null,
+  "compare": "https://github.com/mendersoftware/workflows-enterprise/compare/3b10d9aa52b2...b25c56ec4dd6",
+  "commits": [
+    {
+      "id": "ea2bba68f3fde0e2a5d69441efb5bd509d6b2acf",
+      "tree_id": "efd9d4959908d0ec705eea08ef43d749ebc3ac54",
+      "distinct": true,
+      "message": "INF-1984: Do not send the email to support@mender.io on tenant cancellation\n\nChangelog: none\n\nSigned-off-by: Fabio Tranchitella <fabio.tranchitella@northern.tech>",
+      "timestamp": "2021-06-14T12:16:14+02:00",
+      "url": "https://github.com/mendersoftware/workflows-enterprise/commit/ea2bba68f3fde0e2a5d69441efb5bd509d6b2acf",
+      "author": {
+        "name": "Fabio Tranchitella",
+        "email": "fabio.tranchitella@northern.tech",
+        "username": "tranchitella"
+      },
+      "committer": {
+        "name": "Fabio Tranchitella",
+        "email": "fabio.tranchitella@northern.tech",
+        "username": "tranchitella"
+      },
+      "added": [
+
+      ],
+      "removed": [
+
+      ],
+      "modified": [
+        "tests/tests/test_cancel_tenant.py",
+        "worker/cancel_tenant.json"
+      ]
+    },
+    {
+      "id": "b25c56ec4dd6dce42d202eac64f6d2d399a0539d",
+      "tree_id": "efd9d4959908d0ec705eea08ef43d749ebc3ac54",
+      "distinct": true,
+      "message": "Merge pull request #221 from tranchitella/inf-1984\n\nDo not send the email to support@mender.io on tenant cancellation",
+      "timestamp": "2021-06-14T13:50:11+02:00",
+      "url": "https://github.com/mendersoftware/workflows-enterprise/commit/b25c56ec4dd6dce42d202eac64f6d2d399a0539d",
+      "author": {
+        "name": "Fabio Tranchitella",
+        "email": "fabio.tranchitella@northern.tech",
+        "username": "tranchitella"
+      },
+      "committer": {
+        "name": "GitHub",
+        "email": "noreply@github.com",
+        "username": "web-flow"
+      },
+      "added": [
+
+      ],
+      "removed": [
+
+      ],
+      "modified": [
+        "tests/tests/test_cancel_tenant.py",
+        "worker/cancel_tenant.json"
+      ]
+    }
+  ],
+  "head_commit": {
+    "id": "b25c56ec4dd6dce42d202eac64f6d2d399a0539d",
+    "tree_id": "efd9d4959908d0ec705eea08ef43d749ebc3ac54",
+    "distinct": true,
+    "message": "Merge pull request #221 from tranchitella/inf-1984\n\nDo not send the email to support@mender.io on tenant cancellation",
+    "timestamp": "2021-06-14T13:50:11+02:00",
+    "url": "https://github.com/mendersoftware/workflows-enterprise/commit/b25c56ec4dd6dce42d202eac64f6d2d399a0539d",
+    "author": {
+      "name": "Fabio Tranchitella",
+      "email": "fabio.tranchitella@northern.tech",
+      "username": "tranchitella"
+    },
+    "committer": {
+      "name": "GitHub",
+      "email": "noreply@github.com",
+      "username": "web-flow"
+    },
+    "added": [
+
+    ],
+    "removed": [
+
+    ],
+    "modified": [
+      "tests/tests/test_cancel_tenant.py",
+      "worker/cancel_tenant.json"
+    ]
+  }
+}

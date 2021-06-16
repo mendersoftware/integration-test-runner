@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -133,7 +134,7 @@ func getConfig() (*config, error) {
 	}
 
 	switch {
-	case githubSecret == "":
+	case githubSecret == "" && !dryRunMode:
 		return &config{}, fmt.Errorf("set GITHUB_SECRET")
 	case githubToken == "":
 		return &config{}, fmt.Errorf("set GITHUB_TOKEN")
@@ -155,20 +156,6 @@ func getConfig() (*config, error) {
 		integrationDirectory:             integrationDirectory,
 		watchRepositoriesTriggerPipeline: repositoryWatchListPipeline,
 	}, nil
-}
-
-func init() {
-	// Log to stdout and with JSON format; suitable for GKE
-	formatter := &logrus.JSONFormatter{
-		FieldMap: logrus.FieldMap{
-			logrus.FieldKeyTime:  "time",
-			logrus.FieldKeyLevel: "level",
-			logrus.FieldKeyMsg:   "message",
-		},
-	}
-
-	logrus.SetOutput(os.Stdout)
-	logrus.SetFormatter(formatter)
 }
 
 func getCustomLoggerFromContext(ctx *gin.Context) *logrus.Entry {
@@ -200,21 +187,41 @@ func processGitHubWebhook(ctx *gin.Context, webhookType string, webhookEvent int
 	return nil
 }
 
+func setupLogging(conf *config, requestLogger logger.RequestLogger) {
+	// Log to stdout and with JSON format; suitable for GKE
+	formatter := &logrus.JSONFormatter{
+		FieldMap: logrus.FieldMap{
+			logrus.FieldKeyTime:  "time",
+			logrus.FieldKeyLevel: "level",
+			logrus.FieldKeyMsg:   "message",
+		},
+	}
+
+	if conf.dryRunMode {
+		mw := io.MultiWriter(os.Stdout, requestLogger)
+		logrus.SetOutput(mw)
+	} else {
+		logrus.SetOutput(os.Stdout)
+	}
+	logrus.SetFormatter(formatter)
+}
+
 func main() {
 	conf, err := getConfig()
 	if err != nil {
 		logrus.Fatalf("failed to load config: %s", err.Error())
 	}
 
+	requestLogger := logger.NewRequestLogger()
+	logger.SetRequestLogger(requestLogger)
+
+	setupLogging(conf, requestLogger)
 	git.SetDryRunMode(conf.dryRunMode)
 
 	logrus.Infoln("using settings: ", spew.Sdump(conf))
 
 	githubClient := clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
 	r := gin.Default()
-
-	requestLogger := logger.NewRequestLogger()
-	logger.SetRequestLogger(requestLogger)
 
 	// webhook for GitHub
 	r.POST("/", func(context *gin.Context) {
@@ -225,7 +232,11 @@ func main() {
 			return
 		}
 		context.Set("delivery", github.DeliveryID(context.Request))
-		go processGitHubWebhookRequest(context, payload, githubClient, conf)
+		if conf.dryRunMode {
+			processGitHubWebhookRequest(context, payload, githubClient, conf)
+		} else {
+			go processGitHubWebhookRequest(context, payload, githubClient, conf)
+		}
 		context.Status(http.StatusAccepted)
 	})
 
