@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
@@ -14,6 +17,7 @@ import (
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 	"github.com/mendersoftware/integration-test-runner/git"
 	"github.com/mendersoftware/integration-test-runner/logger"
+	"golang.org/x/sys/unix"
 
 	"github.com/sirupsen/logrus"
 )
@@ -207,6 +211,10 @@ func setupLogging(conf *config, requestLogger logger.RequestLogger) {
 }
 
 func main() {
+	doMain()
+}
+
+func doMain() {
 	conf, err := getConfig()
 	if err != nil {
 		logrus.Fatalf("failed to load config: %s", err.Error())
@@ -256,5 +264,27 @@ func main() {
 		})
 	}
 
-	_ = r.Run("0.0.0.0:8080")
+	srv := &http.Server{
+		Addr:    "0.0.0.0:8080",
+		Handler: r,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logrus.Fatalf("Failed listening: %s\n", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, unix.SIGINT, unix.SIGTERM)
+	<-quit
+
+	logrus.Info("Shutdown server ...")
+
+	ctx := context.Background()
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctxWithTimeout); err != nil {
+		logrus.Fatal("Failed to shutdown the server: ", err)
+	}
 }

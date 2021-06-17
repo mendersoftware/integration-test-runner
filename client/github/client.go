@@ -52,6 +52,11 @@ func (c *gitHubClient) CreateComment(ctx context.Context, org string, repo strin
 }
 
 func (c *gitHubClient) IsOrganizationMember(ctx context.Context, org string, user string) bool {
+	if c.dryRunMode {
+		msg := fmt.Sprintf("github.IsOrganizationMember: org=%s,user=%s", org, user)
+		logger.GetRequestLogger().Push(msg)
+		return true
+	}
 	res, _, _ := c.client.Organizations.IsMember(ctx, org, user)
 	return res
 }

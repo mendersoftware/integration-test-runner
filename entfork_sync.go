@@ -95,7 +95,8 @@ func syncIfOSHasEnterpriseRepo(log *logrus.Entry, conf *config, gpr *github.Pull
 
 			log.Infof("syncIfOSHasEnterpriseRepo: Created PR: %d on Enterprise/%s/%s",
 				enterprisePR.GetNumber(), repo.GetName(), branchRef)
-			log.Debugf("syncIfOSHasEnterpriseRepo: Created PR: %v", pr)
+			log.Debugf("syncIfOSHasEnterpriseRepo: Created PR: id=%d,number=%d,title=%s",
+				pr.GetID(), pr.GetNumber(), pr.GetTitle())
 			log.Debug("Trying to @mention the user in the newly created PR")
 			userName := pr.GetMergedBy().GetLogin()
 			log.Debugf("userName: %s", userName)

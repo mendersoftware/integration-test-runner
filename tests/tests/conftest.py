@@ -18,7 +18,7 @@ import requests
 INTEGRATION_TEST_RUNNER_URI = "http://integration-test-runner:8080"
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def integration_test_runner_url():
     res = requests.delete(INTEGRATION_TEST_RUNNER_URI + "/logs")
     assert res.status_code == 204

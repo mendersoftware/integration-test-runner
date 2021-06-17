@@ -15,6 +15,6 @@ workflows
 
 /integration-test-runner
 /coverage.txt
-/coverage-acceptance.txt
+/tests/coverage-acceptance.txt
 .vscode
 .idea
