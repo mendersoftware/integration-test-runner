@@ -212,10 +212,12 @@ func main() {
 		payload, err := github.ValidatePayload(context.Request, conf.githubSecret)
 		if err != nil {
 			logrus.Warnln("payload failed to validate, ignoring.")
+			context.Status(http.StatusForbidden)
 			return
 		}
 		context.Set("delivery", github.DeliveryID(context.Request))
 		go processGitHubWebhookRequest(context, payload, githubClient, conf)
+		context.Status(http.StatusAccepted)
 	})
 
 	// 200 replay for the loadbalancer
