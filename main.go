@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"sync"
@@ -24,7 +25,6 @@ type config struct {
 	gitlabBaseURL                    string
 	integrationDirectory             string
 	watchRepositoriesTriggerPipeline []string // List of repositories for which to trigger mender-qa pipeline
-	watchRepositoriesGitLabSync      []string // List of repositories for which to trigger GitHub->Gitlab branches sync
 }
 
 type buildOptions struct {
@@ -76,39 +76,6 @@ var gitHubRepoToGitLabProjectCustom = map[string]string{
 	"saas": "Northern.tech/MenderSaaS/saas",
 }
 
-// List of repos for which the GitHub->Gitlab sync shall be performed.
-// It can be overridden with env. variable WATCH_REPOS_SYNC
-var defaultWatchRepositoriesSync = []string{
-	// backend
-	"deployments-enterprise",
-	"inventory-enterprise",
-	"tenantadm",
-	"useradm-enterprise",
-	"workflows-enterprise",
-	"mender-conductor-enterprise",
-	"mender-helm",
-	"auditlogs",
-	"mtls-ambassador",
-	"devicemonitor",
-	// client
-	"mender-binary-delta",
-	// Monitoring
-	"monitor-client",
-	// docs
-	"mender-docs-site",
-	"mender-api-docs",
-	// saas
-	"saas",
-	"saas-tools",
-	"sre-tools",
-	// mender-qa is in fact an open source repo but the project
-	// in GitLab is kept private; hence it requires manual sync
-	"mender-qa",
-	// websites
-	"mender.io",
-	"northern-tech-web",
-}
-
 var qemuBuildRepositories = []string{
 	"meta-mender",
 	"mender",
@@ -135,7 +102,6 @@ const (
 
 func getConfig() (*config, error) {
 	var repositoryWatchListPipeline []string
-	var repositoryWatchListSync []string
 	githubSecret := os.Getenv("GITHUB_SECRET")
 	githubToken := os.Getenv("GITHUB_TOKEN")
 	gitlabToken := os.Getenv("GITLAB_TOKEN")
@@ -162,13 +128,6 @@ func getConfig() (*config, error) {
 		repositoryWatchListPipeline = defaultWatchRepositoriesPipeline
 	}
 
-	watchRepositoriesGitLabSync, ok := os.LookupEnv("WATCH_REPOS_SYNC")
-	if ok {
-		repositoryWatchListSync = strings.Split(watchRepositoriesGitLabSync, ",")
-	} else {
-		repositoryWatchListSync = defaultWatchRepositoriesSync
-	}
-
 	switch {
 	case githubSecret == "":
 		return &config{}, fmt.Errorf("set GITHUB_SECRET")
@@ -190,7 +149,6 @@ func getConfig() (*config, error) {
 		gitlabBaseURL:                    gitlabBaseURL,
 		integrationDirectory:             integrationDirectory,
 		watchRepositoriesTriggerPipeline: repositoryWatchListPipeline,
-		watchRepositoriesGitLabSync:      repositoryWatchListSync,
 	}, nil
 }
 
