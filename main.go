@@ -1,16 +1,23 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v28/github"
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
+	"github.com/mendersoftware/integration-test-runner/git"
+	"github.com/mendersoftware/integration-test-runner/logger"
+	"golang.org/x/sys/unix"
 
 	"github.com/sirupsen/logrus"
 )
@@ -18,8 +25,9 @@ import (
 var mutex = &sync.Mutex{}
 
 type config struct {
+	dryRunMode                       bool
 	githubSecret                     []byte
-	githubProtocol                   GitProtocol
+	githubProtocol                   gitProtocol
 	githubToken                      string
 	gitlabToken                      string
 	gitlabBaseURL                    string
@@ -84,7 +92,7 @@ var qemuBuildRepositories = []string{
 }
 
 const (
-	GIT_OPERATION_TIMEOUT = 30
+	gitOperationTimeout = 30
 )
 
 const (
@@ -102,6 +110,7 @@ const (
 
 func getConfig() (*config, error) {
 	var repositoryWatchListPipeline []string
+	dryRunMode := os.Getenv("DRY_RUN") != ""
 	githubSecret := os.Getenv("GITHUB_SECRET")
 	githubToken := os.Getenv("GITHUB_TOKEN")
 	gitlabToken := os.Getenv("GITLAB_TOKEN")
@@ -129,7 +138,7 @@ func getConfig() (*config, error) {
 	}
 
 	switch {
-	case githubSecret == "":
+	case githubSecret == "" && !dryRunMode:
 		return &config{}, fmt.Errorf("set GITHUB_SECRET")
 	case githubToken == "":
 		return &config{}, fmt.Errorf("set GITHUB_TOKEN")
@@ -142,28 +151,15 @@ func getConfig() (*config, error) {
 	}
 
 	return &config{
+		dryRunMode:                       dryRunMode,
 		githubSecret:                     []byte(githubSecret),
-		githubProtocol:                   GitProtocolSSH,
+		githubProtocol:                   gitProtocolSSH,
 		githubToken:                      githubToken,
 		gitlabToken:                      gitlabToken,
 		gitlabBaseURL:                    gitlabBaseURL,
 		integrationDirectory:             integrationDirectory,
 		watchRepositoriesTriggerPipeline: repositoryWatchListPipeline,
 	}, nil
-}
-
-func init() {
-	// Log to stdout and with JSON format; suitable for GKE
-	formatter := &logrus.JSONFormatter{
-		FieldMap: logrus.FieldMap{
-			logrus.FieldKeyTime:  "time",
-			logrus.FieldKeyLevel: "level",
-			logrus.FieldKeyMsg:   "message",
-		},
-	}
-
-	logrus.SetOutput(os.Stdout)
-	logrus.SetFormatter(formatter)
 }
 
 func getCustomLoggerFromContext(ctx *gin.Context) *logrus.Entry {
@@ -195,16 +191,44 @@ func processGitHubWebhook(ctx *gin.Context, webhookType string, webhookEvent int
 	return nil
 }
 
-func main() {
-	conf, err := getConfig()
+func setupLogging(conf *config, requestLogger logger.RequestLogger) {
+	// Log to stdout and with JSON format; suitable for GKE
+	formatter := &logrus.JSONFormatter{
+		FieldMap: logrus.FieldMap{
+			logrus.FieldKeyTime:  "time",
+			logrus.FieldKeyLevel: "level",
+			logrus.FieldKeyMsg:   "message",
+		},
+	}
 
+	if conf.dryRunMode {
+		mw := io.MultiWriter(os.Stdout, requestLogger)
+		logrus.SetOutput(mw)
+	} else {
+		logrus.SetOutput(os.Stdout)
+	}
+	logrus.SetFormatter(formatter)
+}
+
+func main() {
+	doMain()
+}
+
+func doMain() {
+	conf, err := getConfig()
 	if err != nil {
 		logrus.Fatalf("failed to load config: %s", err.Error())
 	}
 
+	requestLogger := logger.NewRequestLogger()
+	logger.SetRequestLogger(requestLogger)
+
+	setupLogging(conf, requestLogger)
+	git.SetDryRunMode(conf.dryRunMode)
+
 	logrus.Infoln("using settings: ", spew.Sdump(conf))
 
-	githubClient := clientgithub.NewGitHubClient(conf.githubToken)
+	githubClient := clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
 	r := gin.Default()
 
 	// webhook for GitHub
@@ -216,12 +240,51 @@ func main() {
 			return
 		}
 		context.Set("delivery", github.DeliveryID(context.Request))
-		go processGitHubWebhookRequest(context, payload, githubClient, conf)
+		if conf.dryRunMode {
+			processGitHubWebhookRequest(context, payload, githubClient, conf)
+		} else {
+			go processGitHubWebhookRequest(context, payload, githubClient, conf)
+		}
 		context.Status(http.StatusAccepted)
 	})
 
 	// 200 replay for the loadbalancer
 	r.GET("/", func(_ *gin.Context) {})
 
-	_ = r.Run("0.0.0.0:8080")
+	// dry-run mode, end-point to retrieve and clear logs
+	if conf.dryRunMode {
+		r.GET("/logs", func(context *gin.Context) {
+			logs := requestLogger.Get()
+			context.JSON(http.StatusOK, logs)
+		})
+
+		r.DELETE("/logs", func(context *gin.Context) {
+			requestLogger.Clear()
+			context.Writer.WriteHeader(http.StatusNoContent)
+		})
+	}
+
+	srv := &http.Server{
+		Addr:    "0.0.0.0:8080",
+		Handler: r,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logrus.Fatalf("Failed listening: %s\n", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, unix.SIGINT, unix.SIGTERM)
+	<-quit
+
+	logrus.Info("Shutdown server ...")
+
+	ctx := context.Background()
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctxWithTimeout); err != nil {
+		logrus.Fatal("Failed to shutdown the server: ", err)
+	}
 }

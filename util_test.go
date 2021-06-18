@@ -7,10 +7,10 @@ import (
 )
 
 func TestGetRemoteURLGitHub(t *testing.T) {
-	url := getRemoteURLGitHub(GitProtocolSSH, "mendersoftware", "workflows")
+	url := getRemoteURLGitHub(gitProtocolSSH, "mendersoftware", "workflows")
 	assert.Equal(t, "git@github.com:/mendersoftware/workflows.git", url)
 
-	url = getRemoteURLGitHub(GitProtocolHTTP, "mendersoftware", "workflows")
+	url = getRemoteURLGitHub(gitProtocolHTTP, "mendersoftware", "workflows")
 	assert.Equal(t, "https://github.com/mendersoftware/workflows", url)
 }
 

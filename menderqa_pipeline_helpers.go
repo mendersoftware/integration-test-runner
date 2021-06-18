@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mendersoftware/integration-test-runner/git"
 	"github.com/sirupsen/logrus"
 )
 
@@ -20,11 +21,11 @@ func getServiceRevisionFromIntegration(repo, baseBranch string, conf *config) (s
 }
 
 func updateIntegrationRepo(conf *config) error {
-	gitcmd := exec.Command("git", "pull", "--rebase", "origin")
+	gitcmd := git.Command("pull", "--rebase", "origin")
 	gitcmd.Dir = conf.integrationDirectory
 
-	// timeout and kill process after GIT_OPERATION_TIMEOUT seconds
-	t := time.AfterFunc(GIT_OPERATION_TIMEOUT*time.Second, func() {
+	// timeout and kill process after gitOperationTimeout seconds
+	t := time.AfterFunc(gitOperationTimeout*time.Second, func() {
 		gitcmd.Process.Kill()
 	})
 	defer t.Stop()

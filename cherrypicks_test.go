@@ -170,7 +170,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			}
 
 			conf := &config{
-				githubProtocol: GitProtocolHTTP,
+				githubProtocol: gitProtocolHTTP,
 			}
 			conf.integrationDirectory = tmpdir
 

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"strconv"
 
 	"github.com/google/go-github/v28/github"
+	"github.com/mendersoftware/integration-test-runner/git"
 	"github.com/sirupsen/logrus"
 )
 
@@ -36,7 +36,7 @@ func createPullRequestBranch(log *logrus.Entry, pr *github.PullRequestEvent, con
 	}
 	defer os.RemoveAll(tmpdir)
 
-	gitcmd := exec.Command("git", "init", ".")
+	gitcmd := git.Command("init", ".")
 	gitcmd.Dir = tmpdir
 	out, err := gitcmd.CombinedOutput()
 	if err != nil {
@@ -44,7 +44,7 @@ func createPullRequestBranch(log *logrus.Entry, pr *github.PullRequestEvent, con
 	}
 
 	repoURL := getRemoteURLGitHub(conf.githubProtocol, githubOrganization, repo)
-	gitcmd = exec.Command("git", "remote", "add", "github", repoURL)
+	gitcmd = git.Command("remote", "add", "github", repoURL)
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
@@ -56,7 +56,7 @@ func createPullRequestBranch(log *logrus.Entry, pr *github.PullRequestEvent, con
 		return fmt.Errorf("getRemoteURLGitLab returned error: %s", err.Error())
 	}
 
-	gitcmd = exec.Command("git", "remote", "add", "gitlab", remoteURL)
+	gitcmd = git.Command("remote", "add", "gitlab", remoteURL)
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
@@ -64,14 +64,14 @@ func createPullRequestBranch(log *logrus.Entry, pr *github.PullRequestEvent, con
 	}
 
 	prBranchName := "pr_" + prNum
-	gitcmd = exec.Command("git", "fetch", "github", "pull/"+prNum+"/head:"+prBranchName)
+	gitcmd = git.Command("fetch", "github", "pull/"+prNum+"/head:"+prBranchName)
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
-	gitcmd = exec.Command("git", "push", "-f", "--set-upstream", "gitlab", prBranchName)
+	gitcmd = git.Command("push", "-f", "--set-upstream", "gitlab", prBranchName)
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
@@ -100,7 +100,7 @@ func deleteStaleGitlabPRBranch(log *logrus.Entry, pr *github.PullRequestEvent, c
 	}
 	defer os.RemoveAll(tmpdir)
 
-	gitcmd := exec.Command("git", "init", ".")
+	gitcmd := git.Command("init", ".")
 	gitcmd.Dir = tmpdir
 	out, err := gitcmd.CombinedOutput()
 	if err != nil {
@@ -112,21 +112,21 @@ func deleteStaleGitlabPRBranch(log *logrus.Entry, pr *github.PullRequestEvent, c
 		return fmt.Errorf("getRemoteURLGitLab returned error: %s", err.Error())
 	}
 
-	gitcmd = exec.Command("git", "remote", "add", "gitlab", remoteURL)
+	gitcmd = git.Command("remote", "add", "gitlab", remoteURL)
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
-	gitcmd = exec.Command("git", "fetch", "gitlab")
+	gitcmd = git.Command("fetch", "gitlab")
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
-	gitcmd = exec.Command("git", "push", "gitlab", "--delete", fmt.Sprintf("pr_%d", pr.GetNumber()))
+	gitcmd = git.Command("push", "gitlab", "--delete", fmt.Sprintf("pr_%d", pr.GetNumber()))
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {

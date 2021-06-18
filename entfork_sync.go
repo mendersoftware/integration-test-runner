@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
@@ -96,7 +95,8 @@ func syncIfOSHasEnterpriseRepo(log *logrus.Entry, conf *config, gpr *github.Pull
 
 			log.Infof("syncIfOSHasEnterpriseRepo: Created PR: %d on Enterprise/%s/%s",
 				enterprisePR.GetNumber(), repo.GetName(), branchRef)
-			log.Debugf("syncIfOSHasEnterpriseRepo: Created PR: %v", pr)
+			log.Debugf("syncIfOSHasEnterpriseRepo: Created PR: id=%d,number=%d,title=%s",
+				pr.GetID(), pr.GetNumber(), pr.GetTitle())
 			log.Debug("Trying to @mention the user in the newly created PR")
 			userName := pr.GetMergedBy().GetLogin()
 			log.Debugf("userName: %s", userName)
@@ -151,7 +151,7 @@ func createPRBranchOnEnterprise(log *logrus.Entry, repo, branchName, PRNumber, P
 	mergeMsg := fmt.Sprintf("Merge OS base branch: (%s) including PR: (%s) into Enterprise: (%[1]s)",
 		branchName, PRNumber)
 	log.Debug("Trying to " + mergeMsg)
-	gitcmd := exec.Command("git", "merge", "-m", mergeMsg, "opensource/"+branchName)
+	gitcmd := git.Command("merge", "-m", mergeMsg, "opensource/"+branchName)
 	gitcmd.Dir = state.Dir
 	out, err := gitcmd.CombinedOutput()
 	merged = true
@@ -170,7 +170,7 @@ func createPRBranchOnEnterprise(log *logrus.Entry, repo, branchName, PRNumber, P
 	if !merged {
 		// In case of a failed merge, reset PRBranchName to opensource/branchName
 		// and push this branch to enterprise
-		gitcmd = exec.Command("git", "reset", "--hard", "opensource/"+branchName)
+		gitcmd = git.Command("reset", "--hard", "opensource/"+branchName)
 		gitcmd.Dir = state.Dir
 		out, err = gitcmd.CombinedOutput()
 		if err != nil {
@@ -179,7 +179,7 @@ func createPRBranchOnEnterprise(log *logrus.Entry, repo, branchName, PRNumber, P
 	}
 
 	// Push the branch to the bot's own fork
-	gitcmd = exec.Command("git", "push", "--set-upstream", githubBotName, PRBranchName)
+	gitcmd = git.Command("push", "--set-upstream", githubBotName, PRBranchName)
 	gitcmd.Dir = state.Dir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
@@ -218,7 +218,7 @@ func createPullRequestFromTestBotFork(args createPRArgs) (*github.PullRequest, e
 		MaintainerCanModify: github.Bool(true),
 	}
 
-	client := clientgithub.NewGitHubClient(args.conf.githubToken)
+	client := clientgithub.NewGitHubClient(args.conf.githubToken, args.conf.dryRunMode)
 	pr, err := client.CreatePullRequest(context.Background(), githubOrganization, args.repo, newPR)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create the PR for: (%s) %v", args.repo, err)
@@ -303,6 +303,6 @@ This can be done by following:
 		Body: &commentBody,
 	}
 
-	client := clientgithub.NewGitHubClient(args.conf.githubToken)
+	client := clientgithub.NewGitHubClient(args.conf.githubToken, args.conf.dryRunMode)
 	return client.CreateComment(context.Background(), githubOrganization, args.repo, args.pr.GetNumber(), &comment)
 }

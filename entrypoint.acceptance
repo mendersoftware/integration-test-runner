@@ -6,4 +6,7 @@ git config --global user.email ${GIT_CONFIG_USER_EMAIL-root@mender-jenkins.mende
 ssh-keyscan github.com >> /root/.ssh/known_hosts
 ssh-keyscan gitlab.com >> /root/.ssh/known_hosts
 
-exec /integration-test-runner
+exec /integration-test-runner \
+    -test.coverprofile=/testing/coverage-acceptance.txt \
+    -acceptance-tests \
+    -test.run=TestRunMain

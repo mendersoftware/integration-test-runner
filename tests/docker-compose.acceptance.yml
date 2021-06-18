@@ -1,0 +1,16 @@
+version: '2.1'
+services:
+
+  acceptance-testing:
+    image: mendersoftware/mender-test-containers:acceptance-testing
+    entrypoint: sh
+    command: -c "while true; do sleep 5; done;"
+    volumes:
+      - ".:/testing"
+    networks:
+      - acceptance-tests
+    depends_on:
+      - integration-test-runner
+
+networks:
+    acceptance-tests:
