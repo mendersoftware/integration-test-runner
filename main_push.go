@@ -16,15 +16,9 @@ func processGitHubPush(ctx *gin.Context, push *github.PushEvent, githubClient cl
 
 	log.Debugf("Got push event :: repo %s :: ref %s", repoName, refName)
 
-	for _, repo := range conf.watchRepositoriesGitLabSync {
-		if repoName == repo {
-			err := syncRemoteRef(log, repoOrg, repoName, refName, conf)
-			if err != nil {
-				log.Errorf("Could not sync branch: %s", err.Error())
-			}
-			return err
-		}
+	err := syncRemoteRef(log, repoOrg, repoName, refName, conf)
+	if err != nil {
+		log.Errorf("Could not sync branch: %s", err.Error())
 	}
-
-	return nil
+	return err
 }
