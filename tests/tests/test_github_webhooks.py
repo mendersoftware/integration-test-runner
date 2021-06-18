@@ -34,9 +34,9 @@ def test_pull_request_opened(integration_test_runner_url):
             "X-Github-Delivery": "delivery",
         },
     )
-    assert res.status_code == 200
+    assert res.status_code == 202
     #
-    res = requests.get(integration_test_runner_url + "/logs",)
+    res = requests.get(integration_test_runner_url + "/logs")
     assert res.status_code == 200
     assert res.json() == [
         "git.Run: /usr/bin/git init .",
@@ -69,9 +69,9 @@ def test_pull_request_closed(integration_test_runner_url):
             "X-Github-Delivery": "delivery",
         },
     )
-    assert res.status_code == 200
+    assert res.status_code == 202
     #
-    res = requests.get(integration_test_runner_url + "/logs",)
+    res = requests.get(integration_test_runner_url + "/logs")
     assert res.status_code == 200
     assert res.json() == [
         "info:createPullRequestBranch: Action closed, ignoring",
@@ -147,9 +147,9 @@ def test_push(integration_test_runner_url):
             "X-Github-Delivery": "delivery",
         },
     )
-    assert res.status_code == 200
+    assert res.status_code == 202
     #
-    res = requests.get(integration_test_runner_url + "/logs",)
+    res = requests.get(integration_test_runner_url + "/logs")
     assert res.status_code == 200
     assert res.json() == [
         "debug:Got push event :: repo workflows-enterprise :: ref refs/heads/master",
@@ -173,9 +173,9 @@ def test_issue_comment(integration_test_runner_url):
             "X-Github-Delivery": "delivery",
         },
     )
-    assert res.status_code == 200
+    assert res.status_code == 202
     #
-    res = requests.get(integration_test_runner_url + "/logs",)
+    res = requests.get(integration_test_runner_url + "/logs")
     assert res.status_code == 200
     assert res.json() == [
         "github.IsOrganizationMember: org=mendersoftware,user=alfrunes",
