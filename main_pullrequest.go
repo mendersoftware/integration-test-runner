@@ -24,8 +24,8 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 
 	// To run component's Pipeline create a branch in GitLab, regardless of the PR
 	// coming from an organization member or not (equivalent to the old Travis tests)
-	if err := createPullRequestBranch(log, pr, conf); err != nil {
-		log.Errorf("Could not create PR branch: %s", err.Error())
+	if err := syncPullRequest(log, pr, conf); err != nil {
+		log.Errorf("Could not sync PR: %s", err.Error())
 	}
 
 	// Delete merged pr branches in GitLab
