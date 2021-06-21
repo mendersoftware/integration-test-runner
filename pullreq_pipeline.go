@@ -11,35 +11,24 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func getGitlabBranch(pr *github.PullRequestEvent) string {
-	prHead := pr.GetPullRequest().GetHead()
-	if prHead.GetUser().GetLogin() == "mendersoftware" {
-		return prHead.GetRef()
-	}
-	return "pr_" + strconv.Itoa(pr.GetNumber())
-}
-
-func syncPullRequest(log *logrus.Entry, pr *github.PullRequestEvent, conf *config) error {
+func createPullRequestBranch(log *logrus.Entry, pr *github.PullRequestEvent, conf *config) error {
 
 	action := pr.GetAction()
 	if action != "opened" && action != "edited" && action != "reopened" &&
 		action != "synchronize" && action != "ready_for_review" {
-		log.Infof("syncPullRequest: Action %s, ignoring", action)
+		log.Infof("createPullRequestBranch: Action %s, ignoring", action)
+		return nil
+	}
+
+	prHeadFork := pr.GetPullRequest().GetHead().GetUser().GetLogin()
+	if prHeadFork == "mendersoftware" {
+		log.Debug("createPullRequestBranch: PR head is a branch in mendersoftware, ignoring")
 		return nil
 	}
 
 	repo := pr.GetRepo().GetName()
 	org := pr.GetOrganization().GetLogin()
 	prNum := strconv.Itoa(pr.GetNumber())
-	req := pr.GetPullRequest()
-	base := req.GetBase()
-	targetRepo := base.GetRepo().GetFullName()
-	targetBranch := base.GetRef()
-	targetSHA := base.GetSHA()
-	head := req.GetHead()
-	sourceRepo := head.GetRepo().GetFullName()
-	sourceBranch := head.GetRef()
-	sourceSHA := head.GetSHA()
 
 	tmpdir, err := ioutil.TempDir("", repo)
 	if err != nil {
@@ -74,26 +63,15 @@ func syncPullRequest(log *logrus.Entry, pr *github.PullRequestEvent, conf *confi
 		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
-	prBranchName := getGitlabBranch(pr)
+	prBranchName := "pr_" + prNum
 	gitcmd = git.Command("fetch", "github", "pull/"+prNum+"/head:"+prBranchName)
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
-	gitcmd = git.Command(
-		"push", "-f",
-		// The following push options are simulating gitlab repository mirroring
-		// and are for resolving coverage reports PRs.
-		"-o", `ci.variable="CI_EXTERNAL_PULL_REQUEST_IID=`+prNum+`"`,
-		"-o", `ci.variable="CI_EXTERNAL_PULL_REQUEST_SOURCE_REPOSITORY=`+sourceRepo+`"`,
-		"-o", `ci.variable="CI_EXTERNAL_PULL_REQUEST_TARGET_REPOSITORY=`+targetRepo+`"`,
-		"-o", `ci.variable="CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME=`+sourceBranch+`"`,
-		"-o", `ci.variable="CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME=`+targetBranch+`"`,
-		"-o", `ci.variable="CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_SHA=`+sourceSHA+`"`,
-		"-o", `ci.variable="CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_SHA=`+targetSHA+`"`,
-		"--set-upstream", "gitlab", prBranchName,
-	)
+
+	gitcmd = git.Command("push", "-f", "--set-upstream", "gitlab", prBranchName)
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
@@ -115,7 +93,6 @@ func deleteStaleGitlabPRBranch(log *logrus.Entry, pr *github.PullRequestEvent, c
 	}
 	repoName := pr.GetRepo().GetName()
 	repoOrg := pr.GetOrganization().GetLogin()
-	prBranchName := getGitlabBranch(pr)
 
 	tmpdir, err := ioutil.TempDir("", repoName)
 	if err != nil {
@@ -149,7 +126,7 @@ func deleteStaleGitlabPRBranch(log *logrus.Entry, pr *github.PullRequestEvent, c
 		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
-	gitcmd = git.Command("push", "gitlab", "--delete", prBranchName)
+	gitcmd = git.Command("push", "gitlab", "--delete", fmt.Sprintf("pr_%d", pr.GetNumber()))
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
