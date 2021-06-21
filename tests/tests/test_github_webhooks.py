@@ -43,17 +43,7 @@ def test_pull_request_opened(integration_test_runner_url):
         "git.Run: /usr/bin/git remote add github git@github.com:/mendersoftware/workflows.git",
         "git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/Mender/workflows",
         "git.Run: /usr/bin/git fetch github pull/140/head:pr_140",
-        'git.Run: /usr/bin/git push -f -o '
-      +  'ci.variable="CI_EXTERNAL_PULL_REQUEST_IID=140" -o '
-      +  'ci.variable="CI_EXTERNAL_PULL_REQUEST_SOURCE_REPOSITORY=tranchitella/workflows" '
-      +  '-o '
-      +  'ci.variable="CI_EXTERNAL_PULL_REQUEST_TARGET_REPOSITORY=mendersoftware/workflows" '
-      +  '-o ci.variable="CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME=men-4705" -o '
-      +  'ci.variable="CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME=master" -o '
-      +  'ci.variable="CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_SHA=7b099b84cb50df18847027b0afa16820eab850d9" '
-      +  '-o '
-      +  'ci.variable="CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_SHA=70ab90b3932d3d008ebee56d6cfe4f3329d5ee7b" '
-      +  '--set-upstream gitlab pr_140',
+        "git.Run: /usr/bin/git push -f --set-upstream gitlab pr_140",
         "info:Created branch: workflows:pr_140",
         "info:Pipeline is expected to start automatically",
         "debug:deleteStaleGitlabPRBranch: PR not closed, therefore not stopping it's pipeline",
@@ -84,7 +74,7 @@ def test_pull_request_closed(integration_test_runner_url):
     res = requests.get(integration_test_runner_url + "/logs")
     assert res.status_code == 200
     assert res.json() == [
-        "info:syncPullRequest: Action closed, ignoring",
+        "info:createPullRequestBranch: Action closed, ignoring",
         "git.Run: /usr/bin/git init .",
         "git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/Mender/workflows",
         "git.Run: /usr/bin/git fetch gitlab",
