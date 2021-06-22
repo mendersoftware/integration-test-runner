@@ -74,7 +74,7 @@ func getBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEvent) []b
 
 			default:
 				var err error
-				integrationsToTest := []string{}
+				var integrationsToTest []string
 
 				if integrationsToTest, err = getIntegrationVersionsUsingMicroservice(log, repo, baseBranch, conf); err != nil {
 					log.Errorf("failed to get related microservices for repo: %s version: %s, failed with: %s\n", repo, baseBranch, err.Error())
