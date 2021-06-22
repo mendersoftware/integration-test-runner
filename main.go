@@ -230,6 +230,7 @@ func doMain() {
 
 	githubClient := clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
 	r := gin.Default()
+	r.Use(gin.Recovery())
 
 	// webhook for GitHub
 	r.POST("/", func(context *gin.Context) {
