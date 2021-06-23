@@ -12,37 +12,62 @@ import (
 )
 
 func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, githubClient clientgithub.Client, conf *config) error {
-	log := getCustomLoggerFromContext(ctx)
+
+	var (
+		prRef  string
+		err    error
+		action = pr.GetAction()
+	)
+	log := getCustomLoggerFromContext(ctx).
+		WithField("pull", pr.GetNumber()).
+		WithField("action", action)
+	req := pr.GetPullRequest()
+	base := req.GetBase()
+	head := req.GetHead()
+	prRef = base.GetRef()
 
 	// Do not run if the PR is a draft
-	if pr.GetPullRequest().GetDraft() {
+	if req.GetDraft() {
 		log.Infof("The PR: %s/%d is a draft. Do not run tests", pr.GetRepo().GetName(), pr.GetNumber())
 		return nil
 	}
 
-	action := pr.GetAction()
+	log.Debugf("Processing pull request action %s", action)
+	switch action {
+	case "opened", "edited", "reopened", "synchronize", "ready_for_review":
+		// Check if PR is coming from fork
+		if head.GetRepo().GetFullName() == base.GetRepo().GetFullName() {
+			log.Debug("PR head is NOT a fork, " +
+				"skipping GitLab branch sync")
+		} else {
+			if prRef, err = syncPullRequestBranch(log, pr, conf); err != nil {
+				log.Errorf("Could not create PR branch: %s", err.Error())
+			}
+		}
+		if prRef != "" {
+			err = startPRPipeline(log, prRef, pr, conf)
+			if err != nil {
+				log.Errorf("failed to start pipeline for PR: %s", err)
+			}
+		}
 
-	// To run component's Pipeline create a branch in GitLab, regardless of the PR
-	// coming from an organization member or not (equivalent to the old Travis tests)
-	if err := createPullRequestBranch(log, pr, conf); err != nil {
-		log.Errorf("Could not create PR branch: %s", err.Error())
+	case "closed":
+		// Delete merged pr branches in GitLab
+		if err := deleteStaleGitlabPRBranch(log, pr, conf); err != nil {
+			log.Errorf("Failed to delete the stale PR branch after the PR: %v was merged or closed. Error: %v", pr, err)
+		}
+
+		// make sure we only parse one pr at a time, since we use release_tool
+		mutex.Lock()
+
+		// If the pr was merged, suggest cherry-picks
+		if err := suggestCherryPicks(log, pr, githubClient, conf); err != nil {
+			log.Errorf("Failed to suggest cherry picks for the pr %v. Error: %v", pr, err)
+		}
+
+		// release the mutex
+		mutex.Unlock()
 	}
-
-	// Delete merged pr branches in GitLab
-	if err := deleteStaleGitlabPRBranch(log, pr, conf); err != nil {
-		log.Errorf("Failed to delete the stale PR branch after the PR: %v was merged or closed. Error: %v", pr, err)
-	}
-
-	// make sure we only parse one pr at a time, since we use release_tool
-	mutex.Lock()
-
-	// If the pr was merged, suggest cherry-picks
-	if err := suggestCherryPicks(log, pr, githubClient, conf); err != nil {
-		log.Errorf("Failed to suggest cherry picks for the pr %v. Error: %v", pr, err)
-	}
-
-	// release the mutex
-	mutex.Unlock()
 
 	// Continue to the integration Pipeline only for organization members
 	if member := githubClient.IsOrganizationMember(ctx, githubOrganization, pr.Sender.GetLogin()); !member {

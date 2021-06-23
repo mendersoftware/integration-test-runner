@@ -5,26 +5,74 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/google/go-github/v28/github"
+	clientgitlab "github.com/mendersoftware/integration-test-runner/client/gitlab"
 	"github.com/mendersoftware/integration-test-runner/git"
 	"github.com/sirupsen/logrus"
+	"github.com/xanzy/go-gitlab"
 )
 
-func createPullRequestBranch(log *logrus.Entry, pr *github.PullRequestEvent, conf *config) error {
+func startPRPipeline(log *logrus.Entry, ref string, event *github.PullRequestEvent, conf *config) error {
+	client, err := clientgitlab.NewGitLabClient(
+		conf.gitlabToken,
+		conf.gitlabBaseURL,
+		conf.dryRunMode,
+	)
+	if err != nil {
+		return err
+	}
+	pr := event.GetPullRequest()
+	org := event.GetOrganization().GetLogin()
+	head := pr.GetHead()
+	base := pr.GetBase()
+	repo := event.GetRepo()
+	repoURL, err := getRemoteURLGitLab(org, repo.GetName())
+	if err != nil {
+		return err
+	}
+	repoHostURI := strings.SplitN(repoURL, ":", 2)
+	if len(repoHostURI) != 2 {
+		return fmt.Errorf("invalid GitLab URL '%s': failed to start GitLab pipeline", repoURL)
+	}
+	gitlabPath := repoHostURI[1]
 
-	action := pr.GetAction()
-	if action != "opened" && action != "edited" && action != "reopened" &&
-		action != "synchronize" && action != "ready_for_review" {
-		log.Infof("createPullRequestBranch: Action %s, ignoring", action)
-		return nil
+	pipeline, err := client.CreatePipeline(gitlabPath, &gitlab.CreatePipelineOptions{
+		Ref: &ref,
+		Variables: []*gitlab.PipelineVariable{{
+			Key:   "CI_EXTERNAL_PULL_REQUEST_IID",
+			Value: strconv.Itoa(event.GetNumber()),
+		}, {
+			Key:   "CI_EXTERNAL_PULL_REQUEST_SOURCE_REPOSITORY",
+			Value: head.GetRepo().GetFullName(),
+		}, {
+			Key:   "CI_EXTERNAL_PULL_REQUEST_TARGET_REPOSITORY",
+			Value: repo.GetFullName(),
+		}, {
+			Key:   "CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME",
+			Value: head.GetRef(),
+		}, {
+			Key:   "CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_SHA",
+			Value: head.GetSHA(),
+		}, {
+			Key:   "CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME",
+			Value: base.GetRef(),
+		}, {
+			Key:   "CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_SHA",
+			Value: base.GetSHA(),
+		}},
+	})
+	if err != nil {
+		return err
+	} else {
+		log.Debugf("started pipeline for PR: %s", pipeline.WebURL)
 	}
 
-	prHeadFork := pr.GetPullRequest().GetHead().GetUser().GetLogin()
-	if prHeadFork == "mendersoftware" {
-		log.Debug("createPullRequestBranch: PR head is a branch in mendersoftware, ignoring")
-		return nil
-	}
+	return nil
+}
+
+func syncPullRequestBranch(log *logrus.Entry, pr *github.PullRequestEvent, conf *config) (string, error) {
 
 	repo := pr.GetRepo().GetName()
 	org := pr.GetOrganization().GetLogin()
@@ -32,7 +80,7 @@ func createPullRequestBranch(log *logrus.Entry, pr *github.PullRequestEvent, con
 
 	tmpdir, err := ioutil.TempDir("", repo)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer os.RemoveAll(tmpdir)
 
@@ -40,7 +88,7 @@ func createPullRequestBranch(log *logrus.Entry, pr *github.PullRequestEvent, con
 	gitcmd.Dir = tmpdir
 	out, err := gitcmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
+		return "", fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
 	repoURL := getRemoteURLGitHub(conf.githubProtocol, githubOrganization, repo)
@@ -48,19 +96,19 @@ func createPullRequestBranch(log *logrus.Entry, pr *github.PullRequestEvent, con
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
+		return "", fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
 	remoteURL, err := getRemoteURLGitLab(org, repo)
 	if err != nil {
-		return fmt.Errorf("getRemoteURLGitLab returned error: %s", err.Error())
+		return "", fmt.Errorf("getRemoteURLGitLab returned error: %s", err.Error())
 	}
 
 	gitcmd = git.Command("remote", "add", "gitlab", remoteURL)
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
+		return "", fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
 	prBranchName := "pr_" + prNum
@@ -68,19 +116,19 @@ func createPullRequestBranch(log *logrus.Entry, pr *github.PullRequestEvent, con
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
+		return "", fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
-	gitcmd = git.Command("push", "-f", "--set-upstream", "gitlab", prBranchName)
+	// Push but not don't trigger CI (yet)
+	gitcmd = git.Command("push", "-f", "-o", "ci.skip", "--set-upstream", "gitlab", prBranchName)
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
+		return "", fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
 	log.Infof("Created branch: %s:%s", repo, prBranchName)
-	log.Info("Pipeline is expected to start automatically")
-	return nil
+	return prBranchName, nil
 }
 
 func deleteStaleGitlabPRBranch(log *logrus.Entry, pr *github.PullRequestEvent, conf *config) error {

@@ -39,15 +39,24 @@ def test_pull_request_opened(integration_test_runner_url):
     res = requests.get(integration_test_runner_url + "/logs")
     assert res.status_code == 200
     assert res.json() == [
+        "debug:Processing pull request action opened",
         "git.Run: /usr/bin/git init .",
         "git.Run: /usr/bin/git remote add github git@github.com:/mendersoftware/workflows.git",
         "git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/Mender/workflows",
         "git.Run: /usr/bin/git fetch github pull/140/head:pr_140",
-        "git.Run: /usr/bin/git push -f --set-upstream gitlab pr_140",
+        "git.Run: /usr/bin/git push -f -o ci.skip --set-upstream gitlab pr_140",
         "info:Created branch: workflows:pr_140",
-        "info:Pipeline is expected to start automatically",
-        "debug:deleteStaleGitlabPRBranch: PR not closed, therefore not stopping it's pipeline",
-        "info:Ignoring cherry-pick suggestions for action: opened, merged: false",
+        "gitlab.CreatePipeline: "
+        + "path=Northern.tech/Mender/workflows,"
+        + 'options={"ref":"pr_140","variables":'
+        + '[{"key":"CI_EXTERNAL_PULL_REQUEST_IID","value":"140"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_REPOSITORY","value":"tranchitella/workflows"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_REPOSITORY","value":"mendersoftware/workflows"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME","value":"men-4705"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_SHA","value":"7b099b84cb50df18847027b0afa16820eab850d9"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME","value":"master"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_SHA","value":"70ab90b3932d3d008ebee56d6cfe4f3329d5ee7b"}]}',
+        "debug:started pipeline for PR: ",
         "github.IsOrganizationMember: org=mendersoftware,user=tranchitella",
         "debug:stopBuildsOfStalePRs: PR not closed, therefore not stopping it's pipeline",
         "info:Pull request event with action: opened",
@@ -74,7 +83,7 @@ def test_pull_request_closed(integration_test_runner_url):
     res = requests.get(integration_test_runner_url + "/logs")
     assert res.status_code == 200
     assert res.json() == [
-        "info:createPullRequestBranch: Action closed, ignoring",
+        "debug:Processing pull request action closed",
         "git.Run: /usr/bin/git init .",
         "git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/Mender/workflows",
         "git.Run: /usr/bin/git fetch gitlab",
@@ -128,7 +137,7 @@ def test_pull_request_closed(integration_test_runner_url):
         "info:Merged branch: opensource/workflows/master into enterprise/workflows/master in the Enterprise repo",
         'github.CreatePullRequest: org=mendersoftware,repo=workflows-enterprise,pr={"title":"[Bot] Improve logging","head":"mender-test-bot:mergeostoent_140","base":"master","body":"Original PR: https://github.com/mendersoftware/workflows/pull/140\\n\\nChangelog: none\\r\\n\\r\\nSigned-off-by: Fabio Tranchitella \\u003cfabio.tranchitella@northern.tech\\u003e","maintainer_can_modify":true}',
         "info:syncIfOSHasEnterpriseRepo: Created PR: 0 on Enterprise/workflows/master",
-        'debug:syncIfOSHasEnterpriseRepo: Created PR: id=666510619,number=140,title=Improve logging',
+        "debug:syncIfOSHasEnterpriseRepo: Created PR: id=666510619,number=140,title=Improve logging",
         "debug:Trying to @mention the user in the newly created PR",
         "debug:userName: tranchitella",
         'github.CreateComment: org=mendersoftware,repo=workflows-enterprise,number=0,comment={"body":"@tranchitella I have created a PR for you, ready to merge as soon as tests are passed"}',
@@ -188,7 +197,7 @@ def test_issue_comment(integration_test_runner_url):
         ' pr: (string) (len=3) "109",\n'
         ' repo: (string) (len=13) "deviceconnect",\n'
         ' baseBranch: (string) (len=6) "master",\n'
-        ' commitSHA: (string) (len=40) "c52542074ffe1c60dfceccf1baedf49dc10cb643",\n'
+        ' commitSHA: (string) (len=40) "e49c29b57bdd8a0a0667cee4bf9463d8211169e0",\n'
         " makeQEMU: (bool) false\n}\n\n",
         "info:auditlogs version origin/master is being used in master",
         "info:create-artifact-worker version origin/master is being used in master",
