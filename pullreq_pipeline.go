@@ -34,7 +34,7 @@ func startPRPipeline(log *logrus.Entry, ref string, event *github.PullRequestEve
 	}
 	repoHostURI := strings.SplitN(repoURL, ":", 2)
 	if len(repoHostURI) != 2 {
-		return fmt.Errorf("invalid GitLab URL '%s': failed to start gitlab pipeline", repoURL)
+		return fmt.Errorf("invalid GitLab URL '%s': failed to start GitLab pipeline", repoURL)
 	}
 	gitlabPath := repoHostURI[1]
 
@@ -73,19 +73,6 @@ func startPRPipeline(log *logrus.Entry, ref string, event *github.PullRequestEve
 }
 
 func syncPullRequestBranch(log *logrus.Entry, pr *github.PullRequestEvent, conf *config) (string, error) {
-
-	action := pr.GetAction()
-	if action != "opened" && action != "edited" && action != "reopened" &&
-		action != "synchronize" && action != "ready_for_review" {
-		log.Infof("createPullRequestBranch: Action %s, ignoring", action)
-		return "", nil
-	}
-
-	prHeadFork := pr.GetPullRequest().GetHead().GetUser().GetLogin()
-	if prHeadFork == "mendersoftware" {
-		log.Debug("createPullRequestBranch: PR head is a branch in mendersoftware, ignoring")
-		return "", nil
-	}
 
 	repo := pr.GetRepo().GetName()
 	org := pr.GetOrganization().GetLogin()
