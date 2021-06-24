@@ -48,7 +48,13 @@ func syncRemoteRef(log *logrus.Entry, org, repo, ref string, conf *config) error
 		if err != nil {
 			return err
 		}
-		err = git.Command("push", "-f", "gitlab", branchName).With(state).Run()
+		// For the push, add option ci.skip for mender-qa
+		cmdArgs := []string{"push", "-f"}
+		if repo == "mender-qa" {
+			cmdArgs = append(cmdArgs, "-o", "ci.skip")
+		}
+		cmdArgs = append(cmdArgs, "gitlab", branchName)
+		err = git.Command(cmdArgs...).With(state).Run()
 		if err != nil {
 			return err
 		}

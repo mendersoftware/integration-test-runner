@@ -171,6 +171,30 @@ def test_push(integration_test_runner_url):
         "info:Pushed ref to GitLab: workflows-enterprise:refs/heads/master",
     ]
 
+def test_push_mender_qa_repo(integration_test_runner_url):
+    res = requests.post(
+        integration_test_runner_url + "/",
+        data=load_payload("push_mender_qa_repo.json"),
+        headers={
+            "Content-Type": "application/json",
+            "X-Github-Event": "push",
+            "X-Github-Delivery": "delivery",
+        },
+    )
+    assert res.status_code == 202
+    #
+    res = requests.get(integration_test_runner_url + "/logs")
+    assert res.status_code == 200
+    assert res.json() == [
+        "debug:Got push event :: repo mender-qa :: ref refs/heads/master",
+        "git.Run: /usr/bin/git init .",
+        "git.Run: /usr/bin/git remote add github git@github.com:/mendersoftware/mender-qa.git",
+        "git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/Mender/mender-qa",
+        "git.Run: /usr/bin/git fetch github",
+        "git.Run: /usr/bin/git checkout -b master github/master",
+        "git.Run: /usr/bin/git push -f -o ci.skip gitlab master",
+        "info:Pushed ref to GitLab: mender-qa:refs/heads/master",
+    ]
 
 def test_issue_comment(integration_test_runner_url):
     res = requests.post(
