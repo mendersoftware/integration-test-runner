@@ -45,32 +45,34 @@ type buildOptions struct {
 
 // List of repos for which the integration pipeline shall be run
 // It can be overridden with env. variable WATCH_REPOS_PIPELINE
+// Keep in sync with release_tool.py --list git --all
 var defaultWatchRepositoriesPipeline = []string{
+	"auditlogs",
 	"create-artifact-worker",
 	"deployments",
 	"deployments-enterprise",
 	"deviceadm",
 	"deviceauth",
+	"deviceconfig",
+	"deviceconnect",
+	"devicemonitor",
+	//"gui",
+	"integration",
 	"inventory",
 	"inventory-enterprise",
-	"integration",
 	"mender",
+	"mender-api-gateway-docker",
 	"mender-artifact",
+	"mender-cli",
 	"mender-conductor",
 	"mender-conductor-enterprise",
-	"meta-mender",
-	"mender-api-gateway-docker",
+	"mender-connect",
+	"mtls-ambassador",
 	"tenantadm",
 	"useradm",
 	"useradm-enterprise",
 	"workflows",
 	"workflows-enterprise",
-	"auditlogs",
-	"mtls-ambassador",
-	"mender-connect",
-	"deviceconnect",
-	"deviceconfig",
-	"devicemonitor",
 }
 
 // Mapping https://github.com/<org> -> https://gitlab.com/Northern.tech/<group>

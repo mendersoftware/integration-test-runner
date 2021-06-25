@@ -1,0 +1,247 @@
+{
+  "ref": "refs/heads/master",
+  "before": "844340fdd2f620f0d38fefd063657717e04e2102",
+  "after": "18da346d228b5c103a292bd0d24c57761c641b38",
+  "repository": {
+    "id": 49201668,
+    "node_id": "MDEwOlJlcG9zaXRvcnk0OTIwMTY2OA==",
+    "name": "mender-qa",
+    "full_name": "mendersoftware/mender-qa",
+    "private": false,
+    "owner": {
+      "name": "mendersoftware",
+      "email": "contact@northern.tech",
+      "login": "mendersoftware",
+      "id": 15040539,
+      "node_id": "MDEyOk9yZ2FuaXphdGlvbjE1MDQwNTM5",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15040539?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/mendersoftware",
+      "html_url": "https://github.com/mendersoftware",
+      "followers_url": "https://api.github.com/users/mendersoftware/followers",
+      "following_url": "https://api.github.com/users/mendersoftware/following{/other_user}",
+      "gists_url": "https://api.github.com/users/mendersoftware/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/mendersoftware/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/mendersoftware/subscriptions",
+      "organizations_url": "https://api.github.com/users/mendersoftware/orgs",
+      "repos_url": "https://api.github.com/users/mendersoftware/repos",
+      "events_url": "https://api.github.com/users/mendersoftware/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/mendersoftware/received_events",
+      "type": "Organization",
+      "site_admin": false
+    },
+    "html_url": "https://github.com/mendersoftware/mender-qa",
+    "description": "Repository to run and test Mender in QEMU",
+    "fork": false,
+    "url": "https://github.com/mendersoftware/mender-qa",
+    "forks_url": "https://api.github.com/repos/mendersoftware/mender-qa/forks",
+    "keys_url": "https://api.github.com/repos/mendersoftware/mender-qa/keys{/key_id}",
+    "collaborators_url": "https://api.github.com/repos/mendersoftware/mender-qa/collaborators{/collaborator}",
+    "teams_url": "https://api.github.com/repos/mendersoftware/mender-qa/teams",
+    "hooks_url": "https://api.github.com/repos/mendersoftware/mender-qa/hooks",
+    "issue_events_url": "https://api.github.com/repos/mendersoftware/mender-qa/issues/events{/number}",
+    "events_url": "https://api.github.com/repos/mendersoftware/mender-qa/events",
+    "assignees_url": "https://api.github.com/repos/mendersoftware/mender-qa/assignees{/user}",
+    "branches_url": "https://api.github.com/repos/mendersoftware/mender-qa/branches{/branch}",
+    "tags_url": "https://api.github.com/repos/mendersoftware/mender-qa/tags",
+    "blobs_url": "https://api.github.com/repos/mendersoftware/mender-qa/git/blobs{/sha}",
+    "git_tags_url": "https://api.github.com/repos/mendersoftware/mender-qa/git/tags{/sha}",
+    "git_refs_url": "https://api.github.com/repos/mendersoftware/mender-qa/git/refs{/sha}",
+    "trees_url": "https://api.github.com/repos/mendersoftware/mender-qa/git/trees{/sha}",
+    "statuses_url": "https://api.github.com/repos/mendersoftware/mender-qa/statuses/{sha}",
+    "languages_url": "https://api.github.com/repos/mendersoftware/mender-qa/languages",
+    "stargazers_url": "https://api.github.com/repos/mendersoftware/mender-qa/stargazers",
+    "contributors_url": "https://api.github.com/repos/mendersoftware/mender-qa/contributors",
+    "subscribers_url": "https://api.github.com/repos/mendersoftware/mender-qa/subscribers",
+    "subscription_url": "https://api.github.com/repos/mendersoftware/mender-qa/subscription",
+    "commits_url": "https://api.github.com/repos/mendersoftware/mender-qa/commits{/sha}",
+    "git_commits_url": "https://api.github.com/repos/mendersoftware/mender-qa/git/commits{/sha}",
+    "comments_url": "https://api.github.com/repos/mendersoftware/mender-qa/comments{/number}",
+    "issue_comment_url": "https://api.github.com/repos/mendersoftware/mender-qa/issues/comments{/number}",
+    "contents_url": "https://api.github.com/repos/mendersoftware/mender-qa/contents/{+path}",
+    "compare_url": "https://api.github.com/repos/mendersoftware/mender-qa/compare/{base}...{head}",
+    "merges_url": "https://api.github.com/repos/mendersoftware/mender-qa/merges",
+    "archive_url": "https://api.github.com/repos/mendersoftware/mender-qa/{archive_format}{/ref}",
+    "downloads_url": "https://api.github.com/repos/mendersoftware/mender-qa/downloads",
+    "issues_url": "https://api.github.com/repos/mendersoftware/mender-qa/issues{/number}",
+    "pulls_url": "https://api.github.com/repos/mendersoftware/mender-qa/pulls{/number}",
+    "milestones_url": "https://api.github.com/repos/mendersoftware/mender-qa/milestones{/number}",
+    "notifications_url": "https://api.github.com/repos/mendersoftware/mender-qa/notifications{?since,all,participating}",
+    "labels_url": "https://api.github.com/repos/mendersoftware/mender-qa/labels{/name}",
+    "releases_url": "https://api.github.com/repos/mendersoftware/mender-qa/releases{/id}",
+    "deployments_url": "https://api.github.com/repos/mendersoftware/mender-qa/deployments",
+    "created_at": 1452167350,
+    "updated_at": "2021-06-21T14:33:50Z",
+    "pushed_at": 1624553629,
+    "git_url": "git://github.com/mendersoftware/mender-qa.git",
+    "ssh_url": "git@github.com:mendersoftware/mender-qa.git",
+    "clone_url": "https://github.com/mendersoftware/mender-qa.git",
+    "svn_url": "https://github.com/mendersoftware/mender-qa",
+    "homepage": "https://mender.io",
+    "size": 4287,
+    "stargazers_count": 9,
+    "watchers_count": 9,
+    "language": "Shell",
+    "has_issues": false,
+    "has_projects": true,
+    "has_downloads": true,
+    "has_wiki": false,
+    "has_pages": false,
+    "forks_count": 24,
+    "mirror_url": null,
+    "archived": false,
+    "disabled": false,
+    "open_issues_count": 1,
+    "license": {
+      "key": "apache-2.0",
+      "name": "Apache License 2.0",
+      "spdx_id": "Apache-2.0",
+      "url": "https://api.github.com/licenses/apache-2.0",
+      "node_id": "MDc6TGljZW5zZTI="
+    },
+    "forks": 24,
+    "open_issues": 1,
+    "watchers": 9,
+    "default_branch": "master",
+    "stargazers": 9,
+    "master_branch": "master",
+    "organization": "mendersoftware"
+  },
+  "pusher": {
+    "name": "lluiscampos",
+    "email": "lluis.campos@northern.tech"
+  },
+  "organization": {
+    "login": "mendersoftware",
+    "id": 15040539,
+    "node_id": "MDEyOk9yZ2FuaXphdGlvbjE1MDQwNTM5",
+    "url": "https://api.github.com/orgs/mendersoftware",
+    "repos_url": "https://api.github.com/orgs/mendersoftware/repos",
+    "events_url": "https://api.github.com/orgs/mendersoftware/events",
+    "hooks_url": "https://api.github.com/orgs/mendersoftware/hooks",
+    "issues_url": "https://api.github.com/orgs/mendersoftware/issues",
+    "members_url": "https://api.github.com/orgs/mendersoftware/members{/member}",
+    "public_members_url": "https://api.github.com/orgs/mendersoftware/public_members{/member}",
+    "avatar_url": "https://avatars.githubusercontent.com/u/15040539?v=4",
+    "description": "Mender is an end-to-end open source update manager for IoT"
+  },
+  "sender": {
+    "login": "lluiscampos",
+    "id": 3168644,
+    "node_id": "MDQ6VXNlcjMxNjg2NDQ=",
+    "avatar_url": "https://avatars.githubusercontent.com/u/3168644?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/lluiscampos",
+    "html_url": "https://github.com/lluiscampos",
+    "followers_url": "https://api.github.com/users/lluiscampos/followers",
+    "following_url": "https://api.github.com/users/lluiscampos/following{/other_user}",
+    "gists_url": "https://api.github.com/users/lluiscampos/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/lluiscampos/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/lluiscampos/subscriptions",
+    "organizations_url": "https://api.github.com/users/lluiscampos/orgs",
+    "repos_url": "https://api.github.com/users/lluiscampos/repos",
+    "events_url": "https://api.github.com/users/lluiscampos/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/lluiscampos/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "created": false,
+  "deleted": false,
+  "forced": false,
+  "base_ref": null,
+  "compare": "https://github.com/mendersoftware/mender-qa/compare/844340fdd2f6...18da346d228b",
+  "commits": [
+    {
+      "id": "5b5c5ca294240c755584c12222b8faeeda268d35",
+      "tree_id": "b76d057634c066c9d185c96303c752af81d87686",
+      "distinct": true,
+      "message": "generate_client_publish_job.py: One trigger job per integ version\n\nSigned-off-by: Lluis Campos <lluis.campos@northern.tech>",
+      "timestamp": "2021-06-24T15:02:02+02:00",
+      "url": "https://github.com/mendersoftware/mender-qa/commit/5b5c5ca294240c755584c12222b8faeeda268d35",
+      "author": {
+        "name": "Lluis Campos",
+        "email": "lluis.campos@northern.tech",
+        "username": "lluiscampos"
+      },
+      "committer": {
+        "name": "Lluis Campos",
+        "email": "lluis.campos@northern.tech",
+        "username": "lluiscampos"
+      },
+      "added": [],
+      "removed": [],
+      "modified": [
+        "scripts/generate_client_publish_job.py"
+      ]
+    },
+    {
+      "id": "e57973f2e6e18b41c6a733947b5c634d3ee6d664",
+      "tree_id": "eaa71555ea2ab8abf3ba17dbfe5b0649f1245c8c",
+      "distinct": true,
+      "message": "generate_client_publish_job.py: Checkout to integ version before list\n\nA known side-effect of the release_tool is that --list option will\nalways list the active repos on the currently checked out version\n(master). For the generation to be correct, we need to checkout the\ntarget version and only then list the repos.\n\nSigned-off-by: Lluis Campos <lluis.campos@northern.tech>",
+      "timestamp": "2021-06-24T15:02:26+02:00",
+      "url": "https://github.com/mendersoftware/mender-qa/commit/e57973f2e6e18b41c6a733947b5c634d3ee6d664",
+      "author": {
+        "name": "Lluis Campos",
+        "email": "lluis.campos@northern.tech",
+        "username": "lluiscampos"
+      },
+      "committer": {
+        "name": "Lluis Campos",
+        "email": "lluis.campos@northern.tech",
+        "username": "lluiscampos"
+      },
+      "added": [],
+      "removed": [],
+      "modified": [
+        "scripts/generate_client_publish_job.py"
+      ]
+    },
+    {
+      "id": "18da346d228b5c103a292bd0d24c57761c641b38",
+      "tree_id": "eaa71555ea2ab8abf3ba17dbfe5b0649f1245c8c",
+      "distinct": true,
+      "message": "Merge pull request #515 from lluiscampos/generate_client_publish_job.py-multiple-releases\n\ngenerate_client_publish_job.py: Multiple releases",
+      "timestamp": "2021-06-24T18:53:49+02:00",
+      "url": "https://github.com/mendersoftware/mender-qa/commit/18da346d228b5c103a292bd0d24c57761c641b38",
+      "author": {
+        "name": "Lluis Campos",
+        "email": "lluis.campos@northern.tech",
+        "username": "lluiscampos"
+      },
+      "committer": {
+        "name": "GitHub",
+        "email": "noreply@github.com",
+        "username": "web-flow"
+      },
+      "added": [],
+      "removed": [],
+      "modified": [
+        "scripts/generate_client_publish_job.py"
+      ]
+    }
+  ],
+  "head_commit": {
+    "id": "18da346d228b5c103a292bd0d24c57761c641b38",
+    "tree_id": "eaa71555ea2ab8abf3ba17dbfe5b0649f1245c8c",
+    "distinct": true,
+    "message": "Merge pull request #515 from lluiscampos/generate_client_publish_job.py-multiple-releases\n\ngenerate_client_publish_job.py: Multiple releases",
+    "timestamp": "2021-06-24T18:53:49+02:00",
+    "url": "https://github.com/mendersoftware/mender-qa/commit/18da346d228b5c103a292bd0d24c57761c641b38",
+    "author": {
+      "name": "Lluis Campos",
+      "email": "lluis.campos@northern.tech",
+      "username": "lluiscampos"
+    },
+    "committer": {
+      "name": "GitHub",
+      "email": "noreply@github.com",
+      "username": "web-flow"
+    },
+    "added": [],
+    "removed": [],
+    "modified": [
+      "scripts/generate_client_publish_job.py"
+    ]
+  }
+}
