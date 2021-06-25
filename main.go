@@ -73,6 +73,8 @@ var defaultWatchRepositoriesPipeline = []string{
 	"useradm-enterprise",
 	"workflows",
 	"workflows-enterprise",
+	// repos outside of release_tool.py
+	"meta-mender",
 }
 
 // Mapping https://github.com/<org> -> https://gitlab.com/Northern.tech/<group>
