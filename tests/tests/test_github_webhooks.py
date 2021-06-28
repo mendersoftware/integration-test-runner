@@ -24,10 +24,10 @@ def load_payload(filename):
         return f.read()
 
 
-def test_pull_request_opened(integration_test_runner_url):
+def test_pull_request_opened_from_fork(integration_test_runner_url):
     res = requests.post(
         integration_test_runner_url + "/",
-        data=load_payload("pull_request_opened.json"),
+        data=load_payload("pull_request_opened_from_fork.json"),
         headers={
             "Content-Type": "application/json",
             "X-Github-Event": "pull_request",
@@ -65,6 +65,42 @@ def test_pull_request_opened(integration_test_runner_url):
         "info:the following integration branches: [master] are using workflows/master",
         "info:workflows:140 would trigger 1 builds",
         "info:I have already commented on the pr: workflows/140, no need to keep on nagging",
+    ]
+
+
+def test_pull_request_opened_from_branch(integration_test_runner_url):
+    res = requests.post(
+        integration_test_runner_url + "/",
+        data=load_payload("pull_request_opened_from_branch.json"),
+        headers={
+            "Content-Type": "application/json",
+            "X-Github-Event": "pull_request",
+            "X-Github-Delivery": "delivery",
+        },
+    )
+    assert res.status_code == 202
+    #
+    res = requests.get(integration_test_runner_url + "/logs")
+    assert res.status_code == 200
+    assert res.json() == [
+        "debug:Processing pull request action opened",
+        "debug:PR head is NOT a fork, skipping GitLab branch sync",
+        "gitlab.CreatePipeline: "
+        + "path=Northern.tech/Mender/mender-docs,"
+        + 'options={"ref":"QA-251-tests-mutual-tls","variables":'
+        + '[{"key":"CI_EXTERNAL_PULL_REQUEST_IID","value":"1483"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_REPOSITORY","value":"mendersoftware/mender-docs"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_REPOSITORY","value":"mendersoftware/mender-docs"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME","value":"QA-251-tests-mutual-tls"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_SHA","value":"d87e5c741112a9a3def98f307723b5760a100271"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME","value":"master"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_SHA","value":"e312f4d62f66ba74e840afed5f267e5f897da20f"}]}',
+        "debug:started pipeline for PR: ",
+        "github.IsOrganizationMember: org=mendersoftware,user=lluiscampos",
+        "debug:stopBuildsOfStalePRs: PR not closed, therefore not stopping it's pipeline",
+        "debug:syncIfOSHasEnterpriseRepo: Repository without Enterprise fork detected: (mender-docs). Not syncing",
+        "info:Pull request event with action: opened",
+        "info:mender-docs:1483 would trigger 0 builds",
     ]
 
 

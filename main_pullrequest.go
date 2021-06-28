@@ -24,7 +24,7 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 	req := pr.GetPullRequest()
 	base := req.GetBase()
 	head := req.GetHead()
-	prRef = base.GetRef()
+	prRef = head.GetRef()
 
 	// Do not run if the PR is a draft
 	if req.GetDraft() {
