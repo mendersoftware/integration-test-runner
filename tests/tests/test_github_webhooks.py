@@ -85,17 +85,6 @@ def test_pull_request_opened_from_branch(integration_test_runner_url):
     assert res.json() == [
         "debug:Processing pull request action opened",
         "debug:PR head is NOT a fork, skipping GitLab branch sync",
-        "gitlab.CreatePipeline: "
-        + "path=Northern.tech/Mender/mender-docs,"
-        + 'options={"ref":"QA-251-tests-mutual-tls","variables":'
-        + '[{"key":"CI_EXTERNAL_PULL_REQUEST_IID","value":"1483"},'
-        + '{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_REPOSITORY","value":"mendersoftware/mender-docs"},'
-        + '{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_REPOSITORY","value":"mendersoftware/mender-docs"},'
-        + '{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME","value":"QA-251-tests-mutual-tls"},'
-        + '{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_SHA","value":"d87e5c741112a9a3def98f307723b5760a100271"},'
-        + '{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME","value":"master"},'
-        + '{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_SHA","value":"e312f4d62f66ba74e840afed5f267e5f897da20f"}]}',
-        "debug:started pipeline for PR: ",
         "github.IsOrganizationMember: org=mendersoftware,user=lluiscampos",
         "debug:stopBuildsOfStalePRs: PR not closed, therefore not stopping it's pipeline",
         "debug:syncIfOSHasEnterpriseRepo: Repository without Enterprise fork detected: (mender-docs). Not syncing",

@@ -24,7 +24,6 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 	req := pr.GetPullRequest()
 	base := req.GetBase()
 	head := req.GetHead()
-	prRef = head.GetRef()
 
 	// Do not run if the PR is a draft
 	if req.GetDraft() {
@@ -43,11 +42,11 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 			if prRef, err = syncPullRequestBranch(log, pr, conf); err != nil {
 				log.Errorf("Could not create PR branch: %s", err.Error())
 			}
-		}
-		if prRef != "" {
-			err = startPRPipeline(log, prRef, pr, conf)
-			if err != nil {
-				log.Errorf("failed to start pipeline for PR: %s", err)
+			if prRef != "" {
+				err = startPRPipeline(log, prRef, pr, conf)
+				if err != nil {
+					log.Errorf("failed to start pipeline for PR: %s", err)
+				}
 			}
 		}
 
