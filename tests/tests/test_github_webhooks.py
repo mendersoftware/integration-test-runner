@@ -24,10 +24,10 @@ def load_payload(filename):
         return f.read()
 
 
-def test_pull_request_opened(integration_test_runner_url):
+def test_pull_request_opened_from_fork(integration_test_runner_url):
     res = requests.post(
         integration_test_runner_url + "/",
-        data=load_payload("pull_request_opened.json"),
+        data=load_payload("pull_request_opened_from_fork.json"),
         headers={
             "Content-Type": "application/json",
             "X-Github-Event": "pull_request",
@@ -65,6 +65,31 @@ def test_pull_request_opened(integration_test_runner_url):
         "info:the following integration branches: [master] are using workflows/master",
         "info:workflows:140 would trigger 1 builds",
         "info:I have already commented on the pr: workflows/140, no need to keep on nagging",
+    ]
+
+
+def test_pull_request_opened_from_branch(integration_test_runner_url):
+    res = requests.post(
+        integration_test_runner_url + "/",
+        data=load_payload("pull_request_opened_from_branch.json"),
+        headers={
+            "Content-Type": "application/json",
+            "X-Github-Event": "pull_request",
+            "X-Github-Delivery": "delivery",
+        },
+    )
+    assert res.status_code == 202
+    #
+    res = requests.get(integration_test_runner_url + "/logs")
+    assert res.status_code == 200
+    assert res.json() == [
+        "debug:Processing pull request action opened",
+        "debug:PR head is NOT a fork, skipping GitLab branch sync",
+        "github.IsOrganizationMember: org=mendersoftware,user=lluiscampos",
+        "debug:stopBuildsOfStalePRs: PR not closed, therefore not stopping it's pipeline",
+        "debug:syncIfOSHasEnterpriseRepo: Repository without Enterprise fork detected: (mender-docs). Not syncing",
+        "info:Pull request event with action: opened",
+        "info:mender-docs:1483 would trigger 0 builds",
     ]
 
 
@@ -221,7 +246,7 @@ def test_issue_comment(integration_test_runner_url):
         ' pr: (string) (len=3) "109",\n'
         ' repo: (string) (len=13) "deviceconnect",\n'
         ' baseBranch: (string) (len=6) "master",\n'
-        ' commitSHA: (string) (len=40) "e49c29b57bdd8a0a0667cee4bf9463d8211169e0",\n'
+        ' commitSHA: (string) (len=40) "5503d260b6b72d4dd04543790522167073acf192",\n'
         " makeQEMU: (bool) false\n}\n\n",
         "info:auditlogs version origin/master is being used in master",
         "info:create-artifact-worker version origin/master is being used in master",
