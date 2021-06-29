@@ -246,7 +246,7 @@ def test_issue_comment(integration_test_runner_url):
         ' pr: (string) (len=3) "109",\n'
         ' repo: (string) (len=13) "deviceconnect",\n'
         ' baseBranch: (string) (len=6) "master",\n'
-        ' commitSHA: (string) (len=40) "e49c29b57bdd8a0a0667cee4bf9463d8211169e0",\n'
+        ' commitSHA: (string) (len=40) "5503d260b6b72d4dd04543790522167073acf192",\n'
         " makeQEMU: (bool) false\n}\n\n",
         "info:auditlogs version origin/master is being used in master",
         "info:create-artifact-worker version origin/master is being used in master",
