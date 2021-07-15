@@ -13,9 +13,15 @@ import (
 func getServiceRevisionFromIntegration(repo, baseBranch string, conf *config) (string, error) {
 	c := exec.Command("python3", "release_tool.py", "--version-of", repo, "--in-integration-version", baseBranch)
 	c.Dir = conf.integrationDirectory + "/extra/"
-	version, err := c.Output()
+	out, err := c.Output()
 	if err != nil {
-		err = fmt.Errorf("getServiceRevisionFromIntegration: Error: %v (%s)", err, version)
+		err = fmt.Errorf("getServiceRevisionFromIntegration: Error: %v (%s)", err, out)
+	}
+	version := string(out)
+
+	// remove the remote (ex: "`origin`/1.0.x")
+	if strings.Contains(version, "/") {
+		version = strings.SplitN(version, "/", 2)[1]
 	}
 	return strings.TrimSpace(string(version)), err
 }
