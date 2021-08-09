@@ -132,6 +132,7 @@ def test_pull_request_closed(integration_test_runner_url):
         "info:deviceauth version master is being used in master",
         "info:deviceconfig version master is being used in master",
         "info:deviceconnect version master is being used in master",
+        "info:devicemonitor version master is being used in master",
         "info:gui version master is being used in master",
         "info:inventory version master is being used in master",
         "info:inventory-enterprise version master is being used in master",
@@ -139,6 +140,7 @@ def test_pull_request_closed(integration_test_runner_url):
         "info:mender-artifact version master is being used in master",
         "info:mender-cli version master is being used in master",
         "info:mender-connect version master is being used in master",
+        "info:monitor-client version master is being used in master",
         "info:mtls-ambassador version master is being used in master",
         "info:tenantadm version master is being used in master",
         "info:useradm version master is being used in master",
@@ -279,6 +281,7 @@ def test_issue_comment(integration_test_runner_url):
         "info:deployments-enterprise version master is being used in master",
         "info:deviceauth version master is being used in master",
         "info:deviceconfig version master is being used in master",
+        "info:devicemonitor version master is being used in master",
         "info:gui version master is being used in master",
         "info:inventory version master is being used in master",
         "info:inventory-enterprise version master is being used in master",
@@ -286,6 +289,7 @@ def test_issue_comment(integration_test_runner_url):
         "info:mender-artifact version master is being used in master",
         "info:mender-cli version master is being used in master",
         "info:mender-connect version master is being used in master",
+        "info:monitor-client version master is being used in master",
         "info:mtls-ambassador version master is being used in master",
         "info:tenantadm version master is being used in master",
         "info:useradm version master is being used in master",
@@ -305,17 +309,18 @@ def test_issue_comment(integration_test_runner_url):
         "BUILD_VEXPRESS_QEMU_FLASH:, BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:, "
         "CREATE_ARTIFACT_WORKER_REV:master, DEPLOYMENTS_ENTERPRISE_REV:master, "
         "DEPLOYMENTS_REV:master, DEVICEAUTH_REV:master, DEVICECONFIG_REV:master, "
-        "DEVICECONNECT_REV:pull/109/head, GUI_REV:master, INTEGRATION_REV:master, "
-        "INVENTORY_ENTERPRISE_REV:master, INVENTORY_REV:master, "
-        "MENDER_ARTIFACT_REV:master, MENDER_CLI_REV:master, "
-        "MENDER_CONNECT_REV:master, MENDER_REV:master, MTLS_AMBASSADOR_REV:master, "
-        "RUN_INTEGRATION_TESTS:true, TENANTADM_REV:master, "
-        "TEST_QEMUX86_64_BIOS_GRUB:, TEST_QEMUX86_64_BIOS_GRUB_GPT:, "
-        "TEST_QEMUX86_64_UEFI_GRUB:, TEST_VEXPRESS_QEMU:, TEST_VEXPRESS_QEMU_FLASH:, "
+        "DEVICECONNECT_REV:pull/109/head, DEVICEMONITOR_REV:master, GUI_REV:master, "
+        "INTEGRATION_REV:master, INVENTORY_ENTERPRISE_REV:master, "
+        "INVENTORY_REV:master, MENDER_ARTIFACT_REV:master, MENDER_CLI_REV:master, "
+        "MENDER_CONNECT_REV:master, MENDER_REV:master, MONITOR_CLIENT_REV:master, "
+        "MTLS_AMBASSADOR_REV:master, RUN_INTEGRATION_TESTS:true, "
+        "TENANTADM_REV:master, TEST_QEMUX86_64_BIOS_GRUB:, "
+        "TEST_QEMUX86_64_BIOS_GRUB_GPT:, TEST_QEMUX86_64_UEFI_GRUB:, "
+        "TEST_VEXPRESS_QEMU:, TEST_VEXPRESS_QEMU_FLASH:, "
         "TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:, USERADM_ENTERPRISE_REV:master, "
         "USERADM_REV:master, WORKFLOWS_ENTERPRISE_REV:master, WORKFLOWS_REV:master, ",
         "gitlab.CreatePipeline: "
-        'path=Northern.tech/Mender/mender-qa,options={"ref":"master","variables":[{"key":"AUDITLOGS_REV","value":"master"},{"key":"BUILD_BEAGLEBONEBLACK","value":""},{"key":"BUILD_CLIENT","value":"false"},{"key":"BUILD_QEMUX86_64_BIOS_GRUB","value":""},{"key":"BUILD_QEMUX86_64_BIOS_GRUB_GPT","value":""},{"key":"BUILD_QEMUX86_64_UEFI_GRUB","value":""},{"key":"BUILD_VEXPRESS_QEMU","value":""},{"key":"BUILD_VEXPRESS_QEMU_FLASH","value":""},{"key":"BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":""},{"key":"CREATE_ARTIFACT_WORKER_REV","value":"master"},{"key":"DEPLOYMENTS_ENTERPRISE_REV","value":"master"},{"key":"DEPLOYMENTS_REV","value":"master"},{"key":"DEVICEAUTH_REV","value":"master"},{"key":"DEVICECONFIG_REV","value":"master"},{"key":"DEVICECONNECT_REV","value":"pull/109/head"},{"key":"GUI_REV","value":"master"},{"key":"INTEGRATION_REV","value":"master"},{"key":"INVENTORY_ENTERPRISE_REV","value":"master"},{"key":"INVENTORY_REV","value":"master"},{"key":"MENDER_ARTIFACT_REV","value":"master"},{"key":"MENDER_CLI_REV","value":"master"},{"key":"MENDER_CONNECT_REV","value":"master"},{"key":"MENDER_REV","value":"master"},{"key":"MTLS_AMBASSADOR_REV","value":"master"},{"key":"RUN_INTEGRATION_TESTS","value":"true"},{"key":"TENANTADM_REV","value":"master"},{"key":"TEST_QEMUX86_64_BIOS_GRUB","value":""},{"key":"TEST_QEMUX86_64_BIOS_GRUB_GPT","value":""},{"key":"TEST_QEMUX86_64_UEFI_GRUB","value":""},{"key":"TEST_VEXPRESS_QEMU","value":""},{"key":"TEST_VEXPRESS_QEMU_FLASH","value":""},{"key":"TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":""},{"key":"USERADM_ENTERPRISE_REV","value":"master"},{"key":"USERADM_REV","value":"master"},{"key":"WORKFLOWS_ENTERPRISE_REV","value":"master"},{"key":"WORKFLOWS_REV","value":"master"}]}',
+        'path=Northern.tech/Mender/mender-qa,options={"ref":"master","variables":[{"key":"AUDITLOGS_REV","value":"master"},{"key":"BUILD_BEAGLEBONEBLACK","value":""},{"key":"BUILD_CLIENT","value":"false"},{"key":"BUILD_QEMUX86_64_BIOS_GRUB","value":""},{"key":"BUILD_QEMUX86_64_BIOS_GRUB_GPT","value":""},{"key":"BUILD_QEMUX86_64_UEFI_GRUB","value":""},{"key":"BUILD_VEXPRESS_QEMU","value":""},{"key":"BUILD_VEXPRESS_QEMU_FLASH","value":""},{"key":"BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":""},{"key":"CREATE_ARTIFACT_WORKER_REV","value":"master"},{"key":"DEPLOYMENTS_ENTERPRISE_REV","value":"master"},{"key":"DEPLOYMENTS_REV","value":"master"},{"key":"DEVICEAUTH_REV","value":"master"},{"key":"DEVICECONFIG_REV","value":"master"},{"key":"DEVICECONNECT_REV","value":"pull/109/head"},{"key":"DEVICEMONITOR_REV","value":"master"},{"key":"GUI_REV","value":"master"},{"key":"INTEGRATION_REV","value":"master"},{"key":"INVENTORY_ENTERPRISE_REV","value":"master"},{"key":"INVENTORY_REV","value":"master"},{"key":"MENDER_ARTIFACT_REV","value":"master"},{"key":"MENDER_CLI_REV","value":"master"},{"key":"MENDER_CONNECT_REV","value":"master"},{"key":"MENDER_REV","value":"master"},{"key":"MONITOR_CLIENT_REV","value":"master"},{"key":"MTLS_AMBASSADOR_REV","value":"master"},{"key":"RUN_INTEGRATION_TESTS","value":"true"},{"key":"TENANTADM_REV","value":"master"},{"key":"TEST_QEMUX86_64_BIOS_GRUB","value":""},{"key":"TEST_QEMUX86_64_BIOS_GRUB_GPT","value":""},{"key":"TEST_QEMUX86_64_UEFI_GRUB","value":""},{"key":"TEST_VEXPRESS_QEMU","value":""},{"key":"TEST_VEXPRESS_QEMU_FLASH","value":""},{"key":"TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":""},{"key":"USERADM_ENTERPRISE_REV","value":"master"},{"key":"USERADM_REV","value":"master"},{"key":"WORKFLOWS_ENTERPRISE_REV","value":"master"},{"key":"WORKFLOWS_REV","value":"master"}]}',
         "info:Created pipeline: ",
         "github.CreateComment: "
         'org=mendersoftware,repo=deviceconnect,number=109,comment={"body":"\\nHello '
@@ -326,13 +331,14 @@ def test_issue_comment(integration_test_runner_url):
         "false |\\n| CREATE_ARTIFACT_WORKER_REV | master |\\n| "
         "DEPLOYMENTS_ENTERPRISE_REV | master |\\n| DEPLOYMENTS_REV | master |\\n| "
         "DEVICEAUTH_REV | master |\\n| DEVICECONFIG_REV | master |\\n| "
-        "DEVICECONNECT_REV | pull/109/head |\\n| GUI_REV | master |\\n| "
-        "INTEGRATION_REV | master |\\n| INVENTORY_ENTERPRISE_REV | master |\\n| "
-        "INVENTORY_REV | master |\\n| MENDER_ARTIFACT_REV | master |\\n| "
-        "MENDER_CLI_REV | master |\\n| MENDER_CONNECT_REV | master |\\n| MENDER_REV | "
-        "master |\\n| MTLS_AMBASSADOR_REV | master |\\n| RUN_INTEGRATION_TESTS | true "
-        "|\\n| TENANTADM_REV | master |\\n| USERADM_ENTERPRISE_REV | master |\\n| "
-        "USERADM_REV | master |\\n| WORKFLOWS_ENTERPRISE_REV | master |\\n| "
-        "WORKFLOWS_REV | master |\\n\\n\\n "
+        "DEVICECONNECT_REV | pull/109/head |\\n| DEVICEMONITOR_REV | master |\\n| "
+        "GUI_REV | master |\\n| INTEGRATION_REV | master |\\n| "
+        "INVENTORY_ENTERPRISE_REV | master |\\n| INVENTORY_REV | master |\\n| "
+        "MENDER_ARTIFACT_REV | master |\\n| MENDER_CLI_REV | master |\\n| "
+        "MENDER_CONNECT_REV | master |\\n| MENDER_REV | master |\\n| "
+        "MONITOR_CLIENT_REV | master |\\n| MTLS_AMBASSADOR_REV | master |\\n| "
+        "RUN_INTEGRATION_TESTS | true |\\n| TENANTADM_REV | master |\\n| "
+        "USERADM_ENTERPRISE_REV | master |\\n| USERADM_REV | master |\\n| "
+        "WORKFLOWS_ENTERPRISE_REV | master |\\n| WORKFLOWS_REV | master |\\n\\n\\n "
         '\\u003c/p\\u003e\\u003c/details\\u003e\\n"}',
     ]
