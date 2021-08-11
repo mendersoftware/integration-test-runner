@@ -13,7 +13,7 @@ type Client interface {
 	CancelPipelineBuild(path string, id int) error
 	CreatePipeline(path string, options *gitlab.CreatePipelineOptions) (*gitlab.Pipeline, error)
 	GetPipelineVariables(path string, id int) ([]*gitlab.PipelineVariable, error)
-	ListProjectPipelines(path string, options *gitlab.ListProjectPipelinesOptions) (gitlab.PipelineList, error)
+	ListProjectPipelines(path string, options *gitlab.ListProjectPipelinesOptions) ([]*gitlab.PipelineInfo, error)
 }
 
 type gitLabClient struct {
@@ -23,8 +23,7 @@ type gitLabClient struct {
 
 // NewGitLabClient returns a new GitLabClient for the given conf
 func NewGitLabClient(accessToken string, baseURL string, dryRunMode bool) (Client, error) {
-	gitlabClient := gitlab.NewClient(nil, accessToken)
-	err := gitlabClient.SetBaseURL(baseURL)
+	gitlabClient, err := gitlab.NewClient(accessToken, gitlab.WithBaseURL(baseURL))
 	if err != nil {
 		return nil, err
 	}
@@ -75,14 +74,14 @@ func (c *gitLabClient) GetPipelineVariables(path string, id int) ([]*gitlab.Pipe
 }
 
 // ListProjectPipelines list the project pipelines
-func (c *gitLabClient) ListProjectPipelines(path string, options *gitlab.ListProjectPipelinesOptions) (gitlab.PipelineList, error) {
+func (c *gitLabClient) ListProjectPipelines(path string, options *gitlab.ListProjectPipelinesOptions) ([]*gitlab.PipelineInfo, error) {
 	if c.dryRunMode {
 		optionsJSON, _ := json.Marshal(options)
 		msg := fmt.Sprintf("gitlab.ListProjectPipelines: path=%s,options=%s",
 			path, string(optionsJSON),
 		)
 		logger.GetRequestLogger().Push(msg)
-		return gitlab.PipelineList{
+		return []*gitlab.PipelineInfo{
 			&gitlab.PipelineInfo{
 				ID: 1,
 			},
