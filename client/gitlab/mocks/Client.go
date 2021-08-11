@@ -73,15 +73,15 @@ func (_m *Client) GetPipelineVariables(path string, id int) ([]*go_gitlab.Pipeli
 }
 
 // ListProjectPipelines provides a mock function with given fields: path, options
-func (_m *Client) ListProjectPipelines(path string, options *go_gitlab.ListProjectPipelinesOptions) (go_gitlab.PipelineList, error) {
+func (_m *Client) ListProjectPipelines(path string, options *go_gitlab.ListProjectPipelinesOptions) ([]*go_gitlab.PipelineInfo, error) {
 	ret := _m.Called(path, options)
 
-	var r0 go_gitlab.PipelineList
-	if rf, ok := ret.Get(0).(func(string, *go_gitlab.ListProjectPipelinesOptions) go_gitlab.PipelineList); ok {
+	var r0 []*go_gitlab.PipelineInfo
+	if rf, ok := ret.Get(0).(func(string, *go_gitlab.ListProjectPipelinesOptions) []*go_gitlab.PipelineInfo); ok {
 		r0 = rf(path, options)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(go_gitlab.PipelineList)
+			r0 = ret.Get(0).([]*go_gitlab.PipelineInfo)
 		}
 	}
 
