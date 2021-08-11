@@ -49,13 +49,13 @@ def test_pull_request_opened_from_fork(integration_test_runner_url):
         "gitlab.CreatePipeline: "
         + "path=Northern.tech/Mender/workflows,"
         + 'options={"ref":"pr_140","variables":'
-        + '[{"key":"CI_EXTERNAL_PULL_REQUEST_IID","value":"140","variable_type":""},'
-        + '{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_REPOSITORY","value":"tranchitella/workflows","variable_type":""},'
-        + '{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_REPOSITORY","value":"mendersoftware/workflows","variable_type":""},'
-        + '{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME","value":"men-4705","variable_type":""},'
-        + '{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_SHA","value":"7b099b84cb50df18847027b0afa16820eab850d9","variable_type":""},'
-        + '{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME","value":"master","variable_type":""},'
-        + '{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_SHA","value":"70ab90b3932d3d008ebee56d6cfe4f3329d5ee7b","variable_type":""}]}',
+        + '[{"key":"CI_EXTERNAL_PULL_REQUEST_IID","value":"140"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_REPOSITORY","value":"tranchitella/workflows"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_REPOSITORY","value":"mendersoftware/workflows"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME","value":"men-4705"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_SHA","value":"7b099b84cb50df18847027b0afa16820eab850d9"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME","value":"master"},'
+        + '{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_SHA","value":"70ab90b3932d3d008ebee56d6cfe4f3329d5ee7b"}]}',
         "debug:started pipeline for PR: ",
         "github.IsOrganizationMember: org=mendersoftware,user=tranchitella",
         "debug:stopBuildsOfStalePRs: PR not closed, therefore not stopping it's pipeline",
@@ -320,46 +320,7 @@ def test_issue_comment(integration_test_runner_url):
         "TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:, USERADM_ENTERPRISE_REV:master, "
         "USERADM_REV:master, WORKFLOWS_ENTERPRISE_REV:master, WORKFLOWS_REV:master, ",
         "gitlab.CreatePipeline: "
-        'path=Northern.tech/Mender/mender-qa,options='
-        + '{"ref":"master","variables":'
-        + '[{"key":"AUDITLOGS_REV","value":"master","variable_type":""},'
-        + '{"key":"BUILD_BEAGLEBONEBLACK","value":"","variable_type":""},'
-        + '{"key":"BUILD_CLIENT","value":"false","variable_type":""},'
-        + '{"key":"BUILD_QEMUX86_64_BIOS_GRUB","value":"","variable_type":""},'
-        + '{"key":"BUILD_QEMUX86_64_BIOS_GRUB_GPT","value":"","variable_type":""},'
-        + '{"key":"BUILD_QEMUX86_64_UEFI_GRUB","value":"","variable_type":""},'
-        + '{"key":"BUILD_VEXPRESS_QEMU","value":"","variable_type":""},'
-        + '{"key":"BUILD_VEXPRESS_QEMU_FLASH","value":"","variable_type":""},'
-        + '{"key":"BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":"","variable_type":""},'
-        + '{"key":"CREATE_ARTIFACT_WORKER_REV","value":"master","variable_type":""},'
-        + '{"key":"DEPLOYMENTS_ENTERPRISE_REV","value":"master","variable_type":""},'
-        + '{"key":"DEPLOYMENTS_REV","value":"master","variable_type":""},'
-        + '{"key":"DEVICEAUTH_REV","value":"master","variable_type":""},'
-        + '{"key":"DEVICECONFIG_REV","value":"master","variable_type":""},'
-        + '{"key":"DEVICECONNECT_REV","value":"pull/109/head","variable_type":""},'
-        + '{"key":"DEVICEMONITOR_REV","value":"master","variable_type":""},'
-        + '{"key":"GUI_REV","value":"master","variable_type":""},'
-        + '{"key":"INTEGRATION_REV","value":"master","variable_type":""},'
-        + '{"key":"INVENTORY_ENTERPRISE_REV","value":"master","variable_type":""},'
-        + '{"key":"INVENTORY_REV","value":"master","variable_type":""},'
-        + '{"key":"MENDER_ARTIFACT_REV","value":"master","variable_type":""},'
-        + '{"key":"MENDER_CLI_REV","value":"master","variable_type":""},'
-        + '{"key":"MENDER_CONNECT_REV","value":"master","variable_type":""},'
-        + '{"key":"MENDER_REV","value":"master","variable_type":""},'
-        + '{"key":"MONITOR_CLIENT_REV","value":"master","variable_type":""},'
-        + '{"key":"MTLS_AMBASSADOR_REV","value":"master","variable_type":""},'
-        + '{"key":"RUN_INTEGRATION_TESTS","value":"true","variable_type":""},'
-        + '{"key":"TENANTADM_REV","value":"master","variable_type":""},'
-        + '{"key":"TEST_QEMUX86_64_BIOS_GRUB","value":"","variable_type":""},'
-        + '{"key":"TEST_QEMUX86_64_BIOS_GRUB_GPT","value":"","variable_type":""},'
-        + '{"key":"TEST_QEMUX86_64_UEFI_GRUB","value":"","variable_type":""},'
-        + '{"key":"TEST_VEXPRESS_QEMU","value":"","variable_type":""},'
-        + '{"key":"TEST_VEXPRESS_QEMU_FLASH","value":"","variable_type":""},'
-        + '{"key":"TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":"","variable_type":""},'
-        + '{"key":"USERADM_ENTERPRISE_REV","value":"master","variable_type":""},'
-        + '{"key":"USERADM_REV","value":"master","variable_type":""},'
-        + '{"key":"WORKFLOWS_ENTERPRISE_REV","value":"master","variable_type":""},'
-        + '{"key":"WORKFLOWS_REV","value":"master","variable_type":""}]}',
+        'path=Northern.tech/Mender/mender-qa,options={"ref":"master","variables":[{"key":"AUDITLOGS_REV","value":"master"},{"key":"BUILD_BEAGLEBONEBLACK","value":""},{"key":"BUILD_CLIENT","value":"false"},{"key":"BUILD_QEMUX86_64_BIOS_GRUB","value":""},{"key":"BUILD_QEMUX86_64_BIOS_GRUB_GPT","value":""},{"key":"BUILD_QEMUX86_64_UEFI_GRUB","value":""},{"key":"BUILD_VEXPRESS_QEMU","value":""},{"key":"BUILD_VEXPRESS_QEMU_FLASH","value":""},{"key":"BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":""},{"key":"CREATE_ARTIFACT_WORKER_REV","value":"master"},{"key":"DEPLOYMENTS_ENTERPRISE_REV","value":"master"},{"key":"DEPLOYMENTS_REV","value":"master"},{"key":"DEVICEAUTH_REV","value":"master"},{"key":"DEVICECONFIG_REV","value":"master"},{"key":"DEVICECONNECT_REV","value":"pull/109/head"},{"key":"DEVICEMONITOR_REV","value":"master"},{"key":"GUI_REV","value":"master"},{"key":"INTEGRATION_REV","value":"master"},{"key":"INVENTORY_ENTERPRISE_REV","value":"master"},{"key":"INVENTORY_REV","value":"master"},{"key":"MENDER_ARTIFACT_REV","value":"master"},{"key":"MENDER_CLI_REV","value":"master"},{"key":"MENDER_CONNECT_REV","value":"master"},{"key":"MENDER_REV","value":"master"},{"key":"MONITOR_CLIENT_REV","value":"master"},{"key":"MTLS_AMBASSADOR_REV","value":"master"},{"key":"RUN_INTEGRATION_TESTS","value":"true"},{"key":"TENANTADM_REV","value":"master"},{"key":"TEST_QEMUX86_64_BIOS_GRUB","value":""},{"key":"TEST_QEMUX86_64_BIOS_GRUB_GPT","value":""},{"key":"TEST_QEMUX86_64_UEFI_GRUB","value":""},{"key":"TEST_VEXPRESS_QEMU","value":""},{"key":"TEST_VEXPRESS_QEMU_FLASH","value":""},{"key":"TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":""},{"key":"USERADM_ENTERPRISE_REV","value":"master"},{"key":"USERADM_REV","value":"master"},{"key":"WORKFLOWS_ENTERPRISE_REV","value":"master"},{"key":"WORKFLOWS_REV","value":"master"}]}',
         "info:Created pipeline: ",
         "github.CreateComment: "
         'org=mendersoftware,repo=deviceconnect,number=109,comment={"body":"\\nHello '
