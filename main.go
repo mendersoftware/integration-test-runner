@@ -67,6 +67,7 @@ var defaultWatchRepositoriesPipeline = []string{
 	"mender-conductor",
 	"mender-conductor-enterprise",
 	"mender-connect",
+	"monitor-client",
 	"mtls-ambassador",
 	"tenantadm",
 	"useradm",
@@ -93,6 +94,7 @@ var qemuBuildRepositories = []string{
 	"mender",
 	"mender-artifact",
 	"mender-connect",
+	"monitor-client",
 }
 
 const (
