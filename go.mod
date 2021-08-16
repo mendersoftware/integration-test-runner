@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
-	github.com/gin-gonic/gin v1.7.3
+	github.com/gin-gonic/gin v1.7.4
 	github.com/google/go-github/v28 v28.1.1
 	github.com/google/go-querystring v1.0.1-0.20190318165438-c8c88dbee036 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
@@ -17,10 +17,7 @@ require (
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
 	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
 	golang.org/x/sys v0.0.0-20200116001909-b77594299b42
-	golang.org/x/tools v0.0.0-20190424220101-1e8e1cfdf96b // indirect
 	google.golang.org/appengine v1.6.1-0.20190515044707-311d3c5cf937 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
-	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c // indirect
 )
