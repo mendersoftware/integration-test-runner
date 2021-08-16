@@ -71,6 +71,21 @@ func getIntegrationVersionsUsingMicroservice(log *logrus.Entry, repo, version st
 		}
 	}
 
+	// filter out "staging" branch if version is "master"
+	// Reasoning: integration/staging will have "master" versions for client side
+	// unreleased components, making the bot trigger two pipelines, wasting
+	// resources and confusing developers...
+	i := 0
+	for _, branch := range branches {
+		if version == "master" && branch == "staging" {
+			continue
+		}
+		branches[i] = branch
+		i++
+
+	}
+	branches = branches[:i]
+
 	log.Infof("%s/%s is being used in the following integration: %s", repo, version, branches)
 	return branches, nil
 }
