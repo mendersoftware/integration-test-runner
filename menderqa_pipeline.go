@@ -17,6 +17,8 @@ import (
 	clientgitlab "github.com/mendersoftware/integration-test-runner/client/gitlab"
 )
 
+const LatestStableYoctoBranch = "dunfell"
+
 func parsePullRequest(log *logrus.Entry, conf *config, action string, pr *github.PullRequestEvent) []buildOptions {
 	log.Info("Pull request event with action: ", action)
 	var builds []buildOptions
@@ -274,12 +276,23 @@ func getBuildParameters(log *logrus.Entry, conf *config, build *buildOptions) ([
 		buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter("integration"), Value: build.baseBranch})
 	}
 
-	// set the poky branch equal to the meta-mender base branch, unless it
-	// is master, in which case we rely on the default.
-	if build.repo == "meta-mender" && build.baseBranch != "master" {
-		buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter("poky"), Value: build.baseBranch})
-		buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter("meta-openembedded"), Value: build.baseBranch})
-		buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter("meta-raspberrypi"), Value: build.baseBranch})
+	// Set poky (& friends) and meta-mender revisions:
+	// - If building a master PR, leave everything at defaults, which generally means
+	//   meta-mender/master and poky/LatestStableYoctoBranch.
+	// - If building meta-mender @ non-master, set poky branches to its baseBranch.
+	// - If building any other repo @ non-master, set both meta-mender and poky to
+	//   LatestStableYoctoBranch.
+	if build.baseBranch != "master" {
+		var pokyBranch string
+		if build.repo == "meta-mender" {
+			pokyBranch = build.baseBranch
+		} else {
+			pokyBranch = LatestStableYoctoBranch
+			buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter("meta-mender"), Value: pokyBranch})
+		}
+		buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter("poky"), Value: pokyBranch})
+		buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter("meta-openembedded"), Value: pokyBranch})
+		buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter("meta-raspberrypi"), Value: pokyBranch})
 	}
 
 	// set the rest of the CI build parameters
