@@ -11,9 +11,7 @@ This is a Mender specific feature.
 
 ### GitHub -> GitLab sync
 
-Set `WATCH_REPOS_SYNC` for the list of repositories for which to do
-GitHub->Gitlab git branches sync. Default is a list of the Mender Enterprise
-repositories.
+All repositories from the configured GitHub organization are synced with GitLab.
 
 ### GitLab PR branches
 
