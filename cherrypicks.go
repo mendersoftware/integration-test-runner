@@ -48,7 +48,7 @@ func suggestCherryPicks(log *logrus.Entry, pr *github.PullRequestEvent, githubCl
 
 	// initialize the git work area
 	repo := pr.GetRepo().GetName()
-	repoURL := getRemoteURLGitHub(conf.githubProtocol, githubOrganization, repo)
+	repoURL := getRemoteURLGitHub(conf.githubProtocol, conf.githubOrganization, repo)
 	prNumber := strconv.Itoa(pr.GetNumber())
 	prBranchName := "pr_" + prNumber
 	state, err := git.Commands(
@@ -128,7 +128,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 	comment := github.IssueComment{
 		Body: &commentBody,
 	}
-	if err := githubClient.CreateComment(context.Background(), githubOrganization,
+	if err := githubClient.CreateComment(context.Background(), conf.githubOrganization,
 		pr.GetRepo().GetName(), pr.GetNumber(), &comment); err != nil {
 		log.Infof("Failed to comment on the pr: %v, Error: %s", pr, err.Error())
 		return err

@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+
+	"github.com/google/go-github/v28/github"
 )
 
 type gitProtocol int
@@ -33,4 +35,20 @@ func getRemoteURLGitLab(org, repo string) (string, error) {
 		remoteURL = "git@gitlab.com:" + v
 	}
 	return remoteURL, nil
+}
+
+func getGitHubOrganization(webhookType string, webhookEvent interface{}) (string, error) {
+	switch webhookType {
+	case "pull_request":
+		pr := webhookEvent.(*github.PullRequestEvent)
+		return pr.GetOrganization().GetLogin(), nil
+	case "push":
+		push := webhookEvent.(*github.PushEvent)
+		return push.GetRepo().GetOrganization(), nil
+	case "issue_comment":
+		comment := webhookEvent.(*github.IssueCommentEvent)
+		return comment.GetRepo().GetOwner().GetLogin(), nil
+	}
+	return "", fmt.Errorf("getGitHubOrganization cannot get organizatoin from webhook type %q", webhookType)
+
 }

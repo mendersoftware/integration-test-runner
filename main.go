@@ -28,6 +28,7 @@ type config struct {
 	dryRunMode                       bool
 	githubSecret                     []byte
 	githubProtocol                   gitProtocol
+	githubOrganization               string
 	githubToken                      string
 	gitlabToken                      string
 	gitlabBaseURL                    string
@@ -106,8 +107,7 @@ const (
 )
 
 const (
-	githubOrganization = "mendersoftware"
-	githubBotName      = "mender-test-bot"
+	githubBotName = "mender-test-bot"
 )
 
 const (
@@ -183,6 +183,12 @@ func processGitHubWebhookRequest(ctx *gin.Context, payload []byte, githubClient 
 }
 
 func processGitHubWebhook(ctx *gin.Context, webhookType string, webhookEvent interface{}, githubClient clientgithub.Client, conf *config) error {
+	githubOrganization, err := getGitHubOrganization(webhookType, webhookEvent)
+	if err != nil {
+		logrus.Warnln("ignoring event: ", err.Error())
+		return nil
+	}
+	conf.githubOrganization = githubOrganization
 	switch webhookType {
 	case "pull_request":
 		pr := webhookEvent.(*github.PullRequestEvent)

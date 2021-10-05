@@ -22,7 +22,7 @@ func processGitHubComment(ctx *gin.Context, comment *github.IssueCommentEvent, g
 	}
 
 	// accept commands only from organization members
-	if !githubClient.IsOrganizationMember(ctx, githubOrganization, comment.Sender.GetLogin()) {
+	if !githubClient.IsOrganizationMember(ctx, conf.githubOrganization, comment.Sender.GetLogin()) {
 		log.Warnf("%s commented, but he/she is not a member of our organization, ignoring", comment.Sender.GetLogin())
 		return nil
 	}
@@ -54,7 +54,7 @@ func processGitHubComment(ctx *gin.Context, comment *github.IssueCommentEvent, g
 		return err
 	}
 
-	pr, err := githubClient.GetPullRequest(ctx, githubOrganization, comment.GetRepo().GetName(), prNumber)
+	pr, err := githubClient.GetPullRequest(ctx, conf.githubOrganization, comment.GetRepo().GetName(), prNumber)
 	if err != nil {
 		log.Errorf("Unable to retrieve the pull request: %s", err.Error())
 		return err

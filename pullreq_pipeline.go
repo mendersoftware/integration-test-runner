@@ -91,7 +91,7 @@ func syncPullRequestBranch(log *logrus.Entry, pr *github.PullRequestEvent, conf 
 		return "", fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
-	repoURL := getRemoteURLGitHub(conf.githubProtocol, githubOrganization, repo)
+	repoURL := getRemoteURLGitHub(conf.githubProtocol, conf.githubOrganization, repo)
 	gitcmd = git.Command("remote", "add", "github", repoURL)
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()

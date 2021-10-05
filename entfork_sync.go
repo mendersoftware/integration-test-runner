@@ -131,9 +131,9 @@ func createPRBranchOnEnterprise(log *logrus.Entry, repo, branchName, PRNumber, P
 	state, err := git.Commands(
 		git.Command("init", "."),
 		git.Command("remote", "add", "opensource",
-			getRemoteURLGitHub(conf.githubProtocol, githubOrganization, repo)),
+			getRemoteURLGitHub(conf.githubProtocol, conf.githubOrganization, repo)),
 		git.Command("remote", "add", "enterprise",
-			getRemoteURLGitHub(conf.githubProtocol, githubOrganization, repo+"-enterprise")),
+			getRemoteURLGitHub(conf.githubProtocol, conf.githubOrganization, repo+"-enterprise")),
 		git.Command("remote", "add", githubBotName,
 			getRemoteURLGitHub(conf.githubProtocol, githubBotName, repo+"-enterprise")),
 		git.Command("config", "--add", "user.name", githubBotName),
@@ -219,7 +219,7 @@ func createPullRequestFromTestBotFork(args createPRArgs) (*github.PullRequest, e
 	}
 
 	client := clientgithub.NewGitHubClient(args.conf.githubToken, args.conf.dryRunMode)
-	pr, err := client.CreatePullRequest(context.Background(), githubOrganization, args.repo, newPR)
+	pr, err := client.CreatePullRequest(context.Background(), args.conf.githubOrganization, args.repo, newPR)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create the PR for: (%s) %v", args.repo, err)
 	}
@@ -304,5 +304,5 @@ This can be done by following:
 	}
 
 	client := clientgithub.NewGitHubClient(args.conf.githubToken, args.conf.dryRunMode)
-	return client.CreateComment(context.Background(), githubOrganization, args.repo, args.pr.GetNumber(), &comment)
+	return client.CreateComment(context.Background(), args.conf.githubOrganization, args.repo, args.pr.GetNumber(), &comment)
 }

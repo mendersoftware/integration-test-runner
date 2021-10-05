@@ -14,6 +14,9 @@ import (
 )
 
 func TestProcessGitHubWebhook(t *testing.T) {
+
+	gitHubOrg := "mendersoftware"
+
 	testCases := map[string]struct {
 		webhookType  string
 		webhookEvent interface{}
@@ -31,6 +34,11 @@ func TestProcessGitHubWebhook(t *testing.T) {
 			webhookType: "issue_comment",
 			webhookEvent: &github.IssueCommentEvent{
 				Action: github.String("updated"),
+				Repo: &github.Repository{
+					Owner: &github.User{
+						Login: github.String(gitHubOrg),
+					},
+				},
 			},
 		},
 		"comment from non-mendersoftware user, ignore": {
@@ -39,6 +47,11 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				Action: github.String("created"),
 				Sender: &github.User{
 					Login: github.String("not-member"),
+				},
+				Repo: &github.Repository{
+					Owner: &github.User{
+						Login: github.String(gitHubOrg),
+					},
 				},
 			},
 
@@ -54,6 +67,11 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				Sender: &github.User{
 					Login: github.String("not-member"),
 				},
+				Repo: &github.Repository{
+					Owner: &github.User{
+						Login: github.String(gitHubOrg),
+					},
+				},
 			},
 
 			isOrganizationMember: github.Bool(false),
@@ -68,6 +86,11 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				Sender: &github.User{
 					Login: github.String("not-member"),
 				},
+				Repo: &github.Repository{
+					Owner: &github.User{
+						Login: github.String(gitHubOrg),
+					},
+				},
 			},
 
 			isOrganizationMember: github.Bool(false),
@@ -81,6 +104,11 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				},
 				Sender: &github.User{
 					Login: github.String("member"),
+				},
+				Repo: &github.Repository{
+					Owner: &github.User{
+						Login: github.String(gitHubOrg),
+					},
 				},
 			},
 
@@ -100,6 +128,11 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				},
 				Sender: &github.User{
 					Login: github.String("member"),
+				},
+				Repo: &github.Repository{
+					Owner: &github.User{
+						Login: github.String(gitHubOrg),
+					},
 				},
 			},
 
@@ -121,6 +154,9 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				},
 				Repo: &github.Repository{
 					Name: github.String("integration-test-runner"),
+					Owner: &github.User{
+						Login: github.String(gitHubOrg),
+					},
 				},
 				Sender: &github.User{
 					Login: github.String("member"),
@@ -149,6 +185,9 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				},
 				Repo: &github.Repository{
 					Name: github.String("integration-test-runner"),
+					Owner: &github.User{
+						Login: github.String(gitHubOrg),
+					},
 				},
 				Sender: &github.User{
 					Login: github.String("member"),
@@ -178,7 +217,7 @@ func TestProcessGitHubWebhook(t *testing.T) {
 					mock.MatchedBy(func(ctx context.Context) bool {
 						return true
 					}),
-					githubOrganization,
+					gitHubOrg,
 					tc.webhookEvent.(*github.IssueCommentEvent).GetSender().GetLogin(),
 				).Return(*tc.isOrganizationMember)
 			}
@@ -188,14 +227,15 @@ func TestProcessGitHubWebhook(t *testing.T) {
 					mock.MatchedBy(func(ctx context.Context) bool {
 						return true
 					}),
-					githubOrganization,
+					gitHubOrg,
 					tc.repo,
 					tc.prNumber,
 				).Return(tc.pullRequest, tc.pullRequestErr)
 			}
 
 			conf := &config{
-				githubProtocol: gitProtocolHTTP,
+				githubProtocol:     gitProtocolHTTP,
+				githubOrganization: gitHubOrg,
 			}
 
 			ctx := &gin.Context{}

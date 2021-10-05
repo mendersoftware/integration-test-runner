@@ -173,7 +173,7 @@ Hello :smile_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}]
 
 	client := clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
 	err = client.CreateComment(context.Background(),
-		githubOrganization, pr.GetRepo().GetName(), pr.GetNumber(), &comment)
+		conf.githubOrganization, pr.GetRepo().GetName(), pr.GetNumber(), &comment)
 	if err != nil {
 		log.Infof("Failed to comment on the pr: %v, Error: %s", pr, err.Error())
 	}
