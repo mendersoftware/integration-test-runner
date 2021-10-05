@@ -19,6 +19,9 @@ func TestBotHasAlreadyCommentedOnPR(t *testing.T) {
 		error         error
 	}
 	commentString := github.String(", Let me know if you want to start the integration pipeline by mentioning me and the command \"")
+	conf := &config{
+		githubOrganization: "mendersoftware",
+	}
 	testCases := map[string]struct {
 		pr             *github.PullRequestEvent
 		expectedResult bool
@@ -86,7 +89,7 @@ func TestBotHasAlreadyCommentedOnPR(t *testing.T) {
 			).Return(tc.returnVals.issueComments, tc.returnVals.error)
 
 			log := logrus.NewEntry(logrus.StandardLogger())
-			assert.Equal(t, tc.expectedResult, botHasAlreadyCommentedOnPR(log, mclient, tc.pr, *commentString))
+			assert.Equal(t, tc.expectedResult, botHasAlreadyCommentedOnPR(log, mclient, tc.pr, *commentString, conf))
 		})
 	}
 }

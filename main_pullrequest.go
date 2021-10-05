@@ -69,7 +69,7 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 	}
 
 	// Continue to the integration Pipeline only for organization members
-	if member := githubClient.IsOrganizationMember(ctx, githubOrganization, pr.Sender.GetLogin()); !member {
+	if member := githubClient.IsOrganizationMember(ctx, conf.githubOrganization, pr.Sender.GetLogin()); !member {
 		log.Warnf("%s is making a pullrequest, but he/she is not a member of our organization, ignoring", pr.Sender.GetLogin())
 		return nil
 	}
@@ -99,7 +99,7 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 	if len(builds) > 0 {
 		// Only comment, if not already commented on a PR
 		botCommentString := ", Let me know if you want to start the integration pipeline by mentioning me and the command \""
-		if !botHasAlreadyCommentedOnPR(log, githubClient, pr, botCommentString) {
+		if !botHasAlreadyCommentedOnPR(log, githubClient, pr, botCommentString, conf) {
 
 			msg := "@" + pr.GetSender().GetLogin() + botCommentString + commandStartPipeline + "\"."
 			if err := githubClient.CreateComment(ctx, pr.GetOrganization().GetLogin(), pr.GetRepo().GetName(), pr.GetNumber(), &github.IssueComment{
@@ -117,10 +117,10 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 	return nil
 }
 
-func botHasAlreadyCommentedOnPR(log *logrus.Entry, githubClient clientgithub.Client, pr *github.PullRequestEvent, botComment string) bool {
+func botHasAlreadyCommentedOnPR(log *logrus.Entry, githubClient clientgithub.Client, pr *github.PullRequestEvent, botComment string, conf *config) bool {
 	comments, err := githubClient.ListComments(
 		context.Background(),
-		githubOrganization,
+		conf.githubOrganization,
 		pr.GetRepo().GetName(),
 		pr.GetNumber(),
 		&github.IssueListCommentsOptions{

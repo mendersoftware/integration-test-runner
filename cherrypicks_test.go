@@ -16,6 +16,9 @@ import (
 )
 
 func TestSuggestCherryPicks(t *testing.T) {
+
+	gitHubOrg := "mendersoftware"
+
 	testCases := map[string]struct {
 		pr      *github.PullRequestEvent
 		err     error
@@ -164,7 +167,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 					mock.MatchedBy(func(ctx context.Context) bool {
 						return true
 					}),
-					githubOrganization,
+					gitHubOrg,
 					*tc.pr.Repo.Name,
 					*tc.pr.Number,
 					tc.comment,
@@ -172,7 +175,8 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			}
 
 			conf := &config{
-				githubProtocol: gitProtocolHTTP,
+				githubProtocol:     gitProtocolHTTP,
+				githubOrganization: gitHubOrg,
 			}
 			conf.integrationDirectory = tmpdir
 

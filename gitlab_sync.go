@@ -18,7 +18,7 @@ func syncRemoteRef(log *logrus.Entry, org, repo, ref string, conf *config) error
 	state, err := git.Commands(
 		git.Command("init", "."),
 		git.Command("remote", "add", "github",
-			getRemoteURLGitHub(conf.githubProtocol, githubOrganization, repo)),
+			getRemoteURLGitHub(conf.githubProtocol, conf.githubOrganization, repo)),
 		git.Command("remote", "add", "gitlab", remoteURLGitLab),
 	)
 	defer state.Cleanup()
