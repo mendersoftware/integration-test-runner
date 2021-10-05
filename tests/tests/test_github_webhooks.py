@@ -193,7 +193,7 @@ def test_pull_request_closed(integration_test_runner_url):
     ]
 
 
-def test_push(integration_test_runner_url):
+def test_push_mendersoftware(integration_test_runner_url):
     res = requests.post(
         integration_test_runner_url + "/",
         data=load_payload("push.json"),
@@ -216,6 +216,32 @@ def test_push(integration_test_runner_url):
         "git.Run: /usr/bin/git checkout -b master github/master",
         "git.Run: /usr/bin/git push -f gitlab master",
         "info:Pushed ref to GitLab: workflows-enterprise:refs/heads/master",
+    ]
+
+
+def test_push_cfengine(integration_test_runner_url):
+    res = requests.post(
+        integration_test_runner_url + "/",
+        data=load_payload("push_cfengine.json"),
+        headers={
+            "Content-Type": "application/json",
+            "X-Github-Event": "push",
+            "X-Github-Delivery": "delivery",
+        },
+    )
+    assert res.status_code == 202
+    #
+    res = requests.get(integration_test_runner_url + "/logs")
+    assert res.status_code == 200
+    assert res.json() == [
+        "debug:Got push event :: repo website :: ref refs/heads/master",
+        "git.Run: /usr/bin/git init .",
+        "git.Run: /usr/bin/git remote add github git@github.com:/cfengine/website.git",
+        "git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/CFEngine/website",
+        "git.Run: /usr/bin/git fetch github",
+        "git.Run: /usr/bin/git checkout -b master github/master",
+        "git.Run: /usr/bin/git push -f gitlab master",
+        "info:Pushed ref to GitLab: website:refs/heads/master",
     ]
 
 

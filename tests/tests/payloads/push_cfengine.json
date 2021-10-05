@@ -1,0 +1,232 @@
+{
+  "ref": "refs/heads/master",
+  "before": "fa584abc4bda092697225decfe33ec5b062a6ae6",
+  "after": "934e5b0e7acd11218dc440cc7d08d73ccf0cfe40",
+  "repository": {
+    "id": 308459844,
+    "node_id": "MDEwOlJlcG9zaXRvcnkzMDg0NTk4NDQ=",
+    "name": "website",
+    "full_name": "cfengine/website",
+    "private": true,
+    "owner": {
+      "name": "cfengine",
+      "email": "contact@northern.tech",
+      "login": "cfengine",
+      "id": 1239823,
+      "node_id": "MDEyOk9yZ2FuaXphdGlvbjEyMzk4MjM=",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1239823?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/cfengine",
+      "html_url": "https://github.com/cfengine",
+      "followers_url": "https://api.github.com/users/cfengine/followers",
+      "following_url": "https://api.github.com/users/cfengine/following{/other_user}",
+      "gists_url": "https://api.github.com/users/cfengine/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/cfengine/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/cfengine/subscriptions",
+      "organizations_url": "https://api.github.com/users/cfengine/orgs",
+      "repos_url": "https://api.github.com/users/cfengine/repos",
+      "events_url": "https://api.github.com/users/cfengine/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/cfengine/received_events",
+      "type": "Organization",
+      "site_admin": false
+    },
+    "html_url": "https://github.com/cfengine/website",
+    "description": null,
+    "fork": false,
+    "url": "https://github.com/cfengine/website",
+    "forks_url": "https://api.github.com/repos/cfengine/website/forks",
+    "keys_url": "https://api.github.com/repos/cfengine/website/keys{/key_id}",
+    "collaborators_url": "https://api.github.com/repos/cfengine/website/collaborators{/collaborator}",
+    "teams_url": "https://api.github.com/repos/cfengine/website/teams",
+    "hooks_url": "https://api.github.com/repos/cfengine/website/hooks",
+    "issue_events_url": "https://api.github.com/repos/cfengine/website/issues/events{/number}",
+    "events_url": "https://api.github.com/repos/cfengine/website/events",
+    "assignees_url": "https://api.github.com/repos/cfengine/website/assignees{/user}",
+    "branches_url": "https://api.github.com/repos/cfengine/website/branches{/branch}",
+    "tags_url": "https://api.github.com/repos/cfengine/website/tags",
+    "blobs_url": "https://api.github.com/repos/cfengine/website/git/blobs{/sha}",
+    "git_tags_url": "https://api.github.com/repos/cfengine/website/git/tags{/sha}",
+    "git_refs_url": "https://api.github.com/repos/cfengine/website/git/refs{/sha}",
+    "trees_url": "https://api.github.com/repos/cfengine/website/git/trees{/sha}",
+    "statuses_url": "https://api.github.com/repos/cfengine/website/statuses/{sha}",
+    "languages_url": "https://api.github.com/repos/cfengine/website/languages",
+    "stargazers_url": "https://api.github.com/repos/cfengine/website/stargazers",
+    "contributors_url": "https://api.github.com/repos/cfengine/website/contributors",
+    "subscribers_url": "https://api.github.com/repos/cfengine/website/subscribers",
+    "subscription_url": "https://api.github.com/repos/cfengine/website/subscription",
+    "commits_url": "https://api.github.com/repos/cfengine/website/commits{/sha}",
+    "git_commits_url": "https://api.github.com/repos/cfengine/website/git/commits{/sha}",
+    "comments_url": "https://api.github.com/repos/cfengine/website/comments{/number}",
+    "issue_comment_url": "https://api.github.com/repos/cfengine/website/issues/comments{/number}",
+    "contents_url": "https://api.github.com/repos/cfengine/website/contents/{+path}",
+    "compare_url": "https://api.github.com/repos/cfengine/website/compare/{base}...{head}",
+    "merges_url": "https://api.github.com/repos/cfengine/website/merges",
+    "archive_url": "https://api.github.com/repos/cfengine/website/{archive_format}{/ref}",
+    "downloads_url": "https://api.github.com/repos/cfengine/website/downloads",
+    "issues_url": "https://api.github.com/repos/cfengine/website/issues{/number}",
+    "pulls_url": "https://api.github.com/repos/cfengine/website/pulls{/number}",
+    "milestones_url": "https://api.github.com/repos/cfengine/website/milestones{/number}",
+    "notifications_url": "https://api.github.com/repos/cfengine/website/notifications{?since,all,participating}",
+    "labels_url": "https://api.github.com/repos/cfengine/website/labels{/name}",
+    "releases_url": "https://api.github.com/repos/cfengine/website/releases{/id}",
+    "deployments_url": "https://api.github.com/repos/cfengine/website/deployments",
+    "created_at": 1604008826,
+    "updated_at": "2021-10-05T12:02:47Z",
+    "pushed_at": 1633445759,
+    "git_url": "git://github.com/cfengine/website.git",
+    "ssh_url": "git@github.com:cfengine/website.git",
+    "clone_url": "https://github.com/cfengine/website.git",
+    "svn_url": "https://github.com/cfengine/website",
+    "homepage": null,
+    "size": 46338,
+    "stargazers_count": 0,
+    "watchers_count": 0,
+    "language": "HTML",
+    "has_issues": true,
+    "has_projects": false,
+    "has_downloads": true,
+    "has_wiki": true,
+    "has_pages": false,
+    "forks_count": 8,
+    "mirror_url": null,
+    "archived": false,
+    "disabled": false,
+    "open_issues_count": 1,
+    "license": null,
+    "allow_forking": true,
+    "visibility": "private",
+    "forks": 8,
+    "open_issues": 1,
+    "watchers": 0,
+    "default_branch": "master",
+    "stargazers": 0,
+    "master_branch": "master",
+    "organization": "cfengine"
+  },
+  "pusher": {
+    "name": "olehermanse",
+    "email": "olehermanse@users.noreply.github.com"
+  },
+  "organization": {
+    "login": "cfengine",
+    "id": 1239823,
+    "node_id": "MDEyOk9yZ2FuaXphdGlvbjEyMzk4MjM=",
+    "url": "https://api.github.com/orgs/cfengine",
+    "repos_url": "https://api.github.com/orgs/cfengine/repos",
+    "events_url": "https://api.github.com/orgs/cfengine/events",
+    "hooks_url": "https://api.github.com/orgs/cfengine/hooks",
+    "issues_url": "https://api.github.com/orgs/cfengine/issues",
+    "members_url": "https://api.github.com/orgs/cfengine/members{/member}",
+    "public_members_url": "https://api.github.com/orgs/cfengine/public_members{/member}",
+    "avatar_url": "https://avatars.githubusercontent.com/u/1239823?v=4",
+    "description": ""
+  },
+  "sender": {
+    "login": "olehermanse",
+    "id": 4048546,
+    "node_id": "MDQ6VXNlcjQwNDg1NDY=",
+    "avatar_url": "https://avatars.githubusercontent.com/u/4048546?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/olehermanse",
+    "html_url": "https://github.com/olehermanse",
+    "followers_url": "https://api.github.com/users/olehermanse/followers",
+    "following_url": "https://api.github.com/users/olehermanse/following{/other_user}",
+    "gists_url": "https://api.github.com/users/olehermanse/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/olehermanse/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/olehermanse/subscriptions",
+    "organizations_url": "https://api.github.com/users/olehermanse/orgs",
+    "repos_url": "https://api.github.com/users/olehermanse/repos",
+    "events_url": "https://api.github.com/users/olehermanse/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/olehermanse/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "created": false,
+  "deleted": false,
+  "forced": false,
+  "base_ref": null,
+  "compare": "https://github.com/cfengine/website/compare/fa584abc4bda...934e5b0e7acd",
+  "commits": [
+    {
+      "id": "2463bf18ada7c8202902c434d8601714f81e7337",
+      "tree_id": "8c7547a92c57b158c0b24bad343c2ebe59991378",
+      "distinct": true,
+      "message": "Blog post about CFEngine inventory as Ansible inventory\n\nTicket: ENT-7612",
+      "timestamp": "2021-10-05T14:39:34+02:00",
+      "url": "https://github.com/cfengine/website/commit/2463bf18ada7c8202902c434d8601714f81e7337",
+      "author": {
+        "name": "Vratislav Podzimek",
+        "email": "v.podzimek@mykolab.com",
+        "username": "vpodzime"
+      },
+      "committer": {
+        "name": "Vratislav Podzimek",
+        "email": "v.podzimek@mykolab.com",
+        "username": "vpodzime"
+      },
+      "added": [
+        "content/blog/2021/cfengine-inventory-to-ansible.md"
+      ],
+      "removed": [
+
+      ],
+      "modified": [
+
+      ]
+    },
+    {
+      "id": "934e5b0e7acd11218dc440cc7d08d73ccf0cfe40",
+      "tree_id": "6686d01f9dd1d4af4dcde91a360e75c56f49b2d6",
+      "distinct": true,
+      "message": "Merge pull request #348 from vpodzime/master-cfe_inventory_ansible\n\nBlog post about CFEngine inventory as Ansible inventory",
+      "timestamp": "2021-10-05T16:55:59+02:00",
+      "url": "https://github.com/cfengine/website/commit/934e5b0e7acd11218dc440cc7d08d73ccf0cfe40",
+      "author": {
+        "name": "Ole Herman Schumacher Elgesem",
+        "email": "olehermanse@users.noreply.github.com",
+        "username": "olehermanse"
+      },
+      "committer": {
+        "name": "GitHub",
+        "email": "noreply@github.com",
+        "username": "web-flow"
+      },
+      "added": [
+        "content/blog/2021/cfengine-inventory-to-ansible.md"
+      ],
+      "removed": [
+
+      ],
+      "modified": [
+
+      ]
+    }
+  ],
+  "head_commit": {
+    "id": "934e5b0e7acd11218dc440cc7d08d73ccf0cfe40",
+    "tree_id": "6686d01f9dd1d4af4dcde91a360e75c56f49b2d6",
+    "distinct": true,
+    "message": "Merge pull request #348 from vpodzime/master-cfe_inventory_ansible\n\nBlog post about CFEngine inventory as Ansible inventory",
+    "timestamp": "2021-10-05T16:55:59+02:00",
+    "url": "https://github.com/cfengine/website/commit/934e5b0e7acd11218dc440cc7d08d73ccf0cfe40",
+    "author": {
+      "name": "Ole Herman Schumacher Elgesem",
+      "email": "olehermanse@users.noreply.github.com",
+      "username": "olehermanse"
+    },
+    "committer": {
+      "name": "GitHub",
+      "email": "noreply@github.com",
+      "username": "web-flow"
+    },
+    "added": [
+      "content/blog/2021/cfengine-inventory-to-ansible.md"
+    ],
+    "removed": [
+
+    ],
+    "modified": [
+
+    ]
+  }
+}
