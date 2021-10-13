@@ -678,6 +678,6 @@ def test_cherrypick(integration_test_runner_url):
         "github.CreateComment: "
         'org=mendersoftware,repo=mender,number=864,comment={"body":"Hi '
         ":smiley_cat:\\nI did my very best, and this is the result of the cherry pick "
-        "operation:\\n* 3.1.x :white_check_mark: #0\\n* 3.0.x "
-        ':white_check_mark: #0\\n* 2.6.x :white_check_mark: #0\\n"}',
+        "operation:\\n* 3.1.x :heavy_check_mark: #0\\n* 3.0.x "
+        ':heavy_check_mark: #0\\n* 2.6.x :heavy_check_mark: #0\\n"}',
     ]

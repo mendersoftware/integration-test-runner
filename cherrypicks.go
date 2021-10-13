@@ -234,10 +234,10 @@ I did my very best, and this is the result of the cherry pick operation:
 	for _, targetBranch := range targetBranches {
 		if !conflicts[targetBranch] && errors[targetBranch] != "" {
 			commentText = commentText +
-				fmt.Sprintf("* %s :red_check_mark: Error: %s\n", targetBranch, errors[targetBranch])
+				fmt.Sprintf("* %s :red_circle: Error: %s\n", targetBranch, errors[targetBranch])
 		} else if success[targetBranch] != "" {
 			commentText = commentText +
-				fmt.Sprintf("* %s :white_check_mark: %s\n", targetBranch, success[targetBranch])
+				fmt.Sprintf("* %s :heavy_check_mark: %s\n", targetBranch, success[targetBranch])
 		} else {
 			commentText = commentText +
 				fmt.Sprintf("* %s Had merge conflicts, you will have to fix this yourself :crying_cat_face:\n", targetBranch)
