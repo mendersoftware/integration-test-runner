@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/pkg/errors"
+
 	"github.com/mendersoftware/integration-test-runner/logger"
 )
 
@@ -63,9 +65,11 @@ func Commands(cmds ...*Cmd) (*State, error) {
 	s := &State{Dir: tdir}
 	for _, cmd := range cmds {
 		cmd.Dir = tdir
-		err := cmd.Run()
+		out, err := cmd.CombinedOutput()
 		if err != nil {
-			return s, err
+			return s, errors.Wrapf(err,
+				"git command: %s returned error:\n%s",
+				cmd.cmd.Args, out)
 		}
 	}
 	return s, nil

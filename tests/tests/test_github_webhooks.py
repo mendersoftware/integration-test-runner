@@ -602,3 +602,82 @@ def test_issue_comment_minor_series(integration_test_runner_url):
         'WORKFLOWS_REV | 2.1.x |\\n\\n\\n '
         '\\u003c/p\\u003e\\u003c/details\\u003e\\n"}',
     ]
+
+
+def test_cherrypick(integration_test_runner_url):
+    res = requests.post(
+        integration_test_runner_url + "/",
+        data=load_payload("pr_cherry_pick_comment.json"),
+        headers={
+            "Content-Type": "application/json",
+            "X-Github-Event": "issue_comment",
+            "X-Github-Delivery": "delivery",
+        },
+    )
+    assert res.status_code == 202
+    #
+    res = requests.get(integration_test_runner_url + "/logs")
+    assert res.status_code == 200
+    assert res.json() == [
+        "github.IsOrganizationMember: org=mendersoftware,user=oleorhagen",
+        "info:Attempting to cherry-pick the changes in PR: mender/864",
+        "git.Run: /usr/bin/git init .",
+        "git.Run: /usr/bin/git remote add mendersoftware "
+        "git@github.com:/mendersoftware/mender.git",
+        "git.Run: /usr/bin/git fetch mendersoftware",
+        "git.Run: /usr/bin/git checkout mendersoftware/3.1.x",
+        "git.Run: /usr/bin/git checkout -b cherry-3.1.x-logbuffering",
+        "info:Cherry-picking f48250b19fae7ba72de2439c20a0fc678afa9a87 "
+        "^4c6d93ba936031ee00d9c115ef2dc61597bc1296",
+        "git.Run: /usr/bin/git cherry-pick -x "
+        "f48250b19fae7ba72de2439c20a0fc678afa9a87 "
+        "^4c6d93ba936031ee00d9c115ef2dc61597bc1296",
+        "git.Run: /usr/bin/git push mendersoftware "
+        "cherry-3.1.x-logbuffering:cherry-3.1.x-logbuffering",
+        "github.CreatePullRequest: "
+        'org=mendersoftware,repo=mender,pr={"title":"[Cherry 3.1.x]: MEN-5098: '
+        "Capture and pretty print output from scripts "
+        'executed","head":"cherry-3.1.x-logbuffering","base":"3.1.x","body":"Cherry '
+        'pick of PR: 748602811\\nFor you  :)","maintainer_can_modify":true}',
+        "git.Run: /usr/bin/git init .",
+        "git.Run: /usr/bin/git remote add mendersoftware "
+        "git@github.com:/mendersoftware/mender.git",
+        "git.Run: /usr/bin/git fetch mendersoftware",
+        "git.Run: /usr/bin/git checkout mendersoftware/3.0.x",
+        "git.Run: /usr/bin/git checkout -b cherry-3.0.x-logbuffering",
+        "info:Cherry-picking f48250b19fae7ba72de2439c20a0fc678afa9a87 "
+        "^4c6d93ba936031ee00d9c115ef2dc61597bc1296",
+        "git.Run: /usr/bin/git cherry-pick -x "
+        "f48250b19fae7ba72de2439c20a0fc678afa9a87 "
+        "^4c6d93ba936031ee00d9c115ef2dc61597bc1296",
+        "git.Run: /usr/bin/git push mendersoftware "
+        "cherry-3.0.x-logbuffering:cherry-3.0.x-logbuffering",
+        "github.CreatePullRequest: "
+        'org=mendersoftware,repo=mender,pr={"title":"[Cherry 3.0.x]: MEN-5098: '
+        "Capture and pretty print output from scripts "
+        'executed","head":"cherry-3.0.x-logbuffering","base":"3.0.x","body":"Cherry '
+        'pick of PR: 748602811\\nFor you  :)","maintainer_can_modify":true}',
+        "git.Run: /usr/bin/git init .",
+        "git.Run: /usr/bin/git remote add mendersoftware "
+        "git@github.com:/mendersoftware/mender.git",
+        "git.Run: /usr/bin/git fetch mendersoftware",
+        "git.Run: /usr/bin/git checkout mendersoftware/2.6.x",
+        "git.Run: /usr/bin/git checkout -b cherry-2.6.x-logbuffering",
+        "info:Cherry-picking f48250b19fae7ba72de2439c20a0fc678afa9a87 "
+        "^4c6d93ba936031ee00d9c115ef2dc61597bc1296",
+        "git.Run: /usr/bin/git cherry-pick -x "
+        "f48250b19fae7ba72de2439c20a0fc678afa9a87 "
+        "^4c6d93ba936031ee00d9c115ef2dc61597bc1296",
+        "git.Run: /usr/bin/git push mendersoftware "
+        "cherry-2.6.x-logbuffering:cherry-2.6.x-logbuffering",
+        "github.CreatePullRequest: "
+        'org=mendersoftware,repo=mender,pr={"title":"[Cherry 2.6.x]: MEN-5098: '
+        "Capture and pretty print output from scripts "
+        'executed","head":"cherry-2.6.x-logbuffering","base":"2.6.x","body":"Cherry '
+        'pick of PR: 748602811\\nFor you  :)","maintainer_can_modify":true}',
+        "github.CreateComment: "
+        'org=mendersoftware,repo=mender,number=864,comment={"body":"Hi '
+        ":smileycat:\\nI did my very best, and this is the result of the cherry pick "
+        "operation:\\n\\t* 3.1.x :white_check_mark: #0\\n\\t* 3.0.x "
+        ':white_check_mark: #0\\n\\t* 2.6.x :white_check_mark: #0\\n"}',
+    ]
