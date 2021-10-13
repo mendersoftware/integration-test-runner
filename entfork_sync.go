@@ -34,6 +34,7 @@ func syncIfOSHasEnterpriseRepo(log *logrus.Entry, conf *config, gpr *github.Pull
 	case "inventory":
 	case "useradm":
 	case "workflows":
+	case "deviceauth":
 	default:
 		log.Debugf("syncIfOSHasEnterpriseRepo: Repository without Enterprise fork detected: (%s). Not syncing", repo.GetName())
 		return nil

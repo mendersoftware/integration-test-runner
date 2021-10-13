@@ -54,6 +54,7 @@ var defaultWatchRepositoriesPipeline = []string{
 	"deployments-enterprise",
 	"deviceadm",
 	"deviceauth",
+	"deviceauth-enterprise",
 	"deviceconfig",
 	"deviceconnect",
 	"devicemonitor",
