@@ -638,7 +638,7 @@ def test_cherrypick(integration_test_runner_url):
         'org=mendersoftware,repo=mender,pr={"title":"[Cherry 3.1.x]: MEN-5098: '
         "Capture and pretty print output from scripts "
         'executed","head":"cherry-3.1.x-logbuffering","base":"3.1.x","body":"Cherry '
-        'pick of PR: 748602811\\nFor you  :)","maintainer_can_modify":true}',
+        'pick of PR: #864\\nFor you  :)","maintainer_can_modify":true}',
         "git.Run: /usr/bin/git init .",
         "git.Run: /usr/bin/git remote add mendersoftware "
         "git@github.com:/mendersoftware/mender.git",
@@ -656,7 +656,7 @@ def test_cherrypick(integration_test_runner_url):
         'org=mendersoftware,repo=mender,pr={"title":"[Cherry 3.0.x]: MEN-5098: '
         "Capture and pretty print output from scripts "
         'executed","head":"cherry-3.0.x-logbuffering","base":"3.0.x","body":"Cherry '
-        'pick of PR: 748602811\\nFor you  :)","maintainer_can_modify":true}',
+        'pick of PR: #864\\nFor you  :)","maintainer_can_modify":true}',
         "git.Run: /usr/bin/git init .",
         "git.Run: /usr/bin/git remote add mendersoftware "
         "git@github.com:/mendersoftware/mender.git",
@@ -674,10 +674,10 @@ def test_cherrypick(integration_test_runner_url):
         'org=mendersoftware,repo=mender,pr={"title":"[Cherry 2.6.x]: MEN-5098: '
         "Capture and pretty print output from scripts "
         'executed","head":"cherry-2.6.x-logbuffering","base":"2.6.x","body":"Cherry '
-        'pick of PR: 748602811\\nFor you  :)","maintainer_can_modify":true}',
+        'pick of PR: #864\\nFor you  :)","maintainer_can_modify":true}',
         "github.CreateComment: "
         'org=mendersoftware,repo=mender,number=864,comment={"body":"Hi '
-        ":smileycat:\\nI did my very best, and this is the result of the cherry pick "
-        "operation:\\n\\t* 3.1.x :white_check_mark: #0\\n\\t* 3.0.x "
-        ':white_check_mark: #0\\n\\t* 2.6.x :white_check_mark: #0\\n"}',
+        ":smiley_cat:\\nI did my very best, and this is the result of the cherry pick "
+        "operation:\\n* 3.1.x :white_check_mark: #0\\n* 3.0.x "
+        ':white_check_mark: #0\\n* 2.6.x :white_check_mark: #0\\n"}',
     ]

@@ -183,8 +183,8 @@ func cherryPickToBranch(log *logrus.Entry, comment *github.IssueCommentEvent, pr
 		Head: github.String(prBranchName),
 		Base: github.String(targetBranch),
 		Body: github.String(
-			fmt.Sprintf("Cherry pick of PR: %d\nFor you %s :)",
-				pr.GetID(), comment.Sender.GetName())),
+			fmt.Sprintf("Cherry pick of PR: #%d\nFor you %s :)",
+				pr.GetNumber(), comment.Sender.GetName())),
 		MaintainerCanModify: github.Bool(true),
 	}
 	newPRRes, err := client.CreatePullRequest(
@@ -228,19 +228,19 @@ func cherryPickPR(
 		}
 	}
 	// Comment with cherry links on the PR
-	commentText := `Hi :smileycat:
+	commentText := `Hi :smiley_cat:
 I did my very best, and this is the result of the cherry pick operation:
 `
 	for _, targetBranch := range targetBranches {
 		if !conflicts[targetBranch] && errors[targetBranch] != "" {
 			commentText = commentText +
-				fmt.Sprintf("\t* %s :red_check_mark: Error: %s\n", targetBranch, errors[targetBranch])
+				fmt.Sprintf("* %s :red_check_mark: Error: %s\n", targetBranch, errors[targetBranch])
 		} else if success[targetBranch] != "" {
 			commentText = commentText +
-				fmt.Sprintf("\t* %s :white_check_mark: %s\n", targetBranch, success[targetBranch])
+				fmt.Sprintf("* %s :white_check_mark: %s\n", targetBranch, success[targetBranch])
 		} else {
 			commentText = commentText +
-				fmt.Sprintf("\t* %s Had merge conflicts, you will have to fix this yourself :crying_cat_face:\n", targetBranch)
+				fmt.Sprintf("* %s Had merge conflicts, you will have to fix this yourself :crying_cat_face:\n", targetBranch)
 		}
 	}
 
