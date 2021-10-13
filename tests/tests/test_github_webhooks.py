@@ -627,8 +627,6 @@ def test_cherrypick(integration_test_runner_url):
         "git.Run: /usr/bin/git fetch mendersoftware",
         "git.Run: /usr/bin/git checkout mendersoftware/3.1.x",
         "git.Run: /usr/bin/git checkout -b cherry-3.1.x-logbuffering",
-        "info:Cherry-picking f48250b19fae7ba72de2439c20a0fc678afa9a87 "
-        "^4c6d93ba936031ee00d9c115ef2dc61597bc1296",
         "git.Run: /usr/bin/git cherry-pick -x "
         "f48250b19fae7ba72de2439c20a0fc678afa9a87 "
         "^4c6d93ba936031ee00d9c115ef2dc61597bc1296",
@@ -645,8 +643,6 @@ def test_cherrypick(integration_test_runner_url):
         "git.Run: /usr/bin/git fetch mendersoftware",
         "git.Run: /usr/bin/git checkout mendersoftware/3.0.x",
         "git.Run: /usr/bin/git checkout -b cherry-3.0.x-logbuffering",
-        "info:Cherry-picking f48250b19fae7ba72de2439c20a0fc678afa9a87 "
-        "^4c6d93ba936031ee00d9c115ef2dc61597bc1296",
         "git.Run: /usr/bin/git cherry-pick -x "
         "f48250b19fae7ba72de2439c20a0fc678afa9a87 "
         "^4c6d93ba936031ee00d9c115ef2dc61597bc1296",
@@ -663,8 +659,6 @@ def test_cherrypick(integration_test_runner_url):
         "git.Run: /usr/bin/git fetch mendersoftware",
         "git.Run: /usr/bin/git checkout mendersoftware/2.6.x",
         "git.Run: /usr/bin/git checkout -b cherry-2.6.x-logbuffering",
-        "info:Cherry-picking f48250b19fae7ba72de2439c20a0fc678afa9a87 "
-        "^4c6d93ba936031ee00d9c115ef2dc61597bc1296",
         "git.Run: /usr/bin/git cherry-pick -x "
         "f48250b19fae7ba72de2439c20a0fc678afa9a87 "
         "^4c6d93ba936031ee00d9c115ef2dc61597bc1296",

@@ -138,10 +138,38 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			},
 			comment: &github.IssueComment{
 				Body: github.String(`
+				Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+				1.2.x (release 3.1.x)
+				1.2.x (release 3.0.x)
+				1.0.x (release 2.6.x)
+				`),
+			},
+		},
+		"cherry picks, changelogs, bottable tag added": {
+			pr: &github.PullRequestEvent{
+				Action: github.String("closed"),
+				Number: github.Int(29),
+				PullRequest: &github.PullRequest{
+					Base: &github.PullRequestBranch{
+						Ref: github.String("master"),
+						SHA: github.String("4c6d93ba936031ee00d9c115ef2dc61597bc1296"),
+					},
+					Head: &github.PullRequestBranch{
+						Ref: github.String("logbuffering"),
+						SHA: github.String("e81727b33d264175f2cd804af767c67281b6fc98"),
+					},
+					Merged: github.Bool(true),
+				},
+				Repo: &github.Repository{
+					Name: github.String("mender"),
+				},
+			},
+			comment: &github.IssueComment{
+				Body: github.String(`
 Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
-1.2.x (release 3.1.x)
-1.2.x (release 3.0.x)
-1.0.x (release 2.6.x)
+3.1.x (release 3.1.x) - :robot: :cherries:
+3.0.x (release 3.0.x) - :robot: :cherries:
+2.5.x (release 2.6.x)
 `),
 			},
 		},

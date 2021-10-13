@@ -100,7 +100,11 @@ func suggestCherryPicks(log *logrus.Entry, pr *github.PullRequestEvent, githubCl
 		if err != nil {
 			return err
 		} else if releaseBranch != "" {
-			releaseBranches = append(releaseBranches, releaseBranch+" (release "+version+")")
+			if isCherryPickBottable(pr.GetRepo().GetName(), conf, pr.GetPullRequest(), releaseBranch) {
+				releaseBranches = append(releaseBranches, releaseBranch+" (release "+version+")"+" - :robot: :cherries:")
+			} else {
+				releaseBranches = append(releaseBranches, releaseBranch+" (release "+version+")")
+			}
 		}
 	}
 
@@ -140,33 +144,48 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 	return nil
 }
 
-func cherryPickToBranch(log *logrus.Entry, comment *github.IssueCommentEvent, pr *github.PullRequest, conf *config, targetBranch string,
-	client clientgithub.Client,
-) (*github.PullRequest, error) {
+func isCherryPickBottable(repoName string, conf *config, pr *github.PullRequest, targetBranch string) bool {
+	_, state, err := tryCherryPickToBranch(repoName, conf, pr, targetBranch)
+	state.Cleanup()
+	if err != nil {
+		logrus.Errorf("isCherryPickBottable received error: %s", err.Error())
+	}
+	return err == nil
+}
 
+func tryCherryPickToBranch(repoName string, conf *config, pr *github.PullRequest, targetBranch string) (string, *git.State, error) {
 	prBranchName := fmt.Sprintf("cherry-%s-%s",
 		targetBranch, pr.GetHead().GetRef())
 	state, err := git.Commands(
 		git.Command("init", "."),
 		git.Command("remote", "add", "mendersoftware",
-			getRemoteURLGitHub(conf.githubProtocol, "mendersoftware", comment.GetRepo().GetName())),
+			getRemoteURLGitHub(conf.githubProtocol, "mendersoftware", repoName)),
 		git.Command("fetch", "mendersoftware"),
 		git.Command("checkout", "mendersoftware/"+targetBranch),
 		git.Command("checkout", "-b", prBranchName),
 	)
-	defer state.Cleanup()
 	if err != nil {
-		return nil, err
+		return "", state, err
 	}
-
-	log.Infof("Cherry-picking %s ^%s", pr.GetHead().GetSHA(), pr.GetBase().GetSHA())
 
 	if err = git.Command("cherry-pick", "-x",
 		pr.GetHead().GetSHA(), "^"+pr.GetBase().GetSHA()).
 		With(state).Run(); err != nil {
 		if strings.Contains(err.Error(), "conflict") {
-			return nil, errorCherryPickConflict
+			return "", state, errorCherryPickConflict
 		}
+		return "", state, err
+	}
+	return prBranchName, state, nil
+}
+
+func cherryPickToBranch(log *logrus.Entry, comment *github.IssueCommentEvent, pr *github.PullRequest, conf *config, targetBranch string,
+	client clientgithub.Client,
+) (*github.PullRequest, error) {
+
+	prBranchName, state, err := tryCherryPickToBranch(comment.GetRepo().GetName(), conf, pr, targetBranch)
+	defer state.Cleanup()
+	if err != nil {
 		return nil, err
 	}
 

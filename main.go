@@ -14,10 +14,11 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v28/github"
+	"golang.org/x/sys/unix"
+
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 	"github.com/mendersoftware/integration-test-runner/git"
 	"github.com/mendersoftware/integration-test-runner/logger"
-	"golang.org/x/sys/unix"
 
 	"github.com/sirupsen/logrus"
 )
