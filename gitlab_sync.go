@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mendersoftware/integration-test-runner/git"
 	"github.com/sirupsen/logrus"
+
+	"github.com/mendersoftware/integration-test-runner/git"
 )
 
 func syncRemoteRef(log *logrus.Entry, org, repo, ref string, conf *config) error {

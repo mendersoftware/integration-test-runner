@@ -111,7 +111,8 @@ const (
 )
 
 const (
-	commandStartPipeline = "start pipeline"
+	commandStartPipeline    = "start pipeline"
+	commandCherryPickBranch = "cherry-pick to:"
 )
 
 func getConfig() (*config, error) {
