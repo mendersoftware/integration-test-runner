@@ -269,9 +269,9 @@ cherry-pick to:
 * 2.4.x
 `,
 			expected: []string{`I did my very best, and this is the result of the cherry pick operation:`,
-				`* 2.6.x :white_check_mark: #42`,
-				`* 2.5.x :white_check_mark: #42`,
-				`* 2.4.x :white_check_mark: #42`,
+				`* 2.6.x :heavy_check_mark: #42`,
+				`* 2.5.x :heavy_check_mark: #42`,
+				`* 2.4.x :heavy_check_mark: #42`,
 			},
 		},
 	}
