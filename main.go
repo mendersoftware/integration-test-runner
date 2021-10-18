@@ -50,6 +50,7 @@ type buildOptions struct {
 // Keep in sync with release_tool.py --list git --all
 var defaultWatchRepositoriesPipeline = []string{
 	"auditlogs",
+	"azure-iot-manager",
 	"create-artifact-worker",
 	"deployments",
 	"deployments-enterprise",
