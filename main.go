@@ -47,7 +47,7 @@ type buildOptions struct {
 
 // List of repos for which the integration pipeline shall be run
 // It can be overridden with env. variable WATCH_REPOS_PIPELINE
-// Keep in sync with release_tool.py --list git --all
+// Keep in sync with the release_tool.py --list git --all
 var defaultWatchRepositoriesPipeline = []string{
 	"auditlogs",
 	"azure-iot-manager",
