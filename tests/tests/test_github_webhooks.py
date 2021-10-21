@@ -126,6 +126,7 @@ def test_pull_request_closed(integration_test_runner_url):
         "info:workflows/master is being used in the following integration: [master]",
         "info:the following integration branches: [master] are using workflows/master",
         "info:auditlogs version master is being used in master",
+        "info:azure-iot-manager version master is being used in master",
         "info:create-artifact-worker version master is being used in master",
         "info:deployments version master is being used in master",
         "info:deployments-enterprise version master is being used in master",
@@ -303,6 +304,7 @@ def test_issue_comment(integration_test_runner_url):
         "}\n"
         "\n",
         "info:auditlogs version master is being used in master",
+        "info:azure-iot-manager version master is being used in master",
         "info:create-artifact-worker version master is being used in master",
         "info:deployments version master is being used in master",
         "info:deployments-enterprise version master is being used in master",
@@ -331,7 +333,8 @@ def test_issue_comment(integration_test_runner_url):
         "gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1",
         "gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1",
         "info:Creating pipeline in project Northern.tech/Mender/mender-qa:master with "
-        "variables: AUDITLOGS_REV:master, BUILD_BEAGLEBONEBLACK:, BUILD_CLIENT:false, "
+        "variables: AUDITLOGS_REV:master, AZURE_IOT_MANAGER_REV:master, "
+        "BUILD_BEAGLEBONEBLACK:, BUILD_CLIENT:false, "
         "BUILD_QEMUX86_64_BIOS_GRUB:, BUILD_QEMUX86_64_BIOS_GRUB_GPT:, "
         "BUILD_QEMUX86_64_UEFI_GRUB:, BUILD_VEXPRESS_QEMU:, "
         "BUILD_VEXPRESS_QEMU_FLASH:, BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:, "
@@ -351,6 +354,7 @@ def test_issue_comment(integration_test_runner_url):
         + "path=Northern.tech/Mender/mender-qa,"
         + 'options={"ref":"master","variables":'
         + '[{"key":"AUDITLOGS_REV","value":"master"},'
+        + '{"key":"AZURE_IOT_MANAGER_REV","value":"master"},'
         + '{"key":"BUILD_BEAGLEBONEBLACK","value":""},'
         + '{"key":"BUILD_CLIENT","value":"false"},'
         + '{"key":"BUILD_QEMUX86_64_BIOS_GRUB","value":""},'
@@ -395,7 +399,9 @@ def test_issue_comment(integration_test_runner_url):
         ":smile_cat: I created a pipeline for you here: "
         "[Pipeline-0]()\\n\\n\\u003cdetails\\u003e\\n    \\u003csummary\\u003eBuild "
         "Configuration Matrix\\u003c/summary\\u003e\\u003cp\\u003e\\n\\n| Key   | "
-        "Value |\\n| ----- | ----- |\\n| AUDITLOGS_REV | master |\\n| BUILD_CLIENT | "
+        "Value |\\n| ----- | ----- |\\n| AUDITLOGS_REV | master |\\n| "
+        "AZURE_IOT_MANAGER_REV | master |\\n| "
+        "BUILD_CLIENT | "
         "false |\\n| CREATE_ARTIFACT_WORKER_REV | master |\\n| "
         "DEPLOYMENTS_ENTERPRISE_REV | master |\\n| DEPLOYMENTS_REV | master |\\n| "
         "DEVICEAUTH_REV | master |\\n| DEVICECONFIG_REV | master |\\n| "
@@ -436,6 +442,7 @@ def test_issue_comment_minor_series(integration_test_runner_url):
         "info:mender:865 will trigger 1 builds",
         'info:1: (main.buildOptions) {\n pr: (string) (len=3) "865",\n repo: (string) (len=6) "mender",\n baseBranch: (string) (len=5) "3.1.x",\n commitSHA: (string) (len=40) "75ad5f739a6e0bd3367e92d846521a85a4e8bb35",\n makeQEMU: (bool) true\n}\n\n',
         "info:auditlogs version 2.0.x is being used in 3.1.x",
+        "info:azure-iot-manager version  is being used in 3.1.x",
         "info:create-artifact-worker version 1.0.x is being used in 3.1.x",
         "info:deployments version 4.0.x is being used in 3.1.x",
         "info:deployments-enterprise version 4.0.x is being used in 3.1.x",
@@ -463,6 +470,7 @@ def test_issue_comment_minor_series(integration_test_runner_url):
         "gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1",
         "info:Creating pipeline in project Northern.tech/Mender/mender-qa:master with variables: "
         "AUDITLOGS_REV:2.0.x, "
+        "AZURE_IOT_MANAGER_REV:, "
         "BUILD_BEAGLEBONEBLACK:true, "
         "BUILD_CLIENT:true, "
         "BUILD_QEMUX86_64_BIOS_GRUB:true, "
@@ -509,6 +517,7 @@ def test_issue_comment_minor_series(integration_test_runner_url):
 + 'path=Northern.tech/Mender/mender-qa,'
 +'options={"ref":"master","variables":'
 +'[{"key":"AUDITLOGS_REV","value":"2.0.x"},'
+        + '{"key":"AZURE_IOT_MANAGER_REV","value":""},'
         + '{"key":"BUILD_BEAGLEBONEBLACK","value":"true"},'
         + '{"key":"BUILD_CLIENT","value":"true"},'
         + '{"key":"BUILD_QEMUX86_64_BIOS_GRUB","value":"true"},'
