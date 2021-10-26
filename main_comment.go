@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
@@ -66,11 +67,25 @@ func processGitHubComment(ctx *gin.Context, comment *github.IssueCommentEvent, g
 		// make sure we only parse one pr at a time, since we use release_tool
 		mutex.Lock()
 
+		prsRepos, err := parsePrOptions(body)
 		// get the list of builds
 		prRequest := &github.PullRequestEvent{
 			Repo:        comment.GetRepo(),
 			Number:      github.Int(pr.GetNumber()),
 			PullRequest: pr,
+		}
+		if err != nil {
+			say(ctx, "There was an error while parsing arguments: {{.ErrorMessage}}",
+				struct {
+					ErrorMessage string
+				}{
+					ErrorMessage: err.Error(),
+				},
+				log,
+				conf,
+				prRequest)
+			mutex.Unlock()
+			return err
 		}
 		builds := parsePullRequest(log, conf, "opened", prRequest)
 		log.Infof("%s:%d will trigger %d builds", comment.GetRepo().GetName(), pr.GetNumber(), len(builds))
@@ -85,7 +100,7 @@ func processGitHubComment(ctx *gin.Context, comment *github.IssueCommentEvent, g
 				log.Info("Skipping build targeting meta-mender:master-next")
 				continue
 			}
-			if err := triggerBuild(log, conf, &build, prRequest); err != nil {
+			if err := triggerBuild(log, conf, &build, prRequest, prsRepos); err != nil {
 				log.Errorf("Could not start build: %s", err.Error())
 			}
 		}
@@ -104,4 +119,33 @@ func processGitHubComment(ctx *gin.Context, comment *github.IssueCommentEvent, g
 	}
 
 	return nil
+}
+
+//parsing `start pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head --pr mender/3.1.x sugar pretty please`
+//	map[string]string{
+//		"mender-connect": "pull/88/head",
+//		"deviceconnect": "pull/12/head",
+//	}
+func parsePrOptions(commentBody string) (map[string]string, error) {
+	prRepos := make(map[string]string)
+	var err error = nil
+
+	words := strings.Fields(commentBody)
+	tokensCount := len(words)
+	for i, w := range words {
+		if w == "--pr" && i < (tokensCount-1) {
+			v := words[i+1]
+			o := strings.Index(v, "/")
+			if o > 0 {
+				skip := 0
+				if v[o:][0] == '/' && len(v[o:]) > 1 {
+					skip = 1
+				}
+				prRepos[v[:o]] = v[o+skip:]
+			} else {
+				err = errors.New("parse error near '" + v + "', I need, e.g.: start pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x ")
+			}
+		}
+	}
+	return prRepos, err
 }

@@ -19,6 +19,32 @@ import (
 
 const LatestStableYoctoBranch = "dunfell"
 
+func say(ctx context.Context, tmplString string, data interface{}, log *logrus.Entry, conf *config, pr *github.PullRequestEvent) error {
+	tmpl, err := template.New("Main").Parse(tmplString)
+	if err != nil {
+		log.Errorf("Failed to parse the build matrix template. Should never happen! Error: %s\n", err.Error())
+	}
+	var buf bytes.Buffer
+	if err = tmpl.Execute(&buf, data); err != nil {
+		log.Errorf("Failed to execute the build matrix template. Error: %s\n", err.Error())
+	}
+
+	// Comment with a pipeline-link on the PR
+	commentBody := buf.String()
+	comment := github.IssueComment{
+		Body: &commentBody,
+	}
+
+	client := clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
+	err = client.CreateComment(ctx,
+		conf.githubOrganization, pr.GetRepo().GetName(), pr.GetNumber(), &comment)
+	if err != nil {
+		log.Infof("Failed to comment on the pr: %v, Error: %s", pr, err.Error())
+	}
+
+	return err
+}
+
 func parsePullRequest(log *logrus.Entry, conf *config, action string, pr *github.PullRequestEvent) []buildOptions {
 	log.Info("Pull request event with action: ", action)
 	var builds []buildOptions
@@ -102,13 +128,13 @@ func getBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEvent) []b
 	return builds
 }
 
-func triggerBuild(log *logrus.Entry, conf *config, build *buildOptions, pr *github.PullRequestEvent) error {
+func triggerBuild(log *logrus.Entry, conf *config, build *buildOptions, pr *github.PullRequestEvent, prRepos map[string]string) error {
 	gitlabClient, err := clientgitlab.NewGitLabClient(conf.gitlabToken, conf.gitlabBaseURL, conf.dryRunMode)
 	if err != nil {
 		return err
 	}
 
-	buildParameters, err := getBuildParameters(log, conf, build)
+	buildParameters, err := getBuildParameters(log, conf, build, prRepos)
 	if err != nil {
 		return err
 	}
@@ -236,7 +262,7 @@ func stopStalePipelines(log *logrus.Entry, client clientgitlab.Client, vars []*g
 	}
 }
 
-func getBuildParameters(log *logrus.Entry, conf *config, build *buildOptions) ([]*gitlab.PipelineVariable, error) {
+func getBuildParameters(log *logrus.Entry, conf *config, build *buildOptions, prsRepos map[string]string) ([]*gitlab.PipelineVariable, error) {
 	var err error
 	readHead := "pull/" + build.pr + "/head"
 	var buildParameters []*gitlab.PipelineVariable
@@ -261,6 +287,10 @@ func getBuildParameters(log *logrus.Entry, conf *config, build *buildOptions) ([
 		if versionedRepo != build.repo &&
 			versionedRepo != "integration" &&
 			build.repo != "meta-mender" {
+			if _, exists := prsRepos[versionedRepo]; exists {
+				buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter(versionedRepo), Value: prsRepos[versionedRepo]})
+				continue
+			}
 			version, err := getServiceRevisionFromIntegration(versionedRepo, "origin/"+build.baseBranch, conf)
 			if err != nil {
 				log.Errorf("failed to determine %s version: %s", versionedRepo, err.Error())
@@ -297,7 +327,11 @@ func getBuildParameters(log *logrus.Entry, conf *config, build *buildOptions) ([
 
 	// set the rest of the CI build parameters
 	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: "RUN_INTEGRATION_TESTS", Value: "true"})
-	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter(build.repo), Value: readHead})
+	buildParameters = append(buildParameters,
+		&gitlab.PipelineVariable{
+			Key:   repoToBuildParameter(build.repo),
+			Value: readHead,
+		})
 
 	var qemuParam string
 	if build.makeQEMU {
@@ -357,7 +391,7 @@ func stopBuildsOfStalePRs(log *logrus.Entry, pr *github.PullRequestEvent, conf *
 			return err
 		}
 
-		buildParams, err := getBuildParameters(log, conf, &build)
+		buildParams, err := getBuildParameters(log, conf, &build, map[string]string{})
 		if err != nil {
 			log.Debug("stopBuildsOfStalePRs: Failed to get the build-parameters for the build")
 			return err
