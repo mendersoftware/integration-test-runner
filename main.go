@@ -34,7 +34,7 @@ type config struct {
 	gitlabToken                      string
 	gitlabBaseURL                    string
 	integrationDirectory             string
-	watchRepositoriesTriggerPipeline []string // List of repositories for which to trigger mender-qa pipeline
+	watchRepositoriesTriggerPipeline []string // List of repositories for which to trigger mender-qa pipeline.
 }
 
 type buildOptions struct {
