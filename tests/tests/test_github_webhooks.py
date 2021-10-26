@@ -131,6 +131,7 @@ def test_pull_request_closed(integration_test_runner_url):
         "info:deployments version master is being used in master",
         "info:deployments-enterprise version master is being used in master",
         "info:deviceauth version master is being used in master",
+        "info:deviceauth-enterprise version master is being used in master",
         "info:deviceconfig version master is being used in master",
         "info:deviceconnect version master is being used in master",
         "info:devicemonitor version master is being used in master",
@@ -309,6 +310,7 @@ def test_issue_comment(integration_test_runner_url):
         "info:deployments version master is being used in master",
         "info:deployments-enterprise version master is being used in master",
         "info:deviceauth version master is being used in master",
+        "info:deviceauth-enterprise version master is being used in master",
         "info:deviceconfig version master is being used in master",
         "info:devicemonitor version master is being used in master",
         "info:gui version master is being used in master",
@@ -339,7 +341,8 @@ def test_issue_comment(integration_test_runner_url):
         "BUILD_QEMUX86_64_UEFI_GRUB:, BUILD_VEXPRESS_QEMU:, "
         "BUILD_VEXPRESS_QEMU_FLASH:, BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:, "
         "CREATE_ARTIFACT_WORKER_REV:master, DEPLOYMENTS_ENTERPRISE_REV:master, "
-        "DEPLOYMENTS_REV:master, DEVICEAUTH_REV:master, DEVICECONFIG_REV:master, "
+        "DEPLOYMENTS_REV:master, DEVICEAUTH_ENTERPRISE_REV:master, DEVICEAUTH_REV:master, "
+        "DEVICECONFIG_REV:master, "
         "DEVICECONNECT_REV:pull/109/head, DEVICEMONITOR_REV:master, GUI_REV:master, "
         "INTEGRATION_REV:master, INVENTORY_ENTERPRISE_REV:master, "
         "INVENTORY_REV:master, MENDER_ARTIFACT_REV:master, MENDER_CLI_REV:master, "
@@ -366,6 +369,7 @@ def test_issue_comment(integration_test_runner_url):
         + '{"key":"CREATE_ARTIFACT_WORKER_REV","value":"master"},'
         + '{"key":"DEPLOYMENTS_ENTERPRISE_REV","value":"master"},'
         + '{"key":"DEPLOYMENTS_REV","value":"master"},'
+        + '{"key":"DEVICEAUTH_ENTERPRISE_REV","value":"master"},'
         + '{"key":"DEVICEAUTH_REV","value":"master"},'
         + '{"key":"DEVICECONFIG_REV","value":"master"},'
         + '{"key":"DEVICECONNECT_REV","value":"pull/109/head"},'
@@ -404,7 +408,8 @@ def test_issue_comment(integration_test_runner_url):
         "BUILD_CLIENT | "
         "false |\\n| CREATE_ARTIFACT_WORKER_REV | master |\\n| "
         "DEPLOYMENTS_ENTERPRISE_REV | master |\\n| DEPLOYMENTS_REV | master |\\n| "
-        "DEVICEAUTH_REV | master |\\n| DEVICECONFIG_REV | master |\\n| "
+        "DEVICEAUTH_ENTERPRISE_REV | master |\\n| DEVICEAUTH_REV | master |\\n| "
+        "DEVICECONFIG_REV | master |\\n| "
         "DEVICECONNECT_REV | pull/109/head |\\n| DEVICEMONITOR_REV | master |\\n| "
         "GUI_REV | master |\\n| INTEGRATION_REV | master |\\n| "
         "INVENTORY_ENTERPRISE_REV | master |\\n| INVENTORY_REV | master |\\n| "
@@ -447,6 +452,7 @@ def test_issue_comment_minor_series(integration_test_runner_url):
         "info:deployments version 4.0.x is being used in 3.1.x",
         "info:deployments-enterprise version 4.0.x is being used in 3.1.x",
         "info:deviceauth version 3.1.x is being used in 3.1.x",
+        "info:deviceauth-enterprise version  is being used in 3.1.x",
         "info:deviceconfig version 1.1.x is being used in 3.1.x",
         "info:deviceconnect version 1.2.x is being used in 3.1.x",
         "info:devicemonitor version 1.0.x is being used in 3.1.x",
@@ -482,6 +488,7 @@ def test_issue_comment_minor_series(integration_test_runner_url):
         "CREATE_ARTIFACT_WORKER_REV:1.0.x, "
         "DEPLOYMENTS_ENTERPRISE_REV:4.0.x, "
         "DEPLOYMENTS_REV:4.0.x, "
+        "DEVICEAUTH_ENTERPRISE_REV:, "
         "DEVICEAUTH_REV:3.1.x, "
         "DEVICECONFIG_REV:1.1.x, "
         "DEVICECONNECT_REV:1.2.x, "
@@ -529,6 +536,7 @@ def test_issue_comment_minor_series(integration_test_runner_url):
         + '{"key":"CREATE_ARTIFACT_WORKER_REV","value":"1.0.x"},'
         + '{"key":"DEPLOYMENTS_ENTERPRISE_REV","value":"4.0.x"},'
         + '{"key":"DEPLOYMENTS_REV","value":"4.0.x"},'
+        + '{"key":"DEVICEAUTH_ENTERPRISE_REV","value":""},'
         + '{"key":"DEVICEAUTH_REV","value":"3.1.x"},'
         + '{"key":"DEVICECONFIG_REV","value":"1.1.x"},'
         + '{"key":"DEVICECONNECT_REV","value":"1.2.x"},'
