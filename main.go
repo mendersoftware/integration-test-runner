@@ -51,6 +51,7 @@ type buildOptions struct {
 var defaultWatchRepositoriesPipeline = []string{
 	"auditlogs",
 	"azure-iot-manager",
+	"mender-auth-azure-iot",
 	"create-artifact-worker",
 	"deployments",
 	"deployments-enterprise",
@@ -99,6 +100,7 @@ var qemuBuildRepositories = []string{
 	"mender-artifact",
 	"mender-connect",
 	"monitor-client",
+	"mender-auth-azure-iot",
 }
 
 const (
