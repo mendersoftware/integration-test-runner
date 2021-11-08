@@ -140,6 +140,7 @@ def test_pull_request_closed(integration_test_runner_url):
         "info:inventory-enterprise version master is being used in master",
         "info:mender version master is being used in master",
         "info:mender-artifact version master is being used in master",
+        "info:mender-auth-azure-iot version master is being used in master",
         "info:mender-cli version master is being used in master",
         "info:mender-connect version master is being used in master",
         "info:monitor-client version master is being used in master",
@@ -318,6 +319,7 @@ def test_issue_comment(integration_test_runner_url):
         "info:inventory-enterprise version master is being used in master",
         "info:mender version master is being used in master",
         "info:mender-artifact version master is being used in master",
+        "info:mender-auth-azure-iot version master is being used in master",
         "info:mender-cli version master is being used in master",
         "info:mender-connect version master is being used in master",
         "info:monitor-client version master is being used in master",
@@ -345,7 +347,7 @@ def test_issue_comment(integration_test_runner_url):
         "DEVICECONFIG_REV:master, "
         "DEVICECONNECT_REV:pull/109/head, DEVICEMONITOR_REV:master, GUI_REV:master, "
         "INTEGRATION_REV:master, INVENTORY_ENTERPRISE_REV:master, "
-        "INVENTORY_REV:master, MENDER_ARTIFACT_REV:master, MENDER_CLI_REV:master, "
+        "INVENTORY_REV:master, MENDER_ARTIFACT_REV:master, MENDER_AUTH_AZURE_IOT_REV:master, MENDER_CLI_REV:master, "
         "MENDER_CONNECT_REV:master, MENDER_REV:master, MONITOR_CLIENT_REV:master, "
         "MTLS_AMBASSADOR_REV:master, REPORTING_REV:master, "
         "RUN_INTEGRATION_TESTS:true, TENANTADM_REV:master, "
@@ -379,6 +381,7 @@ def test_issue_comment(integration_test_runner_url):
         + '{"key":"INVENTORY_ENTERPRISE_REV","value":"master"},'
         + '{"key":"INVENTORY_REV","value":"master"},'
         + '{"key":"MENDER_ARTIFACT_REV","value":"master"},'
+        + '{"key":"MENDER_AUTH_AZURE_IOT_REV","value":"master"},'
         + '{"key":"MENDER_CLI_REV","value":"master"},'
         + '{"key":"MENDER_CONNECT_REV","value":"master"},'
         + '{"key":"MENDER_REV","value":"master"},'
@@ -413,7 +416,7 @@ def test_issue_comment(integration_test_runner_url):
         "DEVICECONNECT_REV | pull/109/head |\\n| DEVICEMONITOR_REV | master |\\n| "
         "GUI_REV | master |\\n| INTEGRATION_REV | master |\\n| "
         "INVENTORY_ENTERPRISE_REV | master |\\n| INVENTORY_REV | master |\\n| "
-        "MENDER_ARTIFACT_REV | master |\\n| MENDER_CLI_REV | master |\\n| "
+        "MENDER_ARTIFACT_REV | master |\\n| MENDER_AUTH_AZURE_IOT_REV | master |\\n| MENDER_CLI_REV | master |\\n| "
         "MENDER_CONNECT_REV | master |\\n| MENDER_REV | master |\\n| "
         "MONITOR_CLIENT_REV | master |\\n| MTLS_AMBASSADOR_REV | master |\\n| "
         "REPORTING_REV | master |\\n| RUN_INTEGRATION_TESTS | true |\\n| "
@@ -467,6 +470,7 @@ def test_issue_comment___pr(integration_test_runner_url):
         "info:inventory version master is being used in master",
         "info:inventory-enterprise version master is being used in master",
         "info:mender-artifact version master is being used in master",
+        "info:mender-auth-azure-iot version master is being used in master",
         "info:mender-cli version master is being used in master",
         "info:monitor-client version master is being used in master",
         "info:mtls-ambassador version master is being used in master",
@@ -493,7 +497,7 @@ def test_issue_comment___pr(integration_test_runner_url):
         "DEVICECONFIG_REV:master, "
         "DEVICECONNECT_REV:pull/109/head, DEVICEMONITOR_REV:pull/12/head, GUI_REV:master, "
         "INTEGRATION_REV:master, INVENTORY_ENTERPRISE_REV:master, "
-        "INVENTORY_REV:master, MENDER_ARTIFACT_REV:master, MENDER_CLI_REV:master, "
+        "INVENTORY_REV:master, MENDER_ARTIFACT_REV:master, MENDER_AUTH_AZURE_IOT_REV:master, MENDER_CLI_REV:master, "
         "MENDER_CONNECT_REV:pull/4/head, MENDER_REV:3.1.x, MONITOR_CLIENT_REV:master, "
         "MTLS_AMBASSADOR_REV:master, REPORTING_REV:master, "
         "RUN_INTEGRATION_TESTS:true, TENANTADM_REV:master, "
@@ -527,6 +531,7 @@ def test_issue_comment___pr(integration_test_runner_url):
         + '{"key":"INVENTORY_ENTERPRISE_REV","value":"master"},'
         + '{"key":"INVENTORY_REV","value":"master"},'
         + '{"key":"MENDER_ARTIFACT_REV","value":"master"},'
+        + '{"key":"MENDER_AUTH_AZURE_IOT_REV","value":"master"},'
         + '{"key":"MENDER_CLI_REV","value":"master"},'
         + '{"key":"MENDER_CONNECT_REV","value":"pull/4/head"},'
         + '{"key":"MENDER_REV","value":"3.1.x"},'
@@ -561,7 +566,7 @@ def test_issue_comment___pr(integration_test_runner_url):
         "DEVICECONNECT_REV | pull/109/head |\\n| DEVICEMONITOR_REV | pull/12/head |\\n| "
         "GUI_REV | master |\\n| INTEGRATION_REV | master |\\n| "
         "INVENTORY_ENTERPRISE_REV | master |\\n| INVENTORY_REV | master |\\n| "
-        "MENDER_ARTIFACT_REV | master |\\n| MENDER_CLI_REV | master |\\n| "
+        "MENDER_ARTIFACT_REV | master |\\n| MENDER_AUTH_AZURE_IOT_REV | master |\\n| MENDER_CLI_REV | master |\\n| "
         "MENDER_CONNECT_REV | pull/4/head |\\n| MENDER_REV | 3.1.x |\\n| "
         "MONITOR_CLIENT_REV | master |\\n| MTLS_AMBASSADOR_REV | master |\\n| "
         "REPORTING_REV | master |\\n| RUN_INTEGRATION_TESTS | true |\\n| "
@@ -608,6 +613,7 @@ def test_issue_comment_minor_series(integration_test_runner_url):
         "info:inventory version 4.0.x is being used in 3.1.x",
         "info:inventory-enterprise version 4.0.x is being used in 3.1.x",
         "info:mender-artifact version 3.6.x is being used in 3.1.x",
+        "info:mender-auth-azure-iot version 3.1.x is being used in 3.1.x",
         "info:mender-cli version 1.7.x is being used in 3.1.x",
         "info:mender-connect version 1.2.x is being used in 3.1.x",
         "info:monitor-client version 1.0.x is being used in 3.1.x",
@@ -646,6 +652,7 @@ def test_issue_comment_minor_series(integration_test_runner_url):
         "INVENTORY_ENTERPRISE_REV:4.0.x, "
         "INVENTORY_REV:4.0.x, "
         "MENDER_ARTIFACT_REV:3.6.x, "
+        "MENDER_AUTH_AZURE_IOT_REV:3.1.x, "
         "MENDER_CLI_REV:1.7.x, "
         "MENDER_CONNECT_REV:1.2.x, "
         "MENDER_REV:pull/865/head, "
@@ -694,6 +701,7 @@ def test_issue_comment_minor_series(integration_test_runner_url):
         + '{"key":"INVENTORY_ENTERPRISE_REV","value":"4.0.x"},'
         + '{"key":"INVENTORY_REV","value":"4.0.x"},'
         + '{"key":"MENDER_ARTIFACT_REV","value":"3.6.x"},'
+        + '{"key":"MENDER_AUTH_AZURE_IOT_REV","value":"3.1.x"},'
         + '{"key":"MENDER_CLI_REV","value":"1.7.x"},'
         + '{"key":"MENDER_CONNECT_REV","value":"1.2.x"},'
         + '{"key":"MENDER_REV","value":"pull/865/head"},'
@@ -743,6 +751,7 @@ def test_issue_comment_minor_series(integration_test_runner_url):
         'INVENTORY_ENTERPRISE_REV | 4.0.x |\\n| '
         'INVENTORY_REV | 4.0.x |\\n| '
         'MENDER_ARTIFACT_REV | 3.6.x |\\n| '
+        'MENDER_AUTH_AZURE_IOT_REV | 3.1.x |\\n| '
         'MENDER_CLI_REV | 1.7.x |\\n| '
         'MENDER_CONNECT_REV | 1.2.x |\\n| '
         'MENDER_REV | pull/865/head |\\n| '
