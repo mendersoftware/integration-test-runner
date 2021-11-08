@@ -21,8 +21,8 @@ import (
 var errorCherryPickConflict = errors.New("Cherry pick had conflicts")
 
 func getLatestIntegrationRelease(number int, conf *config) ([]string, error) {
-	cmd := fmt.Sprintf("git for-each-ref --sort=-creatordate --format='%%(refname:short)' 'refs/tags' "+
-		"| sed -E '/(^[0-9]+\\.[0-9]+)\\.[0-9]+$/!d;s//\\1.x/' | uniq | head -n %d | sort -V -r", number)
+	cmd := fmt.Sprintf("git for-each-ref --format='%%(refname:short)' 'refs/tags' "+
+		"| sed -E '/(^[0-9]+\\.[0-9]+)\\.[0-9]+$/!d;s//\\1.x/' | uniq | sort -V -r -k1,1 -k2,2 | head -n %d ", number)
 	c := exec.Command("sh", "-c", cmd)
 	c.Dir = conf.integrationDirectory + "/extra/"
 	version, err := c.Output()
