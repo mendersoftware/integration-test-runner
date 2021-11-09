@@ -22,7 +22,7 @@ var errorCherryPickConflict = errors.New("Cherry pick had conflicts")
 
 func getLatestIntegrationRelease(number int, conf *config) ([]string, error) {
 	cmd := fmt.Sprintf("git for-each-ref --sort=-creatordate --format='%%(refname:short)' 'refs/tags' "+
-		"| sed -E '/(^[0-9]+\\.[0-9]+)\\.[0-9]+$/!d;s//\\1.x/' | uniq | head -n %d | sort -V -r", number)
+		"| sed -E '/(^[0-9]+\\.[0-9]+)\\.[0-9]+$/!d;s//\\1.x/' | grep -vF 2.7.x | uniq | head -n %d | sort -V -r", number)
 	c := exec.Command("sh", "-c", cmd)
 	c.Dir = conf.integrationDirectory + "/extra/"
 	version, err := c.Output()
