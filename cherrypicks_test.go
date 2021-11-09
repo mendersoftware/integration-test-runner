@@ -181,7 +181,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 	}
 	defer os.RemoveAll(tmpdir)
 
-	gitSetup := exec.Command("git", "clone", "https://github.com/mendersoftware/integration.git", tmpdir)
+	gitSetup := exec.Command("git", "clone", "https://github.com/mender-test-bot/integration.git", tmpdir)
 	gitSetup.Dir = tmpdir
 	_, err = gitSetup.CombinedOutput()
 	if err != nil {
