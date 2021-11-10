@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 	"time"
 
@@ -26,15 +25,14 @@ import (
 var mutex = &sync.Mutex{}
 
 type config struct {
-	dryRunMode                       bool
-	githubSecret                     []byte
-	githubProtocol                   gitProtocol
-	githubOrganization               string
-	githubToken                      string
-	gitlabToken                      string
-	gitlabBaseURL                    string
-	integrationDirectory             string
-	watchRepositoriesTriggerPipeline []string // List of repositories for which to trigger mender-qa pipeline
+	dryRunMode           bool
+	githubSecret         []byte
+	githubProtocol       gitProtocol
+	githubOrganization   string
+	githubToken          string
+	gitlabToken          string
+	gitlabBaseURL        string
+	integrationDirectory string
 }
 
 type buildOptions struct {
@@ -45,41 +43,9 @@ type buildOptions struct {
 	makeQEMU   bool
 }
 
-// List of repos for which the integration pipeline shall be run
-// It can be overridden with env. variable WATCH_REPOS_PIPELINE
-// Keep in sync with release_tool.py --list git --all
-var defaultWatchRepositoriesPipeline = []string{
-	"auditlogs",
-	"azure-iot-manager",
-	"mender-auth-azure-iot",
-	"create-artifact-worker",
-	"deployments",
-	"deployments-enterprise",
-	"deviceadm",
-	"deviceauth",
-	"deviceauth-enterprise",
-	"deviceconfig",
-	"deviceconnect",
-	"devicemonitor",
-	//"gui",
-	"integration",
-	"inventory",
-	"inventory-enterprise",
-	"mender",
-	"mender-api-gateway-docker",
-	"mender-artifact",
-	"mender-cli",
-	"mender-conductor",
-	"mender-conductor-enterprise",
-	"mender-connect",
-	"monitor-client",
-	"mtls-ambassador",
-	"tenantadm",
-	"useradm",
-	"useradm-enterprise",
-	"workflows",
-	"workflows-enterprise",
-	// repos outside of release_tool.py
+// List of repos besides the ones in release_tool.py for
+// which the integration pipeline shall be run
+var extraWatchRepositoriesPipeline = []string{
 	"meta-mender",
 }
 
@@ -121,7 +87,6 @@ const (
 )
 
 func getConfig() (*config, error) {
-	var repositoryWatchListPipeline []string
 	dryRunMode := os.Getenv("DRY_RUN") != ""
 	githubSecret := os.Getenv("GITHUB_SECRET")
 	githubToken := os.Getenv("GITHUB_TOKEN")
@@ -142,13 +107,6 @@ func getConfig() (*config, error) {
 		}
 	}
 
-	watchRepositoriesTriggerPipeline, ok := os.LookupEnv("WATCH_REPOS_PIPELINE")
-	if ok {
-		repositoryWatchListPipeline = strings.Split(watchRepositoriesTriggerPipeline, ",")
-	} else {
-		repositoryWatchListPipeline = defaultWatchRepositoriesPipeline
-	}
-
 	switch {
 	case githubSecret == "" && !dryRunMode:
 		return &config{}, fmt.Errorf("set GITHUB_SECRET")
@@ -163,14 +121,13 @@ func getConfig() (*config, error) {
 	}
 
 	return &config{
-		dryRunMode:                       dryRunMode,
-		githubSecret:                     []byte(githubSecret),
-		githubProtocol:                   gitProtocolSSH,
-		githubToken:                      githubToken,
-		gitlabToken:                      gitlabToken,
-		gitlabBaseURL:                    gitlabBaseURL,
-		integrationDirectory:             integrationDirectory,
-		watchRepositoriesTriggerPipeline: repositoryWatchListPipeline,
+		dryRunMode:           dryRunMode,
+		githubSecret:         []byte(githubSecret),
+		githubProtocol:       gitProtocolSSH,
+		githubToken:          githubToken,
+		gitlabToken:          gitlabToken,
+		gitlabBaseURL:        gitlabBaseURL,
+		integrationDirectory: integrationDirectory,
 	}, nil
 }
 

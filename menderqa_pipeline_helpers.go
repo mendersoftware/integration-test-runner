@@ -100,3 +100,24 @@ func getListOfVersionedRepositories(inVersion string, conf *config) ([]string, e
 
 	return strings.Split(strings.TrimSpace(string(output)), "\n"), nil
 }
+
+func getListOfAllRepositories(conf *config) ([]string, error) {
+	c := exec.Command("python3", "release_tool.py", "--list", "--all")
+	c.Dir = conf.integrationDirectory + "/extra/"
+	output, err := c.Output()
+	if err != nil {
+		return nil, fmt.Errorf("getListOfAllRepositories: Error: %v (%s)", err, output)
+	}
+
+	return strings.Split(strings.TrimSpace(string(output)), "\n"), nil
+}
+
+func getListOfWatchedRepositories(conf *config) ([]string, error) {
+
+	listOfAllRepositories, err := getListOfAllRepositories(conf)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(listOfAllRepositories, extraWatchRepositoriesPipeline...), nil
+}
