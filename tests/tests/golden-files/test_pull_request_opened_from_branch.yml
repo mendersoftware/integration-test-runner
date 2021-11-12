@@ -1,0 +1,10 @@
+input: pull_request_opened_from_branch.json
+output:
+- debug:Processing pull request action opened
+- debug:PR head is NOT a fork, skipping GitLab branch sync
+- 'github.IsOrganizationMember: org=mendersoftware,user=lluiscampos'
+- "debug:stopBuildsOfStalePRs: PR not closed, therefore not stopping it's pipeline"
+- 'debug:syncIfOSHasEnterpriseRepo: Repository without Enterprise fork detected: (mender-docs).
+  Not syncing'
+- 'info:Pull request event with action: opened'
+- info:mender-docs:1483 would trigger 0 builds

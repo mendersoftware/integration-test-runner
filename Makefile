@@ -52,6 +52,10 @@ acceptance-testing-up:
 acceptance-testing-run:
 	docker exec tests_acceptance-testing_1 /testing/run.sh
 
+.PHONY: acceptance-testing-update-golden-files
+acceptance-testing-update-golden-files:
+	docker exec tests-acceptance-testing-1 /testing/run.sh --update-goldens
+
 .PHONY: acceptance-testing-logs
 acceptance-testing-logs:
 	docker-compose $(COMPOSEFILES_ACCEPTANCE_TESTING) ps -a
