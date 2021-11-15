@@ -45,7 +45,17 @@ func getBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEvent) []b
 
 	makeQEMU := false
 
-	for _, watchRepo := range conf.watchRepositoriesTriggerPipeline {
+	// we need to have the latest integration/master branch in order to use the release_tool.py
+	if err := updateIntegrationRepo(conf); err != nil {
+		log.Warnf(err.Error())
+	}
+
+	watchRepositoriesTriggerPipeline, err := getListOfWatchedRepositories(conf)
+	if err != nil {
+		log.Warnf(err.Error())
+	}
+
+	for _, watchRepo := range watchRepositoriesTriggerPipeline {
 		// make sure the repo that the pull request is performed against is
 		// one that we are watching.
 
@@ -56,11 +66,6 @@ func getBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEvent) []b
 				if repo == qemuRepo {
 					makeQEMU = true
 				}
-			}
-
-			// we need to have the latest integration/master branch in order to use the release_tool.py
-			if err := updateIntegrationRepo(conf); err != nil {
-				log.Warnf(err.Error())
 			}
 
 			switch repo {
