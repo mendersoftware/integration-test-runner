@@ -205,6 +205,75 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				},
 			},
 		},
+		"comment from organization user, start the builds 2": {
+			webhookType: "issue_comment",
+			webhookEvent: &github.IssueCommentEvent{
+				Action: github.String("created"),
+				Comment: &github.IssueComment{
+					Body: github.String("@" + githubBotName + " start pipeline --pr mender/pull/16/head --pr deviceconnect/1.0.x"),
+				},
+				Issue: &github.Issue{
+					PullRequestLinks: &github.PullRequestLinks{
+						URL: github.String("https://api.github.com/repos/mendersoftware/integration-test-runner/pulls/78"),
+					},
+				},
+				Repo: &github.Repository{
+					Name: github.String("integration-test-runner"),
+					Owner: &github.User{
+						Login: github.String(gitHubOrg),
+					},
+				},
+				Sender: &github.User{
+					Login: github.String("member"),
+				},
+			},
+
+			isOrganizationMember: github.Bool(true),
+
+			repo:     "integration-test-runner",
+			prNumber: 78,
+
+			pullRequest: &github.PullRequest{
+				Base: &github.PullRequestBranch{
+					Label: github.String("user:branch"),
+				},
+			},
+		},
+		"comment from organization user, parse error in arguments": {
+			webhookType: "issue_comment",
+			webhookEvent: &github.IssueCommentEvent{
+				Action: github.String("created"),
+				Comment: &github.IssueComment{
+					Body: github.String("@" + githubBotName + " start pipeline --pr mender/pull/16/head --pr deviceconnect"),
+				},
+				Issue: &github.Issue{
+					PullRequestLinks: &github.PullRequestLinks{
+						URL: github.String("https://api.github.com/repos/mendersoftware/integration-test-runner/pulls/78"),
+					},
+				},
+				Repo: &github.Repository{
+					Name: github.String("integration-test-runner"),
+					Owner: &github.User{
+						Login: github.String(gitHubOrg),
+					},
+				},
+				Sender: &github.User{
+					Login: github.String("member"),
+				},
+			},
+
+			isOrganizationMember: github.Bool(true),
+
+			repo:     "integration-test-runner",
+			prNumber: 78,
+
+			pullRequest: &github.PullRequest{
+				Base: &github.PullRequestBranch{
+					Label: github.String("user:branch"),
+				},
+			},
+			err: errors.New("parse error near 'deviceconnect', I need, e.g.: start pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
+		},
 	}
 
 	for name, tc := range testCases {
@@ -246,6 +315,79 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				assert.EqualError(t, err, tc.err.Error())
 			} else {
 				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestParsePrOptions(t *testing.T) {
+	testCases := map[string]struct {
+		StartPipelineComment string
+		RepoToPr             map[string]string
+		ParseError           error
+	}{
+		"start pipeline with --pr flags": {
+			StartPipelineComment: "start pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head --pr mender/3.1.x",
+			RepoToPr: map[string]string{
+				"mender-connect": "pull/88/head",
+				"deviceconnect":  "pull/12/head",
+				"mender":         "3.1.x",
+			},
+		},
+		"start pipeline with parse error in --pr flags": {
+			StartPipelineComment: "start pipeline --pr mender-connect/pull/88/head --pr deviceconnect --pr mender/3.1.x",
+			RepoToPr: map[string]string{
+				"mender-connect": "pull/88/head",
+			},
+			ParseError: errors.New("parse error near 'deviceconnect', I need, e.g.: start pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
+		},
+		"start pipeline with --pr flags and some sugar": {
+			StartPipelineComment: "start pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head --pr mender/3.1.x sugar pretty please",
+			RepoToPr: map[string]string{
+				"mender-connect": "pull/88/head",
+				"deviceconnect":  "pull/12/head",
+				"mender":         "3.1.x",
+			},
+		},
+		"start pipeline with --pr flags and some sugar with multiple spaces": {
+			StartPipelineComment: "start pipeline  --pr          mender-connect/pull/88/head          --pr          deviceconnect/pull/12/head --pr mender/3. 1.x     sugar pretty please",
+			RepoToPr: map[string]string{
+				"mender-connect": "pull/88/head",
+				"deviceconnect":  "pull/12/head",
+				"mender":         "3.",
+			},
+		},
+		"start pipeline with one --pr flag": {
+			StartPipelineComment: "start pipeline --pr mender-connect/pull/88/head",
+			RepoToPr: map[string]string{
+				"mender-connect": "pull/88/head",
+			},
+		},
+		"start pipeline without--pr flags": {
+			StartPipelineComment: "start pipeline",
+			RepoToPr:             map[string]string{},
+		},
+		"start pipeline incomplete --pr": {
+			StartPipelineComment: "start pipeline --pr",
+			RepoToPr:             map[string]string{},
+		},
+		"start pipeline incomplete --pr param": {
+			StartPipelineComment: "start pipeline --pr some",
+			RepoToPr:             map[string]string{},
+		},
+		"start pipeline incomplete --pr params": {
+			StartPipelineComment: "start pipeline --pr --pr a --pr some",
+			RepoToPr:             map[string]string{},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			actualRepoToPr, err := parsePrOptions(tc.StartPipelineComment)
+			if tc.ParseError != nil {
+				assert.EqualError(t, err, tc.ParseError.Error())
+			} else {
+				assert.Equal(t, tc.RepoToPr, actualRepoToPr)
 			}
 		})
 	}
