@@ -1,0 +1,10 @@
+input: push.json
+output:
+- 'debug:Got push event :: repo workflows-enterprise :: ref refs/heads/master'
+- 'git.Run: /usr/bin/git init .'
+- 'git.Run: /usr/bin/git remote add github git@github.com:/mendersoftware/workflows-enterprise.git'
+- 'git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/Mender/workflows-enterprise'
+- 'git.Run: /usr/bin/git fetch github'
+- 'git.Run: /usr/bin/git checkout -b master github/master'
+- 'git.Run: /usr/bin/git push -f gitlab master'
+- 'info:Pushed ref to GitLab: workflows-enterprise:refs/heads/master'

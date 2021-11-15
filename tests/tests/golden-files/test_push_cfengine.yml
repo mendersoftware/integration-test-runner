@@ -1,0 +1,10 @@
+input: push_cfengine.json
+output:
+- 'debug:Got push event :: repo website :: ref refs/heads/master'
+- 'git.Run: /usr/bin/git init .'
+- 'git.Run: /usr/bin/git remote add github git@github.com:/cfengine/website.git'
+- 'git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/CFEngine/website'
+- 'git.Run: /usr/bin/git fetch github'
+- 'git.Run: /usr/bin/git checkout -b master github/master'
+- 'git.Run: /usr/bin/git push -f gitlab master'
+- 'info:Pushed ref to GitLab: website:refs/heads/master'

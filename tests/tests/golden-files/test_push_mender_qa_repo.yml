@@ -1,0 +1,10 @@
+input: push_mender_qa_repo.json
+output:
+- 'debug:Got push event :: repo mender-qa :: ref refs/heads/master'
+- 'git.Run: /usr/bin/git init .'
+- 'git.Run: /usr/bin/git remote add github git@github.com:/mendersoftware/mender-qa.git'
+- 'git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/Mender/mender-qa'
+- 'git.Run: /usr/bin/git fetch github'
+- 'git.Run: /usr/bin/git checkout -b master github/master'
+- 'git.Run: /usr/bin/git push -f -o ci.skip gitlab master'
+- 'info:Pushed ref to GitLab: mender-qa:refs/heads/master'
