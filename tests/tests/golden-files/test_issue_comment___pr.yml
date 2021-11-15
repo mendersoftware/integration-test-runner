@@ -1,6 +1,8 @@
-input: issue_comment.json
+input: issue_comment___pr.json
 output:
-- 'github.IsOrganizationMember: org=mendersoftware,user=kacf'
+- 'github.IsOrganizationMember: org=mendersoftware,user=alfrunes'
+- 'info:Pull request event with action: opened'
+- 'git.Run: /usr/bin/git pull --rebase origin'
 - 'info:deviceconnect/master is being used in the following integration: [master]'
 - 'info:the following integration branches: [master] are using deviceconnect/master'
 - info:deviceconnect:109 will trigger 1 builds
@@ -13,8 +15,6 @@ output:
    makeQEMU: (bool) false
   }
 
-- 'info:Pull request event with action: opened'
-- 'git.Run: /usr/bin/git pull --rebase origin'
 - info:auditlogs version master is being used in master
 - info:azure-iot-manager version master is being used in master
 - info:create-artifact-worker version master is being used in master
