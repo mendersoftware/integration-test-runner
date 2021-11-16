@@ -85,7 +85,7 @@
     "created_at": "2021-06-16T15:25:43Z",
     "updated_at": "2021-06-16T15:25:43Z",
     "author_association": "CONTRIBUTOR",
-    "body": "@mender-test-bot start pipeline --pr devicemonitor/pull/12/head --pr mender/3.1.x --pr mender-connect/pull/4/head --pr integration/pull/1900/head sugar pretty please",
+    "body": "@mender-test-bot start pipeline --pr devicemonitor/pull/12/head --pr mender/3.1.x --pr mender-connect/pull/4/head --pr integration/pull/1900/head --pr meta-mender/pull/1/head sugar pretty please",
     "performed_via_github_app": null
   },
   "repository": {

@@ -316,6 +316,14 @@ func getBuildParameters(log *logrus.Entry, conf *config, build *buildOptions, pr
 			&gitlab.PipelineVariable{
 				Key:   repoToBuildParameter("integration"),
 				Value: revision})
+
+		if _, exists := prsRepos["meta-mender"]; exists {
+			revision = prsRepos["meta-mender"]
+			buildParameters = append(buildParameters,
+				&gitlab.PipelineVariable{
+					Key:   repoToBuildParameter("meta-mender"),
+					Value: revision})
+		}
 	}
 
 	// Set poky (& friends) and meta-mender revisions:
