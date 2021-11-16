@@ -308,7 +308,22 @@ func getBuildParameters(log *logrus.Entry, conf *config, build *buildOptions, pr
 
 	// set the correct integration branches if we aren't performing a pull request against integration
 	if build.repo != "integration" && build.repo != "meta-mender" {
-		buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter("integration"), Value: build.baseBranch})
+		revision := build.baseBranch
+		if _, exists := prsRepos["integration"]; exists {
+			revision = prsRepos["integration"]
+		}
+		buildParameters = append(buildParameters,
+			&gitlab.PipelineVariable{
+				Key:   repoToBuildParameter("integration"),
+				Value: revision})
+
+		if _, exists := prsRepos["meta-mender"]; exists {
+			revision = prsRepos["meta-mender"]
+			buildParameters = append(buildParameters,
+				&gitlab.PipelineVariable{
+					Key:   repoToBuildParameter("meta-mender"),
+					Value: revision})
+		}
 	}
 
 	// Set poky (& friends) and meta-mender revisions:
