@@ -141,7 +141,11 @@ func parsePrOptions(commentBody string) (map[string]string, error) {
 				if v[o:][0] == '/' && len(v[o:]) > 1 {
 					skip = 1
 				}
-				prRepos[v[:o]] = v[o+skip:]
+				revision := v[o+skip:]
+				if _, err := strconv.Atoi(revision); err == nil {
+					revision = "pull/" + revision + "/head"
+				}
+				prRepos[v[:o]] = revision
 			} else {
 				err = errors.New("parse error near '" + v + "', I need, e.g.: start pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x ")
 			}
