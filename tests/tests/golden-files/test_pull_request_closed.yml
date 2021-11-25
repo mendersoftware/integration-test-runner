@@ -30,7 +30,6 @@ output:
 - info:inventory-enterprise version master is being used in master
 - info:mender version master is being used in master
 - info:mender-artifact version master is being used in master
-- info:mender-auth-azure-iot version master is being used in master
 - info:mender-cli version master is being used in master
 - info:mender-connect version master is being used in master
 - info:monitor-client version master is being used in master
