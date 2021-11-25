@@ -26,6 +26,29 @@ def load_payload(filename):
         return f.read()
 
 
+@pytest.mark.golden_test(
+    "golden-files/test_pull_request_opened_from_fork_to_mender_qa_by_outsider.yml"
+)
+def test_pull_request_opened_from_fork_to_mender_qa_by_outsider(
+    golden, integration_test_runner_url
+):
+    """Verify that outsiders cannot run the mender-qa pipeline in the repository itself."""
+    res = requests.post(
+        integration_test_runner_url + "/",
+        data=load_payload(golden["input"]),
+        headers={
+            "Content-Type": "application/json",
+            "X-Github-Event": "pull_request",
+            "X-Github-Delivery": "delivery",
+        },
+    )
+    assert res.status_code == 202
+    #
+    res = requests.get(integration_test_runner_url + "/logs")
+    assert res.status_code == 200
+    assert res.json() == golden.out["output"]
+
+
 @pytest.mark.golden_test("golden-files/test_pull_request_opened_from_fork.yml")
 def test_pull_request_opened_from_fork(golden, integration_test_runner_url):
     res = requests.post(

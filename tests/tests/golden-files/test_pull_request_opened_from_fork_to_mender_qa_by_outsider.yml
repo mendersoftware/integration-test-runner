@@ -1,0 +1,19 @@
+input: pull_request_opened_from_fork_to_mender_qa_by_outsider.json
+output:
+- debug:Processing pull request action opened
+- 'git.Run: /usr/bin/git init .'
+- 'git.Run: /usr/bin/git remote add github git@github.com:/mendersoftware/mender-qa.git'
+- 'git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/Mender/mender-qa'
+- 'git.Run: /usr/bin/git fetch github pull/550/head:pr_550'
+- 'git.Run: /usr/bin/git push -f -o ci.skip --set-upstream gitlab pr_550'
+- 'info:Created branch: mender-qa:pr_550'
+- 'github.IsOrganizationMember: org=mendersoftware,user=Junglebobo'
+- warning:Junglebobo is making a pullrequest, but he/she is not a member of our organization,
+  ignoring
+- 'github.IsOrganizationMember: org=mendersoftware,user=Junglebobo'
+- "debug:stopBuildsOfStalePRs: PR not closed, therefore not stopping it's pipeline"
+- 'debug:syncIfOSHasEnterpriseRepo: Repository without Enterprise fork detected: (mender-qa).
+  Not syncing'
+- 'info:Pull request event with action: opened'
+- 'git.Run: /usr/bin/git pull --rebase origin'
+- info:mender-qa:550 would trigger 0 builds
