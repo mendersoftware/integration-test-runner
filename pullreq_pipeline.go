@@ -14,7 +14,7 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-func startPRPipeline(log *logrus.Entry, ref string, event *github.PullRequestEvent, conf *config) error {
+func startPRPipeline(log *logrus.Entry, ref string, event *github.PullRequestEvent, conf *config, isOrgMember func() bool) error {
 	client, err := clientgitlab.NewGitLabClient(
 		conf.gitlabToken,
 		conf.gitlabBaseURL,
@@ -28,6 +28,13 @@ func startPRPipeline(log *logrus.Entry, ref string, event *github.PullRequestEve
 	head := pr.GetHead()
 	base := pr.GetBase()
 	repo := event.GetRepo()
+	if repo.GetName() == "mender-qa" {
+		// Verify that the pipe is started by a member of the organization
+		if isOrgMember() {
+			log.Warnf("%s is making a pullrequest, but he/she is not a member of our organization, ignoring", pr.GetUser().GetLogin())
+			return nil
+		}
+	}
 	repoURL, err := getRemoteURLGitLab(org, repo.GetName())
 	if err != nil {
 		return err

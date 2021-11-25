@@ -43,7 +43,14 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 				log.Errorf("Could not create PR branch: %s", err.Error())
 			}
 			if prRef != "" {
-				err = startPRPipeline(log, prRef, pr, conf)
+				isOrgMember := func() bool {
+					return githubClient.IsOrganizationMember(
+						ctx,
+						conf.githubOrganization,
+						pr.Sender.GetLogin(),
+					)
+				}
+				err = startPRPipeline(log, prRef, pr, conf, isOrgMember)
 				if err != nil {
 					log.Errorf("failed to start pipeline for PR: %s", err)
 				}
