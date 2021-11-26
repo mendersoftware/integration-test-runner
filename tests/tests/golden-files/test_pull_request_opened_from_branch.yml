@@ -1,7 +1,14 @@
 input: pull_request_opened_from_branch.json
 output:
 - debug:Processing pull request action opened
-- debug:PR head is NOT a fork, skipping GitLab branch sync
+- 'git.Run: /usr/bin/git init .'
+- 'git.Run: /usr/bin/git remote add github git@github.com:/mendersoftware/mender-docs.git'
+- 'git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/Mender/mender-docs'
+- 'git.Run: /usr/bin/git fetch github pull/1483/head:pr_1483'
+- 'git.Run: /usr/bin/git push -f -o ci.skip --set-upstream gitlab pr_1483'
+- 'info:Created branch: mender-docs:pr_1483'
+- 'gitlab.CreatePipeline: path=Northern.tech/Mender/mender-docs,options={"ref":"pr_1483","variables":[{"key":"CI_EXTERNAL_PULL_REQUEST_IID","value":"1483"},{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_REPOSITORY","value":"mendersoftware/mender-docs"},{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_REPOSITORY","value":"mendersoftware/mender-docs"},{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME","value":"QA-251-tests-mutual-tls"},{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_SHA","value":"d87e5c741112a9a3def98f307723b5760a100271"},{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME","value":"master"},{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_SHA","value":"e312f4d62f66ba74e840afed5f267e5f897da20f"}]}'
+- 'debug:started pipeline for PR: '
 - 'github.IsOrganizationMember: org=mendersoftware,user=lluiscampos'
 - "debug:stopBuildsOfStalePRs: PR not closed, therefore not stopping it's pipeline"
 - 'debug:syncIfOSHasEnterpriseRepo: Repository without Enterprise fork detected: (mender-docs).

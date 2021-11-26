@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -22,8 +23,6 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 		WithField("pull", pr.GetNumber()).
 		WithField("action", action)
 	req := pr.GetPullRequest()
-	base := req.GetBase()
-	head := req.GetHead()
 
 	// Do not run if the PR is a draft
 	if req.GetDraft() {
@@ -34,26 +33,24 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 	log.Debugf("Processing pull request action %s", action)
 	switch action {
 	case "opened", "edited", "reopened", "synchronize", "ready_for_review":
-		// Check if PR is coming from fork
-		if head.GetRepo().GetFullName() == base.GetRepo().GetFullName() {
-			log.Debug("PR head is NOT a fork, " +
-				"skipping GitLab branch sync")
-		} else {
-			if prRef, err = syncPullRequestBranch(log, pr, conf); err != nil {
-				log.Errorf("Could not create PR branch: %s", err.Error())
+		// We always create a pr_* branch
+		if prRef, err = syncPullRequestBranch(log, pr, conf); err != nil {
+			log.Errorf("Could not create PR branch: %s", err.Error())
+		}
+		//and we run a pipeline only for the pr_* branch
+		if prRef != "" {
+			prNum := strconv.Itoa(pr.GetNumber())
+			prBranchName := "pr_" + prNum
+			isOrgMember := func() bool {
+				return githubClient.IsOrganizationMember(
+					ctx,
+					conf.githubOrganization,
+					pr.Sender.GetLogin(),
+				)
 			}
-			if prRef != "" {
-				isOrgMember := func() bool {
-					return githubClient.IsOrganizationMember(
-						ctx,
-						conf.githubOrganization,
-						pr.Sender.GetLogin(),
-					)
-				}
-				err = startPRPipeline(log, prRef, pr, conf, isOrgMember)
-				if err != nil {
-					log.Errorf("failed to start pipeline for PR: %s", err)
-				}
+			err = startPRPipeline(log, prBranchName, pr, conf, isOrgMember)
+			if err != nil {
+				log.Errorf("failed to start pipeline for PR: %s", err)
 			}
 		}
 
