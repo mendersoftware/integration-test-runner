@@ -109,6 +109,26 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 		if !botHasAlreadyCommentedOnPR(log, githubClient, pr, botCommentString, conf) {
 
 			msg := "@" + pr.GetSender().GetLogin() + botCommentString + commandStartPipeline + "\"."
+			msg = `
+   ---
+
+   <details>
+   <summary>my commands and options</summary>
+   <br />
+   You can trigger a pipeline on multiple prs with:
+
+   - mentioning me and ` + "`" + `start pipeline --pr mender/127 --mender-connect/255` + "`" + `
+
+   You can cherry pick to a given branch or branches with:
+
+   - mentioning me and:
+   ` + "```" + `
+    cherry-pick to:
+    * 1.0.x
+    * 2.0.x
+   ` + "```" + `
+   </details>
+   `
 			if err := githubClient.CreateComment(ctx, pr.GetOrganization().GetLogin(), pr.GetRepo().GetName(), pr.GetNumber(), &github.IssueComment{
 				Body: github.String(msg),
 			}); err != nil {
