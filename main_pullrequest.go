@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"regexp"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -11,8 +12,32 @@ import (
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 )
 
-func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, githubClient clientgithub.Client, conf *config) error {
+func shouldStartPipeline(branchName string) bool {
+	startByName := []string{
+		"master",
+		"staging",
+		"production",
+	}
+	for _, n := range startByName {
+		if branchName == n {
+			return true
+		}
+	}
 
+	startByRegEx := []*regexp.Regexp{
+		regexp.MustCompile("^[0-9]+\\.[0-9]+\\."),
+		regexp.MustCompile("^pr_[0-9]+$"),
+	}
+	for _, n := range startByRegEx {
+		if n.MatchString(branchName) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, githubClient clientgithub.Client, conf *config) error {
 	var (
 		prRef  string
 		err    error
@@ -22,7 +47,6 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 		WithField("pull", pr.GetNumber()).
 		WithField("action", action)
 	req := pr.GetPullRequest()
-	base := req.GetBase()
 	head := req.GetHead()
 
 	// Do not run if the PR is a draft
@@ -34,27 +58,27 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 	log.Debugf("Processing pull request action %s", action)
 	switch action {
 	case "opened", "edited", "reopened", "synchronize", "ready_for_review":
-		// Check if PR is coming from fork
-		if head.GetRepo().GetFullName() == base.GetRepo().GetFullName() {
-			log.Debug("PR head is NOT a fork, " +
-				"skipping GitLab branch sync")
-		} else {
-			if prRef, err = syncPullRequestBranch(log, pr, conf); err != nil {
-				log.Errorf("Could not create PR branch: %s", err.Error())
+		// We always create a pr_* branch
+		ref := head.GetRef()
+		ref = strings.TrimPrefix(ref, "refs/heads/")
+		if prRef, err = syncPullRequestBranch(log, pr, conf); err != nil {
+			log.Errorf("Could not create PR branch: %s", err.Error())
+		}
+		//but we run pipelines only for certain branches
+		if prRef != "" && shouldStartPipeline(ref) {
+			isOrgMember := func() bool {
+				return githubClient.IsOrganizationMember(
+					ctx,
+					conf.githubOrganization,
+					pr.Sender.GetLogin(),
+				)
 			}
-			if prRef != "" {
-				isOrgMember := func() bool {
-					return githubClient.IsOrganizationMember(
-						ctx,
-						conf.githubOrganization,
-						pr.Sender.GetLogin(),
-					)
-				}
-				err = startPRPipeline(log, prRef, pr, conf, isOrgMember)
-				if err != nil {
-					log.Errorf("failed to start pipeline for PR: %s", err)
-				}
+			err = startPRPipeline(log, prRef, pr, conf, isOrgMember)
+			if err != nil {
+				log.Errorf("failed to start pipeline for PR: %s", err)
 			}
+		} else if prRef != "" {
+			log.Debugf("Not starting pipeline for branch: %s.", ref)
 		}
 
 	case "closed":

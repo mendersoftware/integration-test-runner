@@ -60,8 +60,8 @@
     "comments_url": "https://api.github.com/repos/mendersoftware/workflows/issues/140/comments",
     "statuses_url": "https://api.github.com/repos/mendersoftware/workflows/statuses/7b099b84cb50df18847027b0afa16820eab850d9",
     "head": {
-      "label": "tranchitella:men-4705",
-      "ref": "men-4705",
+      "label": "tranchitella:pr_128",
+      "ref": "pr_128",
       "sha": "7b099b84cb50df18847027b0afa16820eab850d9",
       "user": {
         "login": "tranchitella",
