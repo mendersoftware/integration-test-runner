@@ -70,7 +70,7 @@ var qemuBuildRepositories = []string{
 }
 
 const (
-	gitOperationTimeout = 30
+	gitOperationTimeout = 32
 )
 
 const (
