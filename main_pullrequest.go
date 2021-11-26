@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -11,31 +11,6 @@ import (
 
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 )
-
-func shouldStartPipeline(branchName string) bool {
-	startByName := []string{
-		"master",
-		"staging",
-		"production",
-	}
-	for _, n := range startByName {
-		if branchName == n {
-			return true
-		}
-	}
-
-	startByRegEx := []*regexp.Regexp{
-		regexp.MustCompile("^[0-9]+\\.[0-9]+\\."),
-		regexp.MustCompile("^pr_[0-9]+$"),
-	}
-	for _, n := range startByRegEx {
-		if n.MatchString(branchName) {
-			return true
-		}
-	}
-
-	return false
-}
 
 func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, githubClient clientgithub.Client, conf *config) error {
 	var (
@@ -65,7 +40,9 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 			log.Errorf("Could not create PR branch: %s", err.Error())
 		}
 		//but we run pipelines only for certain branches
-		if prRef != "" && shouldStartPipeline(ref) {
+		if prRef != "" {
+			prNum := strconv.Itoa(pr.GetNumber())
+			prBranchName := "pr_" + prNum
 			isOrgMember := func() bool {
 				return githubClient.IsOrganizationMember(
 					ctx,
@@ -73,7 +50,7 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 					pr.Sender.GetLogin(),
 				)
 			}
-			err = startPRPipeline(log, prRef, pr, conf, isOrgMember)
+			err = startPRPipeline(log, prBranchName, pr, conf, isOrgMember)
 			if err != nil {
 				log.Errorf("failed to start pipeline for PR: %s", err)
 			}
