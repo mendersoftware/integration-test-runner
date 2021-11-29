@@ -109,7 +109,8 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 		if !botHasAlreadyCommentedOnPR(log, githubClient, pr, botCommentString, conf) {
 
 			msg := "@" + pr.GetSender().GetLogin() + botCommentString + commandStartPipeline + "\"."
-			msg = `
+			msg += `
+
    ---
 
    <details>
