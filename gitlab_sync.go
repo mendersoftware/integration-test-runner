@@ -2,12 +2,38 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/sirupsen/logrus"
 
 	"github.com/mendersoftware/integration-test-runner/git"
 )
+
+func shouldStartPipeline(branchName string) bool {
+	startByName := []string{
+		"master",
+		"staging",
+		"production",
+	}
+	for _, n := range startByName {
+		if branchName == n {
+			return true
+		}
+	}
+
+	startByRegEx := []*regexp.Regexp{
+		regexp.MustCompile("^[0-9]+\\.[0-9]+\\.x"),
+		regexp.MustCompile("^pr_[0-9]+$"),
+	}
+	for _, n := range startByRegEx {
+		if n.MatchString(branchName) {
+			return true
+		}
+	}
+
+	return false
+}
 
 func syncRemoteRef(log *logrus.Entry, org, repo, ref string, conf *config) error {
 
@@ -52,6 +78,9 @@ func syncRemoteRef(log *logrus.Entry, org, repo, ref string, conf *config) error
 		// For the push, add option ci.skip for mender-qa
 		cmdArgs := []string{"push", "-f"}
 		if repo == "mender-qa" {
+			cmdArgs = append(cmdArgs, "-o", "ci.skip")
+		}
+		if !shouldStartPipeline(branchName) {
 			cmdArgs = append(cmdArgs, "-o", "ci.skip")
 		}
 		cmdArgs = append(cmdArgs, "gitlab", branchName)
