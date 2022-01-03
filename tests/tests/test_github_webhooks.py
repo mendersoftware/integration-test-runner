@@ -85,9 +85,8 @@ def test_pull_request_opened_from_branch(golden, integration_test_runner_url):
     assert res.json() == golden.out["output"]
 
 
-
 @pytest.mark.golden_test("golden-files/test_pull_request_closed.yml")
-def test_pull_request_closed(golden,integration_test_runner_url):
+def test_pull_request_closed(golden, integration_test_runner_url):
     res = requests.post(
         integration_test_runner_url + "/",
         data=load_payload(golden["input"]),

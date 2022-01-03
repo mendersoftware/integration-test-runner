@@ -16,7 +16,6 @@ output:
 - 'info:workflows/master is being used in the following integration: [master]'
 - 'info:the following integration branches: [master] are using workflows/master'
 - info:auditlogs version master is being used in master
-- info:azure-iot-manager version master is being used in master
 - info:create-artifact-worker version master is being used in master
 - info:deployments version master is being used in master
 - info:deployments-enterprise version master is being used in master
@@ -28,6 +27,7 @@ output:
 - info:gui version master is being used in master
 - info:inventory version master is being used in master
 - info:inventory-enterprise version master is being used in master
+- info:iot-manager version master is being used in master
 - info:mender version master is being used in master
 - info:mender-artifact version master is being used in master
 - info:mender-cli version master is being used in master
