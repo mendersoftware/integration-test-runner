@@ -115,7 +115,7 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
    <br />
    You can trigger a pipeline on multiple prs with:
 
-   - mentioning me and ` + "`" + `start pipeline --pr mender/127 --mender-connect/255` + "`" + `
+   - mentioning me and ` + "`" + `start pipeline --pr mender/127 --pr mender-connect/255` + "`" + `
 
    You can cherry pick to a given branch or branches with:
 
