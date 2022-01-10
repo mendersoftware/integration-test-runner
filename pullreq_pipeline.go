@@ -8,13 +8,20 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v28/github"
-	clientgitlab "github.com/mendersoftware/integration-test-runner/client/gitlab"
-	"github.com/mendersoftware/integration-test-runner/git"
 	"github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
+
+	clientgitlab "github.com/mendersoftware/integration-test-runner/client/gitlab"
+	"github.com/mendersoftware/integration-test-runner/git"
 )
 
-func startPRPipeline(log *logrus.Entry, ref string, event *github.PullRequestEvent, conf *config, isOrgMember func() bool) error {
+func startPRPipeline(
+	log *logrus.Entry,
+	ref string,
+	event *github.PullRequestEvent,
+	conf *config,
+	isOrgMember func() bool,
+) error {
 	client, err := clientgitlab.NewGitLabClient(
 		conf.gitlabToken,
 		conf.gitlabBaseURL,
@@ -31,7 +38,11 @@ func startPRPipeline(log *logrus.Entry, ref string, event *github.PullRequestEve
 	if repo.GetName() == "mender-qa" {
 		// Verify that the pipe is started by a member of the organization
 		if isOrgMember() {
-			log.Warnf("%s is making a pullrequest, but he/she is not a member of our organization, ignoring", pr.GetUser().GetLogin())
+			log.Warnf(
+				"%s is making a pullrequest, but he/she is not a member of our organization, "+
+					"ignoring",
+				pr.GetUser().GetLogin(),
+			)
 			return nil
 		}
 	}
@@ -79,7 +90,11 @@ func startPRPipeline(log *logrus.Entry, ref string, event *github.PullRequestEve
 	return nil
 }
 
-func syncPullRequestBranch(log *logrus.Entry, pr *github.PullRequestEvent, conf *config) (string, error) {
+func syncPullRequestBranch(
+	log *logrus.Entry,
+	pr *github.PullRequestEvent,
+	conf *config,
+) (string, error) {
 
 	repo := pr.GetRepo().GetName()
 	org := pr.GetOrganization().GetLogin()

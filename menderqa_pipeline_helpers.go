@@ -6,12 +6,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mendersoftware/integration-test-runner/git"
 	"github.com/sirupsen/logrus"
+
+	"github.com/mendersoftware/integration-test-runner/git"
 )
 
 func getServiceRevisionFromIntegration(repo, baseBranch string, conf *config) (string, error) {
-	c := exec.Command("python3", "release_tool.py", "--version-of", repo, "--in-integration-version", baseBranch)
+	c := exec.Command(
+		"python3",
+		"release_tool.py",
+		"--version-of",
+		repo,
+		"--in-integration-version",
+		baseBranch,
+	)
 	c.Dir = conf.integrationDirectory + "/extra/"
 	out, err := c.Output()
 	if err != nil {
@@ -32,7 +40,7 @@ func updateIntegrationRepo(conf *config) error {
 
 	// timeout and kill process after gitOperationTimeout seconds
 	t := time.AfterFunc(gitOperationTimeout*time.Second, func() {
-		gitcmd.Process.Kill()
+		_ = gitcmd.Process.Kill()
 	})
 	defer t.Stop()
 
@@ -49,8 +57,18 @@ func repoToBuildParameter(repo string) string {
 }
 
 // Use python script in order to determine which integration branches to test with
-func getIntegrationVersionsUsingMicroservice(log *logrus.Entry, repo, version string, conf *config) ([]string, error) {
-	cmdArgs := []string{"release_tool.py", "--integration-versions-including", repo, "--version", version}
+func getIntegrationVersionsUsingMicroservice(
+	log *logrus.Entry,
+	repo, version string,
+	conf *config,
+) ([]string, error) {
+	cmdArgs := []string{
+		"release_tool.py",
+		"--integration-versions-including",
+		repo,
+		"--version",
+		version,
+	}
 	if strings.HasPrefix(version, featureBranchPrefix) {
 		cmdArgs = append(cmdArgs, "--feature-branches")
 	}
@@ -59,7 +77,11 @@ func getIntegrationVersionsUsingMicroservice(log *logrus.Entry, repo, version st
 	integrations, err := c.Output()
 
 	if err != nil {
-		return nil, fmt.Errorf("getIntegrationVersionsUsingMicroservice: Error: %v (%s)", err, integrations)
+		return nil, fmt.Errorf(
+			"getIntegrationVersionsUsingMicroservice: Error: %v (%s)",
+			err,
+			integrations,
+		)
 	}
 
 	branches := strings.Split(strings.TrimSpace(string(integrations)), "\n")

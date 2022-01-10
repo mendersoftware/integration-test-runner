@@ -12,7 +12,12 @@ import (
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 )
 
-func processGitHubComment(ctx *gin.Context, comment *github.IssueCommentEvent, githubClient clientgithub.Client, conf *config) error {
+func processGitHubComment(
+	ctx *gin.Context,
+	comment *github.IssueCommentEvent,
+	githubClient clientgithub.Client,
+	conf *config,
+) error {
 	log := getCustomLoggerFromContext(ctx)
 
 	// process created actions only, ignore the others
@@ -24,7 +29,10 @@ func processGitHubComment(ctx *gin.Context, comment *github.IssueCommentEvent, g
 
 	// accept commands only from organization members
 	if !githubClient.IsOrganizationMember(ctx, conf.githubOrganization, comment.Sender.GetLogin()) {
-		log.Warnf("%s commented, but he/she is not a member of our organization, ignoring", comment.Sender.GetLogin())
+		log.Warnf(
+			"%s commented, but he/she is not a member of our organization, ignoring",
+			comment.Sender.GetLogin(),
+		)
 		return nil
 	}
 
@@ -55,7 +63,12 @@ func processGitHubComment(ctx *gin.Context, comment *github.IssueCommentEvent, g
 		return err
 	}
 
-	pr, err := githubClient.GetPullRequest(ctx, conf.githubOrganization, comment.GetRepo().GetName(), prNumber)
+	pr, err := githubClient.GetPullRequest(
+		ctx,
+		conf.githubOrganization,
+		comment.GetRepo().GetName(),
+		prNumber,
+	)
 	if err != nil {
 		log.Errorf("Unable to retrieve the pull request: %s", err.Error())
 		return err
@@ -75,7 +88,7 @@ func processGitHubComment(ctx *gin.Context, comment *github.IssueCommentEvent, g
 			PullRequest: pr,
 		}
 		if err != nil {
-			say(ctx, "There was an error while parsing arguments: {{.ErrorMessage}}",
+			_ = say(ctx, "There was an error while parsing arguments: {{.ErrorMessage}}",
 				struct {
 					ErrorMessage string
 				}{
@@ -88,7 +101,12 @@ func processGitHubComment(ctx *gin.Context, comment *github.IssueCommentEvent, g
 			return err
 		}
 		builds := parsePullRequest(log, conf, "opened", prRequest)
-		log.Infof("%s:%d will trigger %d builds", comment.GetRepo().GetName(), pr.GetNumber(), len(builds))
+		log.Infof(
+			"%s:%d will trigger %d builds",
+			comment.GetRepo().GetName(),
+			pr.GetNumber(),
+			len(builds),
+		)
 
 		// release the mutex
 		mutex.Unlock()
@@ -121,7 +139,8 @@ func processGitHubComment(ctx *gin.Context, comment *github.IssueCommentEvent, g
 	return nil
 }
 
-//parsing `start pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head --pr mender/3.1.x sugar pretty please`
+//parsing `start pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head
+//--pr mender/3.1.x sugar pretty please`
 //	map[string]string{
 //		"mender-connect": "pull/88/head",
 //		"deviceconnect": "pull/12/head",
@@ -147,7 +166,10 @@ func parsePrOptions(commentBody string) (map[string]string, error) {
 				}
 				prRepos[v[:o]] = revision
 			} else {
-				err = errors.New("parse error near '" + v + "', I need, e.g.: start pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x ")
+				err = errors.New(
+					"parse error near '" + v + "', I need, e.g.: start pipeline --pr" +
+						" somerepo/pull/12/head --pr somerepo/1.0.x ",
+				)
 			}
 		}
 	}

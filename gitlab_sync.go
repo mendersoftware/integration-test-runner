@@ -23,8 +23,8 @@ func shouldStartPipeline(branchName string) bool {
 	}
 
 	startByRegEx := []*regexp.Regexp{
-		regexp.MustCompile("^[0-9]+\\.[0-9]+\\.x"),
-		regexp.MustCompile("^pr_[0-9]+$"),
+		regexp.MustCompile(`^[0-9]+\.[0-9]+\.x`),
+		regexp.MustCompile(`^pr_[0-9]+$`),
 	}
 	for _, n := range startByRegEx {
 		if n.MatchString(branchName) {

@@ -11,17 +11,21 @@ import (
 	"text/template"
 
 	"github.com/google/go-github/v28/github"
-	"github.com/mendersoftware/integration-test-runner/git"
 	"github.com/sirupsen/logrus"
 
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
+	"github.com/mendersoftware/integration-test-runner/git"
 )
 
 // syncIfOSHasEnterpriseRepo detects whether a commit has been merged to
 // the Open Source edition of a repo, and then creates a PR-branch
 // in the Enterprise edition, which is then used in order to open
 // a PR to the Enterprise repo with the OS changes.
-func syncIfOSHasEnterpriseRepo(log *logrus.Entry, conf *config, gpr *github.PullRequestEvent) error {
+func syncIfOSHasEnterpriseRepo(
+	log *logrus.Entry,
+	conf *config,
+	gpr *github.PullRequestEvent,
+) error {
 
 	repo := gpr.GetRepo()
 	if repo == nil {
@@ -36,7 +40,11 @@ func syncIfOSHasEnterpriseRepo(log *logrus.Entry, conf *config, gpr *github.Pull
 	case "workflows":
 	case "deviceauth":
 	default:
-		log.Debugf("syncIfOSHasEnterpriseRepo: Repository without Enterprise fork detected: (%s). Not syncing", repo.GetName())
+		log.Debugf(
+			"syncIfOSHasEnterpriseRepo: Repository without Enterprise fork detected: (%s). "+
+				"Not syncing",
+			repo.GetName(),
+		)
 		return nil
 	}
 
@@ -54,28 +62,46 @@ func syncIfOSHasEnterpriseRepo(log *logrus.Entry, conf *config, gpr *github.Pull
 		// Verify release branches.
 		branch := pr.GetBase()
 		if branch == nil {
-			return fmt.Errorf("syncIfOSHasEnterpriseRepo: Failed to get the base-branch of the PR: %v", branch)
+			return fmt.Errorf(
+				"syncIfOSHasEnterpriseRepo: Failed to get the base-branch of the PR: %v",
+				branch,
+			)
 		}
 
-		syncBranches := regexp.MustCompile(`(master|[0-9]+\.[0-9]+\.x|` + featureBranchPrefix + `.+)`)
+		syncBranches := regexp.MustCompile(
+			`(master|[0-9]+\.[0-9]+\.x|` + featureBranchPrefix + `.+)`,
+		)
 		branchRef := branch.GetRef()
 		if branchRef == "" {
 			return fmt.Errorf("Failed to get the branch-ref from the PR: %v", pr)
 		}
 		if !syncBranches.MatchString(branchRef) {
 
-			log.Debugf("syncIfOSHasEnterpriseRepo: Detected a merge into another branch than master or a release branch: (%s), no syncing done", branchRef)
+			log.Debugf(
+				"syncIfOSHasEnterpriseRepo: Detected a merge into another branch than master or "+
+					"a release branch: (%s), no syncing done",
+				branchRef,
+			)
 
 		} else {
 
-			log.Infof("syncIfOSHasEnterpriseRepo: Merge to (%s) in an OS repository detected. Syncing the repositories...", branchRef)
+			log.Infof("syncIfOSHasEnterpriseRepo: Merge to (%s) in an OS repository detected. "+
+				"Syncing the repositories...", branchRef)
 
 			PRNumber := strconv.Itoa(pr.GetNumber())
 			PRBranchName := "mergeostoent_" + PRNumber
 
-			merged, err := createPRBranchOnEnterprise(log, repo.GetName(), branchRef, PRNumber, PRBranchName, conf)
+			merged, err := createPRBranchOnEnterprise(
+				log,
+				repo.GetName(),
+				branchRef,
+				PRNumber,
+				PRBranchName,
+				conf,
+			)
 			if err != nil {
-				return fmt.Errorf("syncIfOSHasEnterpriseRepo: Failed to create the PR branch on the Enterprise repo due to error: %v", err)
+				return fmt.Errorf("syncIfOSHasEnterpriseRepo: Failed to create the PR branch on "+
+					"the Enterprise repo due to error: %v", err)
 			}
 
 			// Get the link to the original PR, so that it can be linked to
@@ -91,7 +117,10 @@ func syncIfOSHasEnterpriseRepo(log *logrus.Entry, conf *config, gpr *github.Pull
 				messageBody: fmt.Sprintf("Original PR: %s\n\n%s", PRURL, pr.GetBody()),
 			})
 			if err != nil {
-				return fmt.Errorf("syncIfOSHasEnterpriseRepo: Failed to create a PR with error: %v", err)
+				return fmt.Errorf(
+					"syncIfOSHasEnterpriseRepo: Failed to create a PR with error: %v",
+					err,
+				)
 			}
 
 			log.Infof("syncIfOSHasEnterpriseRepo: Created PR: %d on Enterprise/%s/%s",
@@ -127,7 +156,11 @@ func syncIfOSHasEnterpriseRepo(log *logrus.Entry, conf *config, gpr *github.Pull
 // createPRBranchOnEnterprise creates a new branch in the Enterprise repository
 // starting at the branch in which to sync, with the name 'PRBranchName'
 // and merges this with the OS equivalent of 'branchName'.
-func createPRBranchOnEnterprise(log *logrus.Entry, repo, branchName, PRNumber, PRBranchName string, conf *config) (merged bool, err error) {
+func createPRBranchOnEnterprise(
+	log *logrus.Entry,
+	repo, branchName, PRNumber, PRBranchName string,
+	conf *config,
+) (merged bool, err error) {
 
 	state, err := git.Commands(
 		git.Command("init", "."),
@@ -149,8 +182,11 @@ func createPRBranchOnEnterprise(log *logrus.Entry, repo, branchName, PRNumber, P
 	}
 
 	// Merge the OS branch into the PR branch
-	mergeMsg := fmt.Sprintf("Merge OS base branch: (%s) including PR: (%s) into Enterprise: (%[1]s)",
-		branchName, PRNumber)
+	mergeMsg := fmt.Sprintf(
+		"Merge OS base branch: (%s) including PR: (%s) into Enterprise: (%[1]s)",
+		branchName,
+		PRNumber,
+	)
 	log.Debug("Trying to " + mergeMsg)
 	gitcmd := git.Command("merge", "-m", mergeMsg, "opensource/"+branchName)
 	gitcmd.Dir = state.Dir
@@ -191,8 +227,8 @@ func createPRBranchOnEnterprise(log *logrus.Entry, repo, branchName, PRNumber, P
 		log.Infof("Merged branch: opensource/%s/%s into enterprise/%[1]s/%s in the Enterprise repo",
 			repo, branchName, PRBranchName)
 	} else {
-		msg := "Failed to merge opensource/%s/%s into enterprise/%[1]s/%s in the Enterprise repo. " +
-			"Therefore pushed opensource/%[1]s/%[2]s to %s so that " +
+		msg := "Failed to merge opensource/%s/%s into enterprise/%[1]s/%s in the Enterprise " +
+			"repo. Therefore pushed opensource/%[1]s/%[2]s to %s so that " +
 			"merging can be done by a human locally"
 		log.Infof(msg, repo, branchName, PRBranchName, PRBranchName)
 	}
@@ -220,7 +256,12 @@ func createPullRequestFromTestBotFork(args createPRArgs) (*github.PullRequest, e
 	}
 
 	client := clientgithub.NewGitHubClient(args.conf.githubToken, args.conf.dryRunMode)
-	pr, err := client.CreatePullRequest(context.Background(), args.conf.githubOrganization, args.repo, newPR)
+	pr, err := client.CreatePullRequest(
+		context.Background(),
+		args.conf.githubOrganization,
+		args.repo,
+		newPR,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create the PR for: (%s) %v", args.repo, err)
 	}
@@ -243,8 +284,12 @@ func commentToNotifyUser(log *logrus.Entry, args commentArgs) error {
 	// Post a comment, and @mention the user
 	var commentBody string
 	if !args.mergeConflicts {
-		commentBody = fmt.Sprintf("@%s I have created a PR for you, ready to merge as soon as tests are passed", args.userName)
+		commentBody = fmt.Sprintf(
+			"@%s I have created a PR for you, ready to merge as soon as tests are passed",
+			args.userName,
+		)
 	} else {
+		// nolint:lll
 		tmplString := `
 @{{.UserName}} I have created a PR for you.
 
@@ -296,7 +341,10 @@ This can be done by following:
 			BackQuote:     "`",
 			GitHubBotName: githubBotName,
 		}); err != nil {
-			log.Errorf("Failed to execute the merge-conflict PR template string. Error: %s", err.Error())
+			log.Errorf(
+				"Failed to execute the merge-conflict PR template string. Error: %s",
+				err.Error(),
+			)
 		}
 		commentBody = buf.String()
 	}
@@ -305,5 +353,11 @@ This can be done by following:
 	}
 
 	client := clientgithub.NewGitHubClient(args.conf.githubToken, args.conf.dryRunMode)
-	return client.CreateComment(context.Background(), args.conf.githubOrganization, args.repo, args.pr.GetNumber(), &comment)
+	return client.CreateComment(
+		context.Background(),
+		args.conf.githubOrganization,
+		args.repo,
+		args.pr.GetNumber(),
+		&comment,
+	)
 }

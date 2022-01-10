@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/mendersoftware/integration-test-runner/logger"
 	"github.com/xanzy/go-gitlab"
+
+	"github.com/mendersoftware/integration-test-runner/logger"
 )
 
 // Client represents a GitLab client
@@ -13,7 +14,10 @@ type Client interface {
 	CancelPipelineBuild(path string, id int) error
 	CreatePipeline(path string, options *gitlab.CreatePipelineOptions) (*gitlab.Pipeline, error)
 	GetPipelineVariables(path string, id int) ([]*gitlab.PipelineVariable, error)
-	ListProjectPipelines(path string, options *gitlab.ListProjectPipelinesOptions) (gitlab.PipelineList, error)
+	ListProjectPipelines(
+		path string,
+		options *gitlab.ListProjectPipelinesOptions,
+	) (gitlab.PipelineList, error)
 }
 
 type gitLabClient struct {
@@ -48,7 +52,10 @@ func (c *gitLabClient) CancelPipelineBuild(path string, id int) error {
 }
 
 // CreatePipeline creates a pipeline
-func (c *gitLabClient) CreatePipeline(path string, options *gitlab.CreatePipelineOptions) (*gitlab.Pipeline, error) {
+func (c *gitLabClient) CreatePipeline(
+	path string,
+	options *gitlab.CreatePipelineOptions,
+) (*gitlab.Pipeline, error) {
 	if c.dryRunMode {
 		optionsJSON, _ := json.Marshal(options)
 		msg := fmt.Sprintf("gitlab.CreatePipeline: path=%s,options=%s",
@@ -62,7 +69,10 @@ func (c *gitLabClient) CreatePipeline(path string, options *gitlab.CreatePipelin
 }
 
 // GetPipelineVariables get the pipeline variables
-func (c *gitLabClient) GetPipelineVariables(path string, id int) ([]*gitlab.PipelineVariable, error) {
+func (c *gitLabClient) GetPipelineVariables(
+	path string,
+	id int,
+) ([]*gitlab.PipelineVariable, error) {
 	if c.dryRunMode {
 		msg := fmt.Sprintf("gitlab.GetPipelineVariables: path=%s,id=%d",
 			path, id,
@@ -75,7 +85,10 @@ func (c *gitLabClient) GetPipelineVariables(path string, id int) ([]*gitlab.Pipe
 }
 
 // ListProjectPipelines list the project pipelines
-func (c *gitLabClient) ListProjectPipelines(path string, options *gitlab.ListProjectPipelinesOptions) (gitlab.PipelineList, error) {
+func (c *gitLabClient) ListProjectPipelines(
+	path string,
+	options *gitlab.ListProjectPipelinesOptions,
+) (gitlab.PipelineList, error) {
 	if c.dryRunMode {
 		optionsJSON, _ := json.Marshal(options)
 		msg := fmt.Sprintf("gitlab.ListProjectPipelines: path=%s,options=%s",

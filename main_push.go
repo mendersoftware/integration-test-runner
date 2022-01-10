@@ -7,7 +7,12 @@ import (
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 )
 
-func processGitHubPush(ctx *gin.Context, push *github.PushEvent, githubClient clientgithub.Client, conf *config) error {
+func processGitHubPush(
+	ctx *gin.Context,
+	push *github.PushEvent,
+	githubClient clientgithub.Client,
+	conf *config,
+) error {
 	log := getCustomLoggerFromContext(ctx)
 
 	repoName := push.GetRepo().GetName()

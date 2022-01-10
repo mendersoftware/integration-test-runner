@@ -6,17 +6,39 @@ import (
 	"fmt"
 
 	"github.com/google/go-github/v28/github"
-	"github.com/mendersoftware/integration-test-runner/logger"
 	"golang.org/x/oauth2"
+
+	"github.com/mendersoftware/integration-test-runner/logger"
 )
 
 // Client represents a GitHub client
 type Client interface {
-	CreateComment(ctx context.Context, org string, repo string, number int, comment *github.IssueComment) error
+	CreateComment(
+		ctx context.Context,
+		org string,
+		repo string,
+		number int,
+		comment *github.IssueComment,
+	) error
 	IsOrganizationMember(ctx context.Context, org string, user string) bool
-	CreatePullRequest(ctx context.Context, org string, repo string, pr *github.NewPullRequest) (*github.PullRequest, error)
-	GetPullRequest(ctx context.Context, org string, repo string, pr int) (*github.PullRequest, error)
-	ListComments(ctx context.Context, owner, repo string, number int, opts *github.IssueListCommentsOptions) ([]*github.IssueComment, error)
+	CreatePullRequest(
+		ctx context.Context,
+		org string,
+		repo string,
+		pr *github.NewPullRequest,
+	) (*github.PullRequest, error)
+	GetPullRequest(
+		ctx context.Context,
+		org string,
+		repo string,
+		pr int,
+	) (*github.PullRequest, error)
+	ListComments(
+		ctx context.Context,
+		owner, repo string,
+		number int,
+		opts *github.IssueListCommentsOptions,
+	) ([]*github.IssueComment, error)
 }
 
 type gitHubClient struct {
@@ -38,7 +60,13 @@ func NewGitHubClient(accessToken string, dryRunMode bool) Client {
 	}
 }
 
-func (c *gitHubClient) CreateComment(ctx context.Context, org string, repo string, number int, comment *github.IssueComment) error {
+func (c *gitHubClient) CreateComment(
+	ctx context.Context,
+	org string,
+	repo string,
+	number int,
+	comment *github.IssueComment,
+) error {
 	if c.dryRunMode {
 		commentJSON, _ := json.Marshal(comment)
 		msg := fmt.Sprintf("github.CreateComment: org=%s,repo=%s,number=%d,comment=%s",
@@ -61,7 +89,12 @@ func (c *gitHubClient) IsOrganizationMember(ctx context.Context, org string, use
 	return res
 }
 
-func (c *gitHubClient) CreatePullRequest(ctx context.Context, org string, repo string, pr *github.NewPullRequest) (*github.PullRequest, error) {
+func (c *gitHubClient) CreatePullRequest(
+	ctx context.Context,
+	org string,
+	repo string,
+	pr *github.NewPullRequest,
+) (*github.PullRequest, error) {
 	if c.dryRunMode {
 		prJSON, _ := json.Marshal(pr)
 		msg := fmt.Sprintf("github.CreatePullRequest: org=%s,repo=%s,pr=%s",
@@ -74,12 +107,22 @@ func (c *gitHubClient) CreatePullRequest(ctx context.Context, org string, repo s
 	return newPR, err
 }
 
-func (c *gitHubClient) GetPullRequest(ctx context.Context, org string, repo string, pr int) (*github.PullRequest, error) {
+func (c *gitHubClient) GetPullRequest(
+	ctx context.Context,
+	org string,
+	repo string,
+	pr int,
+) (*github.PullRequest, error) {
 	newPR, _, err := c.client.PullRequests.Get(ctx, org, repo, pr)
 	return newPR, err
 }
 
-func (c *gitHubClient) ListComments(ctx context.Context, owner, repo string, number int, opts *github.IssueListCommentsOptions) ([]*github.IssueComment, error) {
+func (c *gitHubClient) ListComments(
+	ctx context.Context,
+	owner, repo string,
+	number int,
+	opts *github.IssueListCommentsOptions,
+) ([]*github.IssueComment, error) {
 	comments, _, err := c.client.Issues.ListComments(ctx, owner, repo, number, opts)
 	return comments, err
 }
