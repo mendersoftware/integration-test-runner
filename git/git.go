@@ -105,6 +105,6 @@ func (g *Cmd) Run() error {
 }
 
 func (g *Cmd) CombinedOutput() ([]byte, error) {
-	g.Run()
+	_ = g.Run()
 	return g.out, g.err
 }

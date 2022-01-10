@@ -19,10 +19,20 @@ import (
 
 const LatestStableYoctoBranch = "dunfell"
 
-func say(ctx context.Context, tmplString string, data interface{}, log *logrus.Entry, conf *config, pr *github.PullRequestEvent) error {
+func say(
+	ctx context.Context,
+	tmplString string,
+	data interface{},
+	log *logrus.Entry,
+	conf *config,
+	pr *github.PullRequestEvent,
+) error {
 	tmpl, err := template.New("Main").Parse(tmplString)
 	if err != nil {
-		log.Errorf("Failed to parse the build matrix template. Should never happen! Error: %s\n", err.Error())
+		log.Errorf(
+			"Failed to parse the build matrix template. Should never happen! Error: %s\n",
+			err.Error(),
+		)
 	}
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, data); err != nil {
@@ -45,7 +55,12 @@ func say(ctx context.Context, tmplString string, data interface{}, log *logrus.E
 	return err
 }
 
-func parsePullRequest(log *logrus.Entry, conf *config, action string, pr *github.PullRequestEvent) []buildOptions {
+func parsePullRequest(
+	log *logrus.Entry,
+	conf *config,
+	action string,
+	pr *github.PullRequestEvent,
+) []buildOptions {
 	log.Info("Pull request event with action: ", action)
 	var builds []buildOptions
 
@@ -109,11 +124,27 @@ func getBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEvent) []b
 				var err error
 				var integrationsToTest []string
 
-				if integrationsToTest, err = getIntegrationVersionsUsingMicroservice(log, repo, baseBranch, conf); err != nil {
-					log.Errorf("failed to get related microservices for repo: %s version: %s, failed with: %s\n", repo, baseBranch, err.Error())
+				if integrationsToTest, err = getIntegrationVersionsUsingMicroservice(
+					log,
+					repo,
+					baseBranch,
+					conf,
+				); err != nil {
+					log.Errorf(
+						"failed to get related microservices for repo: %s version: %s, failed "+
+							"with: %s\n",
+						repo,
+						baseBranch,
+						err.Error(),
+					)
 					return nil
 				}
-				log.Infof("the following integration branches: %s are using %s/%s", integrationsToTest, repo, baseBranch)
+				log.Infof(
+					"the following integration branches: %s are using %s/%s",
+					integrationsToTest,
+					repo,
+					baseBranch,
+				)
 
 				// one pull request can trigger multiple builds
 				for _, integrationBranch := range integrationsToTest {
@@ -133,8 +164,18 @@ func getBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEvent) []b
 	return builds
 }
 
-func triggerBuild(log *logrus.Entry, conf *config, build *buildOptions, pr *github.PullRequestEvent, prRepos map[string]string) error {
-	gitlabClient, err := clientgitlab.NewGitLabClient(conf.gitlabToken, conf.gitlabBaseURL, conf.dryRunMode)
+func triggerBuild(
+	log *logrus.Entry,
+	conf *config,
+	build *buildOptions,
+	pr *github.PullRequestEvent,
+	prRepos map[string]string,
+) error {
+	gitlabClient, err := clientgitlab.NewGitLabClient(
+		conf.gitlabToken,
+		conf.gitlabBaseURL,
+		conf.dryRunMode,
+	)
 	if err != nil {
 		return err
 	}
@@ -159,7 +200,12 @@ func triggerBuild(log *logrus.Entry, conf *config, build *buildOptions, pr *gith
 	for _, variable := range opt.Variables {
 		variablesString += variable.Key + ":" + variable.Value + ", "
 	}
-	log.Infof("Creating pipeline in project %s:%s with variables: %s", integrationPipelinePath, *opt.Ref, variablesString)
+	log.Infof(
+		"Creating pipeline in project %s:%s with variables: %s",
+		integrationPipelinePath,
+		*opt.Ref,
+		variablesString,
+	)
 
 	pipeline, err := gitlabClient.CreatePipeline(integrationPipelinePath, opt)
 	if err != nil {
@@ -169,6 +215,7 @@ func triggerBuild(log *logrus.Entry, conf *config, build *buildOptions, pr *gith
 
 	// Add the build variable matrix to the pipeline comment under a
 	// drop-down tab
+	// nolint:lll
 	tmplString := `
 Hello :smile_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}]({{.Pipeline.WebURL}})
 
@@ -183,7 +230,10 @@ Hello :smile_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}]
 `
 	tmpl, err := template.New("Main").Parse(tmplString)
 	if err != nil {
-		log.Errorf("Failed to parse the build matrix template. Should never happen! Error: %s\n", err.Error())
+		log.Errorf(
+			"Failed to parse the build matrix template. Should never happen! Error: %s\n",
+			err.Error(),
+		)
 	}
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, struct {
@@ -212,7 +262,11 @@ Hello :smile_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}]
 	return err
 }
 
-func stopStalePipelines(log *logrus.Entry, client clientgitlab.Client, vars []*gitlab.PipelineVariable) {
+func stopStalePipelines(
+	log *logrus.Entry,
+	client clientgitlab.Client,
+	vars []*gitlab.PipelineVariable,
+) {
 	integrationPipelinePath := "Northern.tech/Mender/mender-qa"
 
 	sort.SliceStable(vars, func(i, j int) bool {
@@ -267,7 +321,12 @@ func stopStalePipelines(log *logrus.Entry, client clientgitlab.Client, vars []*g
 	}
 }
 
-func getBuildParameters(log *logrus.Entry, conf *config, build *buildOptions, prsRepos map[string]string) ([]*gitlab.PipelineVariable, error) {
+func getBuildParameters(
+	log *logrus.Entry,
+	conf *config,
+	build *buildOptions,
+	prsRepos map[string]string,
+) ([]*gitlab.PipelineVariable, error) {
 	var err error
 	readHead := "pull/" + build.pr + "/head"
 	var buildParameters []*gitlab.PipelineVariable
@@ -277,7 +336,10 @@ func getBuildParameters(log *logrus.Entry, conf *config, build *buildOptions, pr
 		// For meta-mender, pick master versions of all Mender release repos.
 		versionedRepositories, err = getListOfVersionedRepositories("origin/master", conf)
 	} else {
-		versionedRepositories, err = getListOfVersionedRepositories("origin/"+build.baseBranch, conf)
+		versionedRepositories, err = getListOfVersionedRepositories(
+			"origin/"+build.baseBranch,
+			conf,
+		)
 	}
 	if err != nil {
 		log.Errorf("Could not get list of repositories: %s", err.Error())
@@ -293,20 +355,34 @@ func getBuildParameters(log *logrus.Entry, conf *config, build *buildOptions, pr
 			versionedRepo != "integration" &&
 			build.repo != "meta-mender" {
 			if _, exists := prsRepos[versionedRepo]; exists {
-				buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter(versionedRepo), Value: prsRepos[versionedRepo]})
+				buildParameters = append(
+					buildParameters,
+					&gitlab.PipelineVariable{
+						Key:   repoToBuildParameter(versionedRepo),
+						Value: prsRepos[versionedRepo],
+					},
+				)
 				continue
 			}
-			version, err := getServiceRevisionFromIntegration(versionedRepo, "origin/"+build.baseBranch, conf)
+			version, err := getServiceRevisionFromIntegration(
+				versionedRepo,
+				"origin/"+build.baseBranch,
+				conf,
+			)
 			if err != nil {
 				log.Errorf("failed to determine %s version: %s", versionedRepo, err.Error())
 				return nil, err
 			}
 			log.Infof("%s version %s is being used in %s", versionedRepo, version, build.baseBranch)
-			buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter(versionedRepo), Value: version})
+			buildParameters = append(
+				buildParameters,
+				&gitlab.PipelineVariable{Key: repoToBuildParameter(versionedRepo), Value: version},
+			)
 		}
 	}
 
-	// set the correct integration branches if we aren't performing a pull request against integration
+	// set the correct integration branches if we aren't performing a pull request against
+	// integration
 	if build.repo != "integration" && build.repo != "meta-mender" {
 		revision := build.baseBranch
 		if _, exists := prsRepos["integration"]; exists {
@@ -338,15 +414,39 @@ func getBuildParameters(log *logrus.Entry, conf *config, build *buildOptions, pr
 			pokyBranch = build.baseBranch
 		} else {
 			pokyBranch = LatestStableYoctoBranch
-			buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter("meta-mender"), Value: pokyBranch})
+			buildParameters = append(
+				buildParameters,
+				&gitlab.PipelineVariable{
+					Key:   repoToBuildParameter("meta-mender"),
+					Value: pokyBranch,
+				},
+			)
 		}
-		buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter("poky"), Value: pokyBranch})
-		buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter("meta-openembedded"), Value: pokyBranch})
-		buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: repoToBuildParameter("meta-raspberrypi"), Value: pokyBranch})
+		buildParameters = append(
+			buildParameters,
+			&gitlab.PipelineVariable{Key: repoToBuildParameter("poky"), Value: pokyBranch},
+		)
+		buildParameters = append(
+			buildParameters,
+			&gitlab.PipelineVariable{
+				Key:   repoToBuildParameter("meta-openembedded"),
+				Value: pokyBranch,
+			},
+		)
+		buildParameters = append(
+			buildParameters,
+			&gitlab.PipelineVariable{
+				Key:   repoToBuildParameter("meta-raspberrypi"),
+				Value: pokyBranch,
+			},
+		)
 	}
 
 	// set the rest of the CI build parameters
-	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: "RUN_INTEGRATION_TESTS", Value: "true"})
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariable{Key: "RUN_INTEGRATION_TESTS", Value: "true"},
+	)
 	buildParameters = append(buildParameters,
 		&gitlab.PipelineVariable{
 			Key:   repoToBuildParameter(build.repo),
@@ -360,25 +460,64 @@ func getBuildParameters(log *logrus.Entry, conf *config, build *buildOptions, pr
 		qemuParam = ""
 	}
 
-	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: "BUILD_QEMUX86_64_UEFI_GRUB", Value: qemuParam})
-	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: "TEST_QEMUX86_64_UEFI_GRUB", Value: qemuParam})
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariable{Key: "BUILD_QEMUX86_64_UEFI_GRUB", Value: qemuParam},
+	)
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariable{Key: "TEST_QEMUX86_64_UEFI_GRUB", Value: qemuParam},
+	)
 
-	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: "BUILD_QEMUX86_64_BIOS_GRUB", Value: qemuParam})
-	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: "TEST_QEMUX86_64_BIOS_GRUB", Value: qemuParam})
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariable{Key: "BUILD_QEMUX86_64_BIOS_GRUB", Value: qemuParam},
+	)
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariable{Key: "TEST_QEMUX86_64_BIOS_GRUB", Value: qemuParam},
+	)
 
-	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: "BUILD_QEMUX86_64_BIOS_GRUB_GPT", Value: qemuParam})
-	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: "TEST_QEMUX86_64_BIOS_GRUB_GPT", Value: qemuParam})
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariable{Key: "BUILD_QEMUX86_64_BIOS_GRUB_GPT", Value: qemuParam},
+	)
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariable{Key: "TEST_QEMUX86_64_BIOS_GRUB_GPT", Value: qemuParam},
+	)
 
-	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: "BUILD_VEXPRESS_QEMU", Value: qemuParam})
-	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: "TEST_VEXPRESS_QEMU", Value: qemuParam})
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariable{Key: "BUILD_VEXPRESS_QEMU", Value: qemuParam},
+	)
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariable{Key: "TEST_VEXPRESS_QEMU", Value: qemuParam},
+	)
 
-	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: "BUILD_VEXPRESS_QEMU_FLASH", Value: qemuParam})
-	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: "TEST_VEXPRESS_QEMU_FLASH", Value: qemuParam})
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariable{Key: "BUILD_VEXPRESS_QEMU_FLASH", Value: qemuParam},
+	)
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariable{Key: "TEST_VEXPRESS_QEMU_FLASH", Value: qemuParam},
+	)
 
-	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: "BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB", Value: qemuParam})
-	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: "TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB", Value: qemuParam})
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariable{Key: "BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB", Value: qemuParam},
+	)
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariable{Key: "TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB", Value: qemuParam},
+	)
 
-	buildParameters = append(buildParameters, &gitlab.PipelineVariable{Key: "BUILD_BEAGLEBONEBLACK", Value: qemuParam})
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariable{Key: "BUILD_BEAGLEBONEBLACK", Value: qemuParam},
+	)
 
 	// Set BUILD_CLIENT = false, if target repo not in the qemuBuildRepositories list
 	buildClient := &gitlab.PipelineVariable{Key: "BUILD_CLIENT", Value: "false"}
@@ -406,7 +545,11 @@ func stopBuildsOfStalePRs(log *logrus.Entry, pr *github.PullRequestEvent, conf *
 
 	for _, build := range getBuilds(log, conf, pr) {
 
-		gitlabClient, err := clientgitlab.NewGitLabClient(conf.gitlabToken, conf.gitlabBaseURL, conf.dryRunMode)
+		gitlabClient, err := clientgitlab.NewGitLabClient(
+			conf.gitlabToken,
+			conf.gitlabBaseURL,
+			conf.dryRunMode,
+		)
 		if err != nil {
 			return err
 		}

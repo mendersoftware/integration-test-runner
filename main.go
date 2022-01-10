@@ -13,13 +13,12 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v28/github"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 	"github.com/mendersoftware/integration-test-runner/git"
 	"github.com/mendersoftware/integration-test-runner/logger"
-
-	"github.com/sirupsen/logrus"
 )
 
 var mutex = &sync.Mutex{}
@@ -100,7 +99,10 @@ func getConfig() (*config, error) {
 	if found {
 		lvl, err := logrus.ParseLevel(logLevel)
 		if err != nil {
-			logrus.Infof("Failed to parse the 'INTEGRATION_TEST_RUNNER_LOG_LEVEL' variable, defaulting to 'InfoLevel'")
+			logrus.Infof(
+				"Failed to parse the 'INTEGRATION_TEST_RUNNER_LOG_LEVEL' variable, " +
+					"defaulting to 'InfoLevel'",
+			)
 		} else {
 			logrus.Infof("Set 'LogLevel' to %s", lvl)
 			logrus.SetLevel(lvl)
@@ -139,13 +141,24 @@ func getCustomLoggerFromContext(ctx *gin.Context) *logrus.Entry {
 	return logrus.WithField("delivery", deliveryID)
 }
 
-func processGitHubWebhookRequest(ctx *gin.Context, payload []byte, githubClient clientgithub.Client, conf *config) {
+func processGitHubWebhookRequest(
+	ctx *gin.Context,
+	payload []byte,
+	githubClient clientgithub.Client,
+	conf *config,
+) {
 	webhookType := github.WebHookType(ctx.Request)
 	webhookEvent, _ := github.ParseWebHook(github.WebHookType(ctx.Request), payload)
 	_ = processGitHubWebhook(ctx, webhookType, webhookEvent, githubClient, conf)
 }
 
-func processGitHubWebhook(ctx *gin.Context, webhookType string, webhookEvent interface{}, githubClient clientgithub.Client, conf *config) error {
+func processGitHubWebhook(
+	ctx *gin.Context,
+	webhookType string,
+	webhookEvent interface{},
+	githubClient clientgithub.Client,
+	conf *config,
+) error {
 	githubOrganization, err := getGitHubOrganization(webhookType, webhookEvent)
 	if err != nil {
 		logrus.Warnln("ignoring event: ", err.Error())

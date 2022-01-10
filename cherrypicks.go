@@ -21,8 +21,12 @@ import (
 var errorCherryPickConflict = errors.New("Cherry pick had conflicts")
 
 func getLatestIntegrationRelease(number int, conf *config) ([]string, error) {
-	cmd := fmt.Sprintf("git for-each-ref --sort=-creatordate --format='%%(refname:short)' 'refs/tags' "+
-		"| sed -E '/(^[0-9]+\\.[0-9]+)\\.[0-9]+$/!d;s//\\1.x/' | grep -vF 2.7.x | uniq | head -n %d | sort -V -r", number)
+	cmd := fmt.Sprintf(
+		"git for-each-ref --sort=-creatordate --format='%%(refname:short)' 'refs/tags' "+
+			"| sed -E '/(^[0-9]+\\.[0-9]+)\\.[0-9]+$/!d;s//\\1.x/' | grep -vF 2.7.x | uniq "+
+			"| head -n %d | sort -V -r",
+		number,
+	)
 	c := exec.Command("sh", "-c", cmd)
 	c.Dir = conf.integrationDirectory + "/extra/"
 	version, err := c.Output()
@@ -34,7 +38,12 @@ func getLatestIntegrationRelease(number int, conf *config) ([]string, error) {
 }
 
 // suggestCherryPicks suggests cherry-picks to release branches if the PR has been merged to master
-func suggestCherryPicks(log *logrus.Entry, pr *github.PullRequestEvent, githubClient clientgithub.Client, conf *config) error {
+func suggestCherryPicks(
+	log *logrus.Entry,
+	pr *github.PullRequestEvent,
+	githubClient clientgithub.Client,
+	conf *config,
+) error {
 	// ignore PRs if they are not closed and merged
 	action := pr.GetAction()
 	merged := pr.GetPullRequest().GetMerged()
@@ -69,8 +78,11 @@ func suggestCherryPicks(log *logrus.Entry, pr *github.PullRequestEvent, githubCl
 	// count the number commits with Changelog entries
 	baseSHA := pr.GetPullRequest().GetBase().GetSHA()
 	countCmd := exec.Command(
-		"sh", "-c",
-		"git log "+baseSHA+"...pr_"+prNumber+" | grep -i -e \"^    Changelog:\" | grep -v -i -e \"^    Changelog: *none\" | wc -l")
+		"sh",
+		"-c",
+		"git log "+baseSHA+"...pr_"+prNumber+" | grep -i -e \"^    Changelog:\" "+
+			"| grep -v -i -e \"^    Changelog: *none\" | wc -l",
+	)
 	countCmd.Dir = state.Dir
 	out, err := countCmd.CombinedOutput()
 	if err != nil {
@@ -100,8 +112,15 @@ func suggestCherryPicks(log *logrus.Entry, pr *github.PullRequestEvent, githubCl
 		if err != nil {
 			return err
 		} else if releaseBranch != "" {
-			if isCherryPickBottable(pr.GetRepo().GetName(), conf, pr.GetPullRequest(), releaseBranch) {
-				releaseBranches = append(releaseBranches, releaseBranch+" (release "+version+")"+" - :robot: :cherries:")
+			if isCherryPickBottable(
+				pr.GetRepo().GetName(),
+				conf, pr.GetPullRequest(),
+				releaseBranch,
+			) {
+				releaseBranches = append(
+					releaseBranches,
+					releaseBranch+" (release "+version+")"+" - :robot: :cherries:",
+				)
 			} else {
 				releaseBranches = append(releaseBranches, releaseBranch+" (release "+version+")")
 			}
@@ -114,13 +133,17 @@ func suggestCherryPicks(log *logrus.Entry, pr *github.PullRequestEvent, githubCl
 	}
 
 	// suggest cherry-picking with a comment
+	// nolint:lll
 	tmplString := `
 Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
 {{.ReleaseBranches}}
 `
 	tmpl, err := template.New("Main").Parse(tmplString)
 	if err != nil {
-		log.Errorf("Failed to parse the build matrix template. Should never happen! Error: %s\n", err.Error())
+		log.Errorf(
+			"Failed to parse the build matrix template. Should never happen! Error: %s\n",
+			err.Error(),
+		)
 	}
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, struct {
@@ -144,7 +167,12 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 	return nil
 }
 
-func isCherryPickBottable(repoName string, conf *config, pr *github.PullRequest, targetBranch string) bool {
+func isCherryPickBottable(
+	repoName string,
+	conf *config,
+	pr *github.PullRequest,
+	targetBranch string,
+) bool {
 	_, state, err := tryCherryPickToBranch(repoName, conf, pr, targetBranch)
 	state.Cleanup()
 	if err != nil {
@@ -153,7 +181,12 @@ func isCherryPickBottable(repoName string, conf *config, pr *github.PullRequest,
 	return err == nil
 }
 
-func tryCherryPickToBranch(repoName string, conf *config, pr *github.PullRequest, targetBranch string) (string, *git.State, error) {
+func tryCherryPickToBranch(
+	repoName string,
+	conf *config,
+	pr *github.PullRequest,
+	targetBranch string,
+) (string, *git.State, error) {
 	prBranchName := fmt.Sprintf("cherry-%s-%s",
 		targetBranch, pr.GetHead().GetRef())
 	state, err := git.Commands(
@@ -179,11 +212,21 @@ func tryCherryPickToBranch(repoName string, conf *config, pr *github.PullRequest
 	return prBranchName, state, nil
 }
 
-func cherryPickToBranch(log *logrus.Entry, comment *github.IssueCommentEvent, pr *github.PullRequest, conf *config, targetBranch string,
+func cherryPickToBranch(
+	log *logrus.Entry,
+	comment *github.IssueCommentEvent,
+	pr *github.PullRequest,
+	conf *config,
+	targetBranch string,
 	client clientgithub.Client,
 ) (*github.PullRequest, error) {
 
-	prBranchName, state, err := tryCherryPickToBranch(comment.GetRepo().GetName(), conf, pr, targetBranch)
+	prBranchName, state, err := tryCherryPickToBranch(
+		comment.GetRepo().GetName(),
+		conf,
+		pr,
+		targetBranch,
+	)
 	defer state.Cleanup()
 	if err != nil {
 		return nil, err
@@ -234,7 +277,14 @@ func cherryPickPR(
 	errors := make(map[string]string)
 	success := make(map[string]string)
 	for _, targetBranch := range targetBranches {
-		if newPR, err := cherryPickToBranch(log, comment, pr, conf, targetBranch, githubClient); err != nil {
+		if newPR, err := cherryPickToBranch(
+			log,
+			comment,
+			pr,
+			conf,
+			targetBranch,
+			githubClient,
+		); err != nil {
 			if err == errorCherryPickConflict {
 				conflicts[targetBranch] = true
 				continue
@@ -259,7 +309,8 @@ I did my very best, and this is the result of the cherry pick operation:
 				fmt.Sprintf("* %s :heavy_check_mark: %s\n", targetBranch, success[targetBranch])
 		} else {
 			commentText = commentText +
-				fmt.Sprintf("* %s Had merge conflicts, you will have to fix this yourself :crying_cat_face:\n", targetBranch)
+				fmt.Sprintf("* %s Had merge conflicts, you will have to fix this yourself "+
+					":crying_cat_face:\n", targetBranch)
 		}
 	}
 
@@ -281,8 +332,9 @@ I did my very best, and this is the result of the cherry pick operation:
 
 func parseCherryTargetBranches(body string) []string {
 	matches := []string{}
+	regex := regexp.MustCompile(` *\* *([0-9]+\.[0-9]+\.x)`)
 	for _, line := range strings.Split(body, "\n") {
-		if m := regexp.MustCompile(" *\\* *([0-9]+\\.[0-9]+\\.x)").FindStringSubmatch(line); len(m) > 1 {
+		if m := regex.FindStringSubmatch(line); len(m) > 1 {
 			matches = append(matches, m[1])
 		}
 	}

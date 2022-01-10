@@ -12,7 +12,12 @@ import (
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 )
 
-func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, githubClient clientgithub.Client, conf *config) error {
+func processGitHubPullRequest(
+	ctx *gin.Context,
+	pr *github.PullRequestEvent,
+	githubClient clientgithub.Client,
+	conf *config,
+) error {
 
 	var (
 		prRef  string
@@ -26,7 +31,11 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 
 	// Do not run if the PR is a draft
 	if req.GetDraft() {
-		log.Infof("The PR: %s/%d is a draft. Do not run tests", pr.GetRepo().GetName(), pr.GetNumber())
+		log.Infof(
+			"The PR: %s/%d is a draft. Do not run tests",
+			pr.GetRepo().GetName(),
+			pr.GetNumber(),
+		)
 		return nil
 	}
 
@@ -57,7 +66,12 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 	case "closed":
 		// Delete merged pr branches in GitLab
 		if err := deleteStaleGitlabPRBranch(log, pr, conf); err != nil {
-			log.Errorf("Failed to delete the stale PR branch after the PR: %v was merged or closed. Error: %v", pr, err)
+			log.Errorf(
+				"Failed to delete the stale PR branch after the PR: %v was merged or closed. "+
+					"Error: %v",
+				pr,
+				err,
+			)
 		}
 
 		// make sure we only parse one pr at a time, since we use release_tool
@@ -73,8 +87,15 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 	}
 
 	// Continue to the integration Pipeline only for organization members
-	if member := githubClient.IsOrganizationMember(ctx, conf.githubOrganization, pr.Sender.GetLogin()); !member {
-		log.Warnf("%s is making a pullrequest, but he/she is not a member of our organization, ignoring", pr.Sender.GetLogin())
+	if member := githubClient.IsOrganizationMember(
+		ctx,
+		conf.githubOrganization,
+		pr.Sender.GetLogin(),
+	); !member {
+		log.Warnf(
+			"%s is making a pullrequest, but he/she is not a member of our organization, ignoring",
+			pr.Sender.GetLogin(),
+		)
 		return nil
 	}
 
@@ -84,7 +105,11 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 	// First check if the PR has been merged. If so, stop
 	// the pipeline, and do nothing else.
 	if err := stopBuildsOfStalePRs(log, pr, conf); err != nil {
-		log.Errorf("Failed to stop a stale build after the PR: %v was merged or closed. Error: %v", pr, err)
+		log.Errorf(
+			"Failed to stop a stale build after the PR: %v was merged or closed. Error: %v",
+			pr,
+			err,
+		)
 	}
 
 	// Keep the OS and Enterprise repos in sync
@@ -102,7 +127,8 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 	// do not start the builds, inform the user about the `start pipeline` command instead
 	if len(builds) > 0 {
 		// Only comment, if not already commented on a PR
-		botCommentString := ", Let me know if you want to start the integration pipeline by mentioning me and the command \""
+		botCommentString := ", Let me know if you want to start the integration pipeline by " +
+			"mentioning me and the command \""
 		if !botHasAlreadyCommentedOnPR(log, githubClient, pr, botCommentString, conf) {
 
 			msg := "@" + pr.GetSender().GetLogin() + botCommentString + commandStartPipeline + "\"."
@@ -127,9 +153,13 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
    ` + "```" + `
    </details>
    `
-			if err := githubClient.CreateComment(ctx, pr.GetOrganization().GetLogin(), pr.GetRepo().GetName(), pr.GetNumber(), &github.IssueComment{
-				Body: github.String(msg),
-			}); err != nil {
+			if err := githubClient.CreateComment(
+				ctx,
+				pr.GetOrganization().GetLogin(),
+				pr.GetRepo().GetName(),
+				pr.GetNumber(),
+				&github.IssueComment{Body: github.String(msg)},
+			); err != nil {
 				log.Infof("Failed to comment on the pr: %v, Error: %s", pr, err.Error())
 			}
 		} else {
@@ -142,7 +172,13 @@ func processGitHubPullRequest(ctx *gin.Context, pr *github.PullRequestEvent, git
 	return nil
 }
 
-func botHasAlreadyCommentedOnPR(log *logrus.Entry, githubClient clientgithub.Client, pr *github.PullRequestEvent, botComment string, conf *config) bool {
+func botHasAlreadyCommentedOnPR(
+	log *logrus.Entry,
+	githubClient clientgithub.Client,
+	pr *github.PullRequestEvent,
+	botComment string,
+	conf *config,
+) bool {
 	comments, err := githubClient.ListComments(
 		context.Background(),
 		conf.githubOrganization,
