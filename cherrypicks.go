@@ -332,7 +332,7 @@ I did my very best, and this is the result of the cherry pick operation:
 
 func parseCherryTargetBranches(body string) []string {
 	matches := []string{}
-	regex := regexp.MustCompile(` *\* *([0-9]+\.[0-9]+\.x)`)
+	regex := regexp.MustCompile(` *\* *(([[:word:]]+[_\.-]?)+)`)
 	for _, line := range strings.Split(body, "\n") {
 		if m := regex.FindStringSubmatch(line); len(m) > 1 {
 			matches = append(matches, m[1])

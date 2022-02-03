@@ -228,7 +228,7 @@ func TestCherryTargetBranches(t *testing.T) {
 		input    string
 		expected []string
 	}{
-		"Success": {
+		"Success nice syntax": {
 			input: `
 cherry pick to:
     * 2.6.x
@@ -237,11 +237,11 @@ cherry pick to:
 `,
 			expected: []string{"2.6.x", "2.5.x", "2.4.x"},
 		},
-		"Failure": {
+		"Success messy syntax": {
 			input: `cherry pick to:
  * 2.4.1
 * 2.5.3`,
-			expected: []string{},
+			expected: []string{"2.4.1", "2.5.3"},
 		},
 	}
 
@@ -356,5 +356,49 @@ cherry-pick to:
 				assert.NoError(t, err)
 			}
 		})
+	}
+}
+
+func TestParseCherryTargetBranches(t *testing.T) {
+	tests := map[string]struct {
+		body     string
+		expected string
+	}{
+		"master": {
+			body: `cherry-pick to:
+		* master`,
+			expected: "master",
+		},
+		"hosted": {
+			body: `cherry-pick to:
+		* hosted`,
+			expected: "hosted",
+		},
+		"staging": {
+			body: `cherry-pick to:
+		* staging`,
+			expected: "staging",
+		},
+		"feature-branch": {
+			body: `cherry-pick to:
+		* feature-independe_testing-1`,
+			expected: "feature-independe_testing-1",
+		},
+		"1.2.x": {
+			body: `cherry-pick to:
+		* 1.2.x`,
+			expected: "1.2.x",
+		},
+		"1.2.x with escape char": {
+			body: `cherry-pick to:
+		* 1.2.x\r`,
+			expected: "1.2.x",
+		},
+	}
+
+	for name, test := range tests {
+		t.Log(name)
+		res := parseCherryTargetBranches(test.body)
+		assert.Equal(t, test.expected, res[0])
 	}
 }
