@@ -30,8 +30,11 @@ output:
 - info:iot-manager version master is being used in master
 - info:mender version master is being used in master
 - info:mender-artifact version master is being used in master
+- info:mender-binary-delta version master is being used in master
 - info:mender-cli version master is being used in master
+- info:mender-configure-module version master is being used in master
 - info:mender-connect version master is being used in master
+- info:mender-convert version master is being used in master
 - info:monitor-client version master is being used in master
 - info:mtls-ambassador version master is being used in master
 - info:reporting version master is being used in master
