@@ -50,7 +50,7 @@ func getGitHubOrganization(webhookType string, webhookEvent interface{}) (string
 		return comment.GetRepo().GetOwner().GetLogin(), nil
 	}
 	return "", fmt.Errorf(
-		"getGitHubOrganization cannot get organizatoin from webhook type %q",
+		"getGitHubOrganization cannot get organization from webhook type %q",
 		webhookType,
 	)
 
