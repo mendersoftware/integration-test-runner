@@ -269,9 +269,9 @@ func cherryPickPR(
 	body string,
 	githubClient clientgithub.Client,
 ) error {
-	targetBranches := parseCherryTargetBranches(body)
-	if len(targetBranches) == 0 {
-		return fmt.Errorf("No target branches found in the comment body: %s", body)
+	targetBranches, err := parseCherryTargetBranches(body)
+	if err != nil {
+		return err
 	}
 	conflicts := make(map[string]bool)
 	errors := make(map[string]string)
@@ -330,11 +330,32 @@ I did my very best, and this is the result of the cherry pick operation:
 	return nil
 }
 
-func parseCherryTargetBranches(body string) []string {
+func parseCherryTargetBranches(body string) ([]string, error) {
+	if matches := parseCherryTargetBranchesMultiLine(body); len(matches) > 0 {
+		return matches, nil
+	} else if matches := parseCherryTargetBranchesSingleLine(body); len(matches) > 0 {
+		return matches, nil
+	}
+	return nil, fmt.Errorf("No target branches found in the comment body: %s", body)
+}
+
+func parseCherryTargetBranchesMultiLine(body string) []string {
 	matches := []string{}
 	regex := regexp.MustCompile(` *\* *(([[:word:]]+[_\.-]?)+)`)
 	for _, line := range strings.Split(body, "\n") {
 		if m := regex.FindStringSubmatch(line); len(m) > 1 {
+			matches = append(matches, m[1])
+		}
+	}
+	return matches
+}
+
+func parseCherryTargetBranchesSingleLine(body string) []string {
+	body = strings.TrimPrefix(body, commandCherryPickBranch)
+	matches := []string{}
+	regex := regexp.MustCompile(`\x60(([[:word:]]+[_\.-]?)+)\x60`)
+	for _, m := range regex.FindAllStringSubmatch(body, -1) {
+		if len(m) > 1 {
 			matches = append(matches, m[1])
 		}
 	}
