@@ -24,7 +24,7 @@ func getLatestIntegrationRelease(number int, conf *config) ([]string, error) {
 	cmd := fmt.Sprintf(
 		"git for-each-ref --sort=-creatordate --format='%%(refname:short)' 'refs/tags' "+
 			"| sed -E '/(^[0-9]+\\.[0-9]+)\\.[0-9]+$/!d;s//\\1.x/' |  uniq "+
-			"| head -n %d | sort -V -r",
+			"| head -n 4 | sort -V -r | head -n %d",
 		number,
 	)
 	c := exec.Command("sh", "-c", cmd)
