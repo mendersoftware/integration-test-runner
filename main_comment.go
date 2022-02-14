@@ -37,14 +37,14 @@ func processGitHubComment(
 	}
 
 	// but ignore comments from myself
-	if comment.Sender.GetLogin() == "mender-test-bot" {
+	if comment.Sender.GetLogin() == githubBotName {
 		log.Warnf("%s commented, probably giving instructions, ignoring", comment.Sender.GetLogin())
 		return nil
 	}
 
 	// filter comments mentioning the bot
-	body := comment.Comment.GetBody()
-	if !strings.Contains(body, "@"+githubBotName) {
+	commentBody := comment.Comment.GetBody()
+	if !strings.Contains(commentBody, "@"+githubBotName) {
 		log.Info("ignoring comment not mentioning me")
 		return nil
 	}
@@ -76,11 +76,11 @@ func processGitHubComment(
 
 	// extract the command and check it is valid
 	switch {
-	case strings.Contains(body, commandStartPipeline):
+	case strings.Contains(commentBody, commandStartPipeline):
 		// make sure we only parse one pr at a time, since we use release_tool
 		mutex.Lock()
 
-		prsRepos, err := parsePrOptions(body)
+		prsRepos, err := parsePrOptions(commentBody)
 		// get the list of builds
 		prRequest := &github.PullRequestEvent{
 			Repo:        comment.GetRepo(),
@@ -122,17 +122,17 @@ func processGitHubComment(
 				log.Errorf("Could not start build: %s", err.Error())
 			}
 		}
-	case strings.Contains(body, commandCherryPickBranch):
+	case strings.Contains(commentBody, commandCherryPickBranch):
 		log.Infof("Attempting to cherry-pick the changes in PR: %s/%d",
 			comment.GetRepo().GetName(),
 			pr.GetNumber(),
 		)
-		err = cherryPickPR(log, comment, pr, conf, body, githubClient)
+		err = cherryPickPR(log, comment, pr, conf, commentBody, githubClient)
 		if err != nil {
 			log.Error(err)
 		}
 	default:
-		log.Warnf("no command found: %s", body)
+		log.Warnf("no command found: %s", commentBody)
 		return nil
 	}
 
@@ -147,31 +147,39 @@ func processGitHubComment(
 //	}
 func parsePrOptions(commentBody string) (map[string]string, error) {
 	prRepos := make(map[string]string)
-	var err error = nil
-
+	var err error
 	words := strings.Fields(commentBody)
 	tokensCount := len(words)
-	for i, w := range words {
-		if w == "--pr" && i < (tokensCount-1) {
-			v := words[i+1]
-			o := strings.Index(v, "/")
-			if o > 0 {
-				skip := 0
-				if v[o:][0] == '/' && len(v[o:]) > 1 {
-					skip = 1
+	for id, word := range words {
+		if word == "--pr" && id < (tokensCount-1) {
+			userInput := strings.TrimSpace(words[id+1])
+			userInputParts := strings.Split(userInput, "/")
+
+			if len(userInput) > 0 {
+				var revision string
+				switch len(userInputParts) {
+				case 2: // we can have both deviceauth/1 and mender/3.1.x syntax
+					// repo/<pr_number> syntax
+					if _, err := strconv.Atoi(userInputParts[1]); err == nil {
+						revision = "pull/" + userInputParts[1] + "/head"
+					} else {
+						// feature branch
+						revision = userInputParts[1]
+					}
+				case 3: // deviceconnect/pull/12 syntax
+					revision = strings.Join(userInputParts[1:], "/") + "/head"
+				case 4: // deviceauth/pull/1/head syntax
+					revision = strings.Join(userInputParts[1:], "/")
+				default:
+					err = errors.New(
+						"parse error near '" + userInput + "', I need, e.g.: start pipeline --pr" +
+							" somerepo/pull/12/head --pr somerepo/1.0.x ",
+					)
 				}
-				revision := v[o+skip:]
-				if _, err := strconv.Atoi(revision); err == nil {
-					revision = "pull/" + revision + "/head"
-				}
-				prRepos[v[:o]] = revision
-			} else {
-				err = errors.New(
-					"parse error near '" + v + "', I need, e.g.: start pipeline --pr" +
-						" somerepo/pull/12/head --pr somerepo/1.0.x ",
-				)
+				prRepos[userInputParts[0]] = revision
 			}
 		}
 	}
+
 	return prRepos, err
 }

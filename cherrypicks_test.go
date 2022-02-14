@@ -91,7 +91,7 @@ func TestSuggestCherryPicks(t *testing.T) {
 			comment: &github.IssueComment{
 				Body: github.String(`
 Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
-2.2.x (release 3.2.x)
+2.1.x (release 3.1.x)
 2.0.x (release 3.0.x)
 1.3.x (release 2.6.x)
 `),
@@ -115,7 +115,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			comment: &github.IssueComment{
 				Body: github.String(`
 Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
-2.0.x (release 3.2.x)
+1.2.x (release 3.1.x)
 1.2.x (release 3.0.x)
 1.0.x (release 2.6.x)
 `),
@@ -139,7 +139,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			comment: &github.IssueComment{
 				Body: github.String(`
 Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
-2.0.x (release 3.2.x)
+1.2.x (release 3.1.x)
 1.2.x (release 3.0.x)
 1.0.x (release 2.6.x)
 `),
@@ -167,7 +167,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			comment: &github.IssueComment{
 				Body: github.String(`
 Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
-3.2.x (release 3.2.x)
+3.1.x (release 3.1.x)
 3.0.x (release 3.0.x)
 2.5.x (release 2.6.x)
 `),
@@ -192,7 +192,6 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 		t.Run(name, func(t *testing.T) {
 			mclient := &mock_github.Client{}
 			defer mclient.AssertExpectations(t)
-
 			if test.comment != nil {
 				mclient.On("CreateComment",
 					mock.MatchedBy(func(ctx context.Context) bool {

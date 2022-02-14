@@ -349,6 +349,23 @@ func TestParsePrOptions(t *testing.T) {
 				"mender":         "3.1.x",
 			},
 		},
+		"start pipeline with --pr flags (new syntax)": {
+			StartPipelineComment: "start pipeline --pr mender-connect/pull/88 --pr deviceconnect/pull/12 --pr mender/3.1.x --pr deviceauth/feature-branch",
+			RepoToPr: map[string]string{
+				"mender-connect": "pull/88/head",
+				"deviceconnect":  "pull/12/head",
+				"mender":         "3.1.x",
+				"deviceauth":     "feature-branch",
+			},
+		},
+		"start pipeline with --pr flags (syntax without 'pull' and 'head')": {
+			StartPipelineComment: "start pipeline --pr mender-connect/88 --pr deviceconnect/12 --pr mender/3.1.x",
+			RepoToPr: map[string]string{
+				"mender-connect": "pull/88/head",
+				"deviceconnect":  "pull/12/head",
+				"mender":         "3.1.x",
+			},
+		},
 		"start pipeline with --pr flags and some sugar with multiple spaces": {
 			StartPipelineComment: "start pipeline  --pr          mender-connect/pull/88/head          --pr          deviceconnect/pull/12/head --pr mender/3. 1.x     sugar pretty please",
 			RepoToPr: map[string]string{
@@ -374,10 +391,12 @@ func TestParsePrOptions(t *testing.T) {
 		"start pipeline incomplete --pr param": {
 			StartPipelineComment: "start pipeline --pr some",
 			RepoToPr:             map[string]string{},
+			ParseError:           errors.New("parse error near 'some', I need, e.g.: start pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
 		},
 		"start pipeline incomplete --pr params": {
 			StartPipelineComment: "start pipeline --pr --pr a --pr some",
-			RepoToPr:             map[string]string{},
+			RepoToPr:             nil,
+			ParseError:           errors.New("parse error near 'some', I need, e.g.: start pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
 		},
 	}
 
