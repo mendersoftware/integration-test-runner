@@ -246,7 +246,7 @@ cherry pick to:
 
 	for name, test := range tests {
 		t.Log(name)
-		output := parseCherryTargetBranches(test.input)
+		output, _ := parseCherryTargetBranches(test.input)
 		assert.Equal(t, test.expected, output)
 	}
 }
@@ -358,46 +358,99 @@ cherry-pick to:
 	}
 }
 
-func TestParseCherryTargetBranches(t *testing.T) {
+func TestParseMultiLineCherryTargetBranches(t *testing.T) {
 	tests := map[string]struct {
 		body     string
-		expected string
+		expected []string
 	}{
 		"master": {
 			body: `cherry-pick to:
 		* master`,
-			expected: "master",
+			expected: []string{"master"},
 		},
 		"hosted": {
 			body: `cherry-pick to:
 		* hosted`,
-			expected: "hosted",
+			expected: []string{"hosted"},
 		},
 		"staging": {
 			body: `cherry-pick to:
 		* staging`,
-			expected: "staging",
+			expected: []string{"staging"},
 		},
 		"feature-branch": {
 			body: `cherry-pick to:
 		* feature-independe_testing-1`,
-			expected: "feature-independe_testing-1",
+			expected: []string{"feature-independe_testing-1"},
 		},
 		"1.2.x": {
 			body: `cherry-pick to:
 		* 1.2.x`,
-			expected: "1.2.x",
+			expected: []string{"1.2.x"},
 		},
 		"1.2.x with escape char": {
 			body: `cherry-pick to:
 		* 1.2.x\r`,
-			expected: "1.2.x",
+			expected: []string{"1.2.x"},
+		},
+		"multiple branches": {
+			body: `cherry-pick to:
+		* master
+		* hosted
+		* example-branch`,
+			expected: []string{"master", "hosted", "example-branch"},
 		},
 	}
 
 	for name, test := range tests {
 		t.Log(name)
-		res := parseCherryTargetBranches(test.body)
-		assert.Equal(t, test.expected, res[0])
+		res, _ := parseCherryTargetBranches(test.body)
+		assert.Equal(t, test.expected, res)
+	}
+}
+
+func TestParseSingleLineCherryTargetBranches(t *testing.T) {
+	tests := map[string]struct {
+		body     string
+		expected []string
+	}{
+		"master": {
+			body:     "cherry-pick to: `master`",
+			expected: []string{"master"},
+		},
+		"hosted": {
+			body:     "cherry-pick to: `hosted`",
+			expected: []string{"hosted"},
+		},
+		"staging": {
+			body:     "cherry-pick to: `staging`",
+			expected: []string{"staging"},
+		},
+		"feature-branch": {
+			body:     "cherry-pick to: `feature-independe_testing-1`",
+			expected: []string{"feature-independe_testing-1"},
+		},
+		"1.2.x": {
+			body:     "cherry-pick to: `1.2.x`",
+			expected: []string{"1.2.x"},
+		},
+		"1.2.x with escape char": {
+			body:     "cherry-pick to: `1.2.x`" + `\r`,
+			expected: []string{"1.2.x"},
+		},
+		"multiple space separated branches": {
+			body:     "cherry-pick to: `master` `hosted` `example-branch`",
+			expected: []string{"master", "hosted", "example-branch"},
+		},
+		"multiple comma and space separated branches": {
+			body:     "cherry-pick to: `master`, `hosted`, `example-branch`, ",
+			expected: []string{"master", "hosted", "example-branch"},
+		},
+	}
+
+	for name, test := range tests {
+		t.Log(name)
+		res, _ := parseCherryTargetBranches(test.body)
+		assert.Equal(t, test.expected, res)
 	}
 }

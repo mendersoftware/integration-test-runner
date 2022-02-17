@@ -1,4 +1,4 @@
-input: pr_cherry_pick_comment.json
+input: pr_cherry_pick_comment_singleline.json
 output:
 - 'github.IsOrganizationMember: org=mendersoftware,user=oleorhagen'
 - 'info:Attempting to cherry-pick the changes in PR: mender/864'
