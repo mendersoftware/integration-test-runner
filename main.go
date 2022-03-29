@@ -82,8 +82,9 @@ const (
 )
 
 const (
-	commandStartPipeline    = "start pipeline"
-	commandCherryPickBranch = "cherry-pick to:"
+	commandStartPipeline      = "start pipeline"
+	commandCherryPickBranch   = "cherry-pick to:"
+	commandConventionalCommit = "mark-pr as"
 )
 
 func getConfig() (*config, error) {

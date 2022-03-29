@@ -63,16 +63,21 @@ func Commands(cmds ...*Cmd) (*State, error) {
 		return &State{}, err
 	}
 	s := &State{Dir: tdir}
+	err = CommandsWithState(s, cmds...)
+	return s, err
+}
+
+func CommandsWithState(s *State, cmds ...*Cmd) error {
 	for _, cmd := range cmds {
-		cmd.Dir = tdir
+		cmd.Dir = s.Dir
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			return s, errors.Wrapf(err,
+			return errors.Wrapf(err,
 				"git command: %s returned error:\n%s",
 				cmd.cmd.Args, out)
 		}
 	}
-	return s, nil
+	return nil
 }
 
 // Command creates a new git command
