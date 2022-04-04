@@ -1,3 +1,4 @@
+# Dummy PR. Using this to test pipeline.
 GO ?= go
 GOFMT ?= gofmt "-s"
 PACKAGES ?= $(shell $(GO) list ./...)
