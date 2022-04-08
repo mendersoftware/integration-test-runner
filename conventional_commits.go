@@ -59,22 +59,21 @@ func attemptConventionalComittifyDependabotPr(
 
 	// take message, and conventional committify it
 	headBranch := pr.GetHead().GetRef()
-	cloneUrl := *pr.GetHead().GetRepo().CloneURL
+	sshCloneUrl := pr.GetHead().GetRepo().GetSSHURL()
 	state, err := git.Commands(
-		git.Command("clone", "--branch", headBranch, "--single-branch", cloneUrl),
+		git.Command("clone", "--branch", headBranch, "--single-branch", sshCloneUrl, "."),
 	)
 	defer state.Cleanup()
 
 	if err != nil {
-		log.Infof("Could not clone branch %s from %s", headBranch, cloneUrl)
-		return err
+		return fmt.Errorf("could not clone branch %s from %s, with error:\n%w",
+			headBranch, sshCloneUrl, err)
 	}
 
 	messageBytes, err := git.Command("--no-pager", "show", "--no-patch", "--format=%B", "HEAD").
 		With(state).CombinedOutput()
 	if err != nil {
-		log.Info(err.Error())
-		return err
+		return fmt.Errorf("could not retrieve last commit message with error:\n%w", err)
 	}
 
 	message := string(messageBytes)
@@ -86,8 +85,7 @@ func attemptConventionalComittifyDependabotPr(
 		git.Command("commit", "--amend", "-m", newMessage),
 		git.Command("push", "--force"),
 	); err != nil {
-		log.Info("Could not amend and push")
-		return err
+		return fmt.Errorf("could not amend and push with error:\n%w", err)
 	}
 
 	return nil
