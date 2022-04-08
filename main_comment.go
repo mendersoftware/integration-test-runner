@@ -131,6 +131,18 @@ func processGitHubComment(
 		if err != nil {
 			log.Error(err)
 		}
+	case strings.Contains(commentBody, commandConventionalCommit) &&
+		strings.Contains(pr.GetUser().GetLogin(), "dependabot"):
+		log.Infof(
+			"Attempting to make the PR: %s/%d and commit: %s a conventional commit",
+			comment.GetRepo().GetName(),
+			pr.GetNumber(),
+			pr.GetHead().GetSHA(),
+		)
+		err = conventionalComittifyDependabotPr(log, comment, pr, conf, commentBody, githubClient)
+		if err != nil {
+			log.Error(err)
+		}
 	default:
 		log.Warnf("no command found: %s", commentBody)
 		return nil

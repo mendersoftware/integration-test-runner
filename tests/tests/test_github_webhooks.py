@@ -245,3 +245,21 @@ def test_cherrypick_singleline(golden, integration_test_runner_url):
     res = requests.get(integration_test_runner_url + "/logs")
     assert res.status_code == 200
     assert res.json() == golden.out["output"]
+
+
+@pytest.mark.golden_test("golden-files/test_issue_comment_conventional_commit.yml")
+def test_conventional_commit(golden, integration_test_runner_url):
+    res = requests.post(
+        integration_test_runner_url + "/",
+        data=load_payload(golden["input"]),
+        headers={
+            "Content-Type": "application/json",
+            "X-Github-Event": "issue_comment",
+            "X-Github-Delivery": "delivery",
+        },
+    )
+    assert res.status_code == 202
+    #
+    res = requests.get(integration_test_runner_url + "/logs")
+    assert res.status_code == 200
+    assert res.json() == golden.out["output"]

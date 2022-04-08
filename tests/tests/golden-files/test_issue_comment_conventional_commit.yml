@@ -1,0 +1,12 @@
+input: issue_comment_conventional_commit.json
+output:
+- 'github.IsOrganizationMember: org=mendersoftware,user=tranchitella'
+- 'info:Attempting to make the PR: mender/973 and commit: e1b17525f802776f9c2ac4df729fc5943e73b3ed
+  a conventional commit'
+- 'git.Run: /usr/bin/git clone --branch dependabot/go_modules/github.com/stretchr/testify-1.7.1
+  --single-branch https://github.com/mendersoftware/mender.git'
+- 'git.Run: /usr/bin/git --no-pager show --no-patch --format=%B HEAD'
+- |-
+  git.Run: /usr/bin/git commit --amend -m fix: Changelog: All
+  Ticket: None
+- 'git.Run: /usr/bin/git push --force'
