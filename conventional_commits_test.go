@@ -92,6 +92,21 @@ Changelog: All
 Ticket: None
 Signed-off-by: dependabot[bot]`,
 		},
+		"with changelog chore prefix": {
+			"feat",
+			`chore: feature description
+
+body
+
+Signed-off-by: dependabot[bot]`,
+			`feat: feature description
+
+body
+
+Changelog: All
+Ticket: None
+Signed-off-by: dependabot[bot]`,
+		},
 	}
 	for name, test := range tests {
 		t.Log(name)

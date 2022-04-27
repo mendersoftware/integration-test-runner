@@ -92,8 +92,11 @@ func attemptConventionalComittifyDependabotPr(
 }
 
 func conventionalComittifyDependabotMessage(message string, typeKeyword string) string {
-	message = typeKeyword + ": " +
-		strings.TrimPrefix(strings.TrimSpace(message), "Changelog:All: ")
+	message = strings.TrimSpace(message)
+	message = strings.TrimPrefix(message, "Changelog:All: ")
+	message = strings.TrimPrefix(message, "chore: ")
+	message = typeKeyword + ": " + message
+
 	fi := strings.Index(message, "Signed-off-by")
 	if fi < 0 {
 		fi = len(message)
