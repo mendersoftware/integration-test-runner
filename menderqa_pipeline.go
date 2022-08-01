@@ -169,7 +169,7 @@ func triggerBuild(
 	conf *config,
 	build *buildOptions,
 	pr *github.PullRequestEvent,
-	prRepos map[string]string,
+	buildOptions *BuildOptions,
 ) error {
 	gitlabClient, err := clientgitlab.NewGitLabClient(
 		conf.gitlabToken,
@@ -180,7 +180,7 @@ func triggerBuild(
 		return err
 	}
 
-	buildParameters, err := getBuildParameters(log, conf, build, prRepos)
+	buildParameters, err := getBuildParameters(log, conf, build, buildOptions)
 	if err != nil {
 		return err
 	}
@@ -325,7 +325,7 @@ func getBuildParameters(
 	log *logrus.Entry,
 	conf *config,
 	build *buildOptions,
-	prsRepos map[string]string,
+	buildOptions *BuildOptions,
 ) ([]*gitlab.PipelineVariable, error) {
 	var err error
 	readHead := "pull/" + build.pr + "/head"
@@ -354,12 +354,12 @@ func getBuildParameters(
 		if versionedRepo != build.repo &&
 			versionedRepo != "integration" &&
 			build.repo != "meta-mender" {
-			if _, exists := prsRepos[versionedRepo]; exists {
+			if _, exists := buildOptions.PullRequests[versionedRepo]; exists {
 				buildParameters = append(
 					buildParameters,
 					&gitlab.PipelineVariable{
 						Key:   repoToBuildParameter(versionedRepo),
-						Value: prsRepos[versionedRepo],
+						Value: buildOptions.PullRequests[versionedRepo],
 					},
 				)
 				continue
@@ -385,16 +385,16 @@ func getBuildParameters(
 	// integration
 	if build.repo != "integration" && build.repo != "meta-mender" {
 		revision := build.baseBranch
-		if _, exists := prsRepos["integration"]; exists {
-			revision = prsRepos["integration"]
+		if _, exists := buildOptions.PullRequests["integration"]; exists {
+			revision = buildOptions.PullRequests["integration"]
 		}
 		buildParameters = append(buildParameters,
 			&gitlab.PipelineVariable{
 				Key:   repoToBuildParameter("integration"),
 				Value: revision})
 
-		if _, exists := prsRepos["meta-mender"]; exists {
-			revision = prsRepos["meta-mender"]
+		if _, exists := buildOptions.PullRequests["meta-mender"]; exists {
+			revision = buildOptions.PullRequests["meta-mender"]
 			buildParameters = append(buildParameters,
 				&gitlab.PipelineVariable{
 					Key:   repoToBuildParameter("meta-mender"),
@@ -443,9 +443,17 @@ func getBuildParameters(
 	}
 
 	// set the rest of the CI build parameters
+	runIntegrationTests := "true"
+	if buildOptions.Fast {
+		runIntegrationTests = "false"
+	}
 	buildParameters = append(
 		buildParameters,
-		&gitlab.PipelineVariable{Key: "RUN_INTEGRATION_TESTS", Value: "true"},
+		&gitlab.PipelineVariable{Key: "RUN_INTEGRATION_TESTS", Value: runIntegrationTests},
+	)
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariable{Key: "RUN_BACKEND_INTEGRATION_TESTS", Value: "true"},
 	)
 	buildParameters = append(buildParameters,
 		&gitlab.PipelineVariable{
@@ -554,7 +562,7 @@ func stopBuildsOfStalePRs(log *logrus.Entry, pr *github.PullRequestEvent, conf *
 			return err
 		}
 
-		buildParams, err := getBuildParameters(log, conf, &build, map[string]string{})
+		buildParams, err := getBuildParameters(log, conf, &build, NewBuildOptions())
 		if err != nil {
 			log.Debug("stopBuildsOfStalePRs: Failed to get the build-parameters for the build")
 			return err

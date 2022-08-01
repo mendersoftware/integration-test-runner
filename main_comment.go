@@ -80,7 +80,7 @@ func processGitHubComment(
 		// make sure we only parse one pr at a time, since we use release_tool
 		mutex.Lock()
 
-		prsRepos, err := parsePrOptions(commentBody)
+		buildOptions, err := parseBuildOptions(commentBody)
 		// get the list of builds
 		prRequest := &github.PullRequestEvent{
 			Repo:        comment.GetRepo(),
@@ -118,7 +118,7 @@ func processGitHubComment(
 				log.Info("Skipping build targeting meta-mender:master-next")
 				continue
 			}
-			if err := triggerBuild(log, conf, &build, prRequest, prsRepos); err != nil {
+			if err := triggerBuild(log, conf, &build, prRequest, buildOptions); err != nil {
 				log.Errorf("Could not start build: %s", err.Error())
 			}
 		}
@@ -152,13 +152,16 @@ func processGitHubComment(
 }
 
 //parsing `start pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head
-//--pr mender/3.1.x sugar pretty please`
-//	map[string]string{
-//		"mender-connect": "pull/88/head",
-//		"deviceconnect": "pull/12/head",
+//--pr mender/3.1.x --fast sugar pretty please`
+//	BuildOptions {
+//		Fast: true,
+//		PullRequests: map[string]string{
+//			"mender-connect": "pull/88/head",
+//			"deviceconnect": "pull/12/head",
+//		}
 //	}
-func parsePrOptions(commentBody string) (map[string]string, error) {
-	prRepos := make(map[string]string)
+func parseBuildOptions(commentBody string) (*BuildOptions, error) {
+	buildOptions := NewBuildOptions()
 	var err error
 	words := strings.Fields(commentBody)
 	tokensCount := len(words)
@@ -188,10 +191,12 @@ func parsePrOptions(commentBody string) (map[string]string, error) {
 							" somerepo/pull/12/head --pr somerepo/1.0.x ",
 					)
 				}
-				prRepos[userInputParts[0]] = revision
+				buildOptions.PullRequests[userInputParts[0]] = revision
 			}
+		} else if word == "--fast" {
+			buildOptions.Fast = true
 		}
 	}
 
-	return prRepos, err
+	return buildOptions, err
 }
