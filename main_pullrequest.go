@@ -143,6 +143,10 @@ func processGitHubPullRequest(
 
    - mentioning me and ` + "`" + `start pipeline --pr mender/127 --pr mender-connect/255` + "`" + `
 
+   You can start a fast pipeline, disabling full integration tests with:
+
+   - mentioning me and ` + "`" + `start pipeline --fast` + "`" + `
+
    You can cherry pick to a given branch or branches with:
 
    - mentioning me and:
