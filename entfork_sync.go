@@ -13,7 +13,6 @@ import (
 	"github.com/google/go-github/v28/github"
 	"github.com/sirupsen/logrus"
 
-	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 	"github.com/mendersoftware/integration-test-runner/git"
 )
 
@@ -255,8 +254,7 @@ func createPullRequestFromTestBotFork(args createPRArgs) (*github.PullRequest, e
 		MaintainerCanModify: github.Bool(true),
 	}
 
-	client := clientgithub.NewGitHubClient(args.conf.githubToken, args.conf.dryRunMode)
-	pr, err := client.CreatePullRequest(
+	pr, err := githubClient.CreatePullRequest(
 		context.Background(),
 		args.conf.githubOrganization,
 		args.repo,
@@ -352,8 +350,7 @@ This can be done by following:
 		Body: &commentBody,
 	}
 
-	client := clientgithub.NewGitHubClient(args.conf.githubToken, args.conf.dryRunMode)
-	return client.CreateComment(
+	return githubClient.CreateComment(
 		context.Background(),
 		args.conf.githubOrganization,
 		args.repo,

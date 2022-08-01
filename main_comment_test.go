@@ -14,7 +14,6 @@ import (
 )
 
 func TestProcessGitHubWebhook(t *testing.T) {
-
 	gitHubOrg := "mendersoftware"
 
 	testCases := map[string]struct {
@@ -28,7 +27,8 @@ func TestProcessGitHubWebhook(t *testing.T) {
 		pullRequest          *github.PullRequest
 		pullRequestErr       error
 
-		err error
+		err           error
+		createComment bool
 	}{
 		"comment updated, ignore": {
 			webhookType: "issue_comment",
@@ -271,15 +271,24 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				Base: &github.PullRequestBranch{
 					Label: github.String("user:branch"),
 				},
+				Number: github.Int(78),
 			},
-			err: errors.New("parse error near 'deviceconnect', I need, e.g.: start pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
+			err:           errors.New("parse error near 'deviceconnect', I need, e.g.: start pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
+			createComment: true,
 		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			oldGithubClient := githubClient
+			defer func() {
+				githubClient = oldGithubClient
+			}()
+
 			mclient := &mock_github.Client{}
 			defer mclient.AssertExpectations(t)
+
+			githubClient = mclient
 
 			if tc.isOrganizationMember != nil {
 				mclient.On("IsOrganizationMember",
@@ -300,6 +309,18 @@ func TestProcessGitHubWebhook(t *testing.T) {
 					tc.repo,
 					tc.prNumber,
 				).Return(tc.pullRequest, tc.pullRequestErr)
+			}
+
+			if tc.createComment {
+				mclient.On("CreateComment",
+					mock.MatchedBy(func(ctx context.Context) bool {
+						return true
+					}),
+					gitHubOrg,
+					tc.repo,
+					tc.prNumber,
+					mock.AnythingOfType("*github.IssueComment"),
+				).Return(nil)
 			}
 
 			conf := &config{

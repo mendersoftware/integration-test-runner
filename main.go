@@ -204,6 +204,8 @@ func main() {
 	doMain()
 }
 
+var githubClient clientgithub.Client
+
 func doMain() {
 	conf, err := getConfig()
 	if err != nil {
@@ -218,7 +220,7 @@ func doMain() {
 
 	logrus.Infoln("using settings: ", spew.Sdump(conf))
 
-	githubClient := clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
+	githubClient = clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
 	r := gin.Default()
 	r.Use(gin.Recovery())
 

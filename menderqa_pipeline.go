@@ -13,7 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 
-	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 	clientgitlab "github.com/mendersoftware/integration-test-runner/client/gitlab"
 )
 
@@ -45,8 +44,7 @@ func say(
 		Body: &commentBody,
 	}
 
-	client := clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
-	err = client.CreateComment(ctx,
+	err = githubClient.CreateComment(ctx,
 		conf.githubOrganization, pr.GetRepo().GetName(), pr.GetNumber(), &comment)
 	if err != nil {
 		log.Infof("Failed to comment on the pr: %v, Error: %s", pr, err.Error())
@@ -252,8 +250,7 @@ Hello :smile_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}]
 		Body: &commentBody,
 	}
 
-	client := clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
-	err = client.CreateComment(context.Background(),
+	err = githubClient.CreateComment(context.Background(),
 		conf.githubOrganization, pr.GetRepo().GetName(), pr.GetNumber(), &comment)
 	if err != nil {
 		log.Infof("Failed to comment on the pr: %v, Error: %s", pr, err.Error())
