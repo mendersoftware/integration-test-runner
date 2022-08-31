@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"strings"
@@ -19,6 +22,9 @@ import (
 )
 
 func TestSuggestCherryPicks(t *testing.T) {
+
+	versionsUrl = ""
+	warnString := fmt.Sprintf(apiWarningString, versionsUrl)
 
 	gitHubOrg := "mendersoftware"
 
@@ -94,7 +100,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 2.2.x (release 3.3.x)
 2.2.x (release 3.2.x)
 2.0.x (release 3.0.x)
-`),
+` + warnString),
 			},
 		},
 		"cherry picks, changelogs, less than three release branches": {
@@ -118,7 +124,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 2.0.x (release 3.3.x)
 2.0.x (release 3.2.x)
 1.2.x (release 3.0.x)
-`),
+` + warnString),
 			},
 		},
 		"cherry picks, changelogs, syntax with no space": {
@@ -142,7 +148,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 2.0.x (release 3.3.x)
 2.0.x (release 3.2.x)
 1.2.x (release 3.0.x)
-`),
+` + warnString),
 			},
 		},
 		"cherry picks, changelogs, bottable tag added": {
@@ -170,7 +176,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 3.3.x (release 3.3.x)
 3.2.x (release 3.2.x)
 3.0.x (release 3.0.x)
-`),
+` + warnString),
 			},
 		},
 	}
@@ -453,4 +459,23 @@ func TestParseSingleLineCherryTargetBranches(t *testing.T) {
 		res, _ := parseCherryTargetBranches(test.body)
 		assert.Equal(t, test.expected, res)
 	}
+}
+
+const versionsResponse = `{
+	"lts": ["3.3", "3.0"],
+	"releases": {
+		"something": "something"
+	}
+}
+`
+
+func TestGetLatestReleaseFromApi(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.Write([]byte(versionsResponse))
+	}))
+	versions, err := getLatestReleaseFromApi(server.URL)
+	assert.Nil(t, err)
+	assert.Len(t, versions, 2)
+	assert.Equal(t, versions[0], "3.3.x")
+	assert.Equal(t, versions[1], "3.0.x")
 }

@@ -3,13 +3,17 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/google/go-github/v28/github"
 	"github.com/sirupsen/logrus"
@@ -18,7 +22,51 @@ import (
 	"github.com/mendersoftware/integration-test-runner/git"
 )
 
+var versionsUrl = "https://docs.mender.io/releases/versions.json"
+
 var errorCherryPickConflict = errors.New("Cherry pick had conflicts")
+
+const apiWarningString = "\nNote: Suggestions could not be fetched from " +
+	"[release version endpoint](%s) and are therefore taken from integration."
+
+type versions struct {
+	Lts []string `json:",omitempty"`
+}
+
+func (v *versions) Unmarshal(bytes []byte) error {
+	return json.Unmarshal(bytes, v)
+}
+
+func getLatestReleaseFromApi(url string) ([]string, error) {
+	client := http.Client{
+		Timeout: time.Second * 2,
+	}
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	v := versions{}
+	err = v.Unmarshal(body)
+	if err != nil {
+		return nil, err
+	}
+	if len(v.Lts) == 0 {
+		return nil, errors.New("getLatestReleaseFromApi: lts version list is empty")
+	}
+	for idx, val := range v.Lts {
+		v.Lts[idx] = val + ".x"
+	}
+	return v.Lts, nil
+}
 
 func getLatestIntegrationRelease(number int, conf *config) ([]string, error) {
 	cmd := fmt.Sprintf(
@@ -101,10 +149,19 @@ func suggestCherryPicks(
 		return err
 	}
 
+	// nolint:lll
+	tmplString := `
+Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+{{.ReleaseBranches}}
+`
 	// get list of release versions
-	versions, err := getLatestIntegrationRelease(3, conf)
+	versions, err := getLatestReleaseFromApi(versionsUrl)
 	if err != nil {
-		return err
+		versions, err = getLatestIntegrationRelease(3, conf)
+		if err != nil {
+			return err
+		}
+		tmplString += fmt.Sprintf(apiWarningString, versionsUrl)
 	}
 	releaseBranches := []string{}
 	for _, version := range versions {
@@ -133,11 +190,6 @@ func suggestCherryPicks(
 	}
 
 	// suggest cherry-picking with a comment
-	// nolint:lll
-	tmplString := `
-Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
-{{.ReleaseBranches}}
-`
 	tmpl, err := template.New("Main").Parse(tmplString)
 	if err != nil {
 		log.Errorf(
