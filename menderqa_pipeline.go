@@ -16,7 +16,7 @@ import (
 	clientgitlab "github.com/mendersoftware/integration-test-runner/client/gitlab"
 )
 
-const LatestStableYoctoBranch = "dunfell"
+const LatestStableYoctoBranch = "kirkstone"
 
 func say(
 	ctx context.Context,
