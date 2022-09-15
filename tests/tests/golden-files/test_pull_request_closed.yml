@@ -1,80 +1,80 @@
 input: pull_request_closed.json
 output:
-- debug:Processing pull request action closed
-- 'git.Run: /usr/bin/git init .'
-- 'git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/Mender/workflows'
-- 'git.Run: /usr/bin/git fetch gitlab'
-- 'git.Run: /usr/bin/git push gitlab --delete pr_140'
-- 'git.Run: /usr/bin/git init .'
-- 'git.Run: /usr/bin/git remote add github git@github.com:/mendersoftware/workflows.git'
-- 'git.Run: /usr/bin/git fetch github master:local'
-- 'git.Run: /usr/bin/git fetch github pull/140/head:pr_140'
-- info:Found no changelog entries, ignoring cherry-pick suggestions
-- 'github.IsOrganizationMember: org=mendersoftware,user=tranchitella'
-- 'debug:stopBuildsOfStalePRs: Find any running pipelines and kill mercilessly!'
-- 'git.Run: /usr/bin/git pull --rebase origin'
-- 'info:workflows/master is being used in the following integration: [master]'
-- 'info:the following integration branches: [master] are using workflows/master'
-- info:auditlogs version master is being used in master
-- info:create-artifact-worker version master is being used in master
-- info:deployments version master is being used in master
-- info:deployments-enterprise version master is being used in master
-- info:deviceauth version master is being used in master
-- info:deviceauth-enterprise version master is being used in master
-- info:deviceconfig version master is being used in master
-- info:deviceconnect version master is being used in master
-- info:devicemonitor version master is being used in master
-- info:gui version master is being used in master
-- info:inventory version master is being used in master
-- info:inventory-enterprise version master is being used in master
-- info:iot-manager version master is being used in master
-- info:mender version master is being used in master
-- info:mender-artifact version master is being used in master
-- info:mender-binary-delta version master is being used in master
-- info:mender-cli version master is being used in master
-- info:mender-configure-module version master is being used in master
-- info:mender-connect version master is being used in master
-- info:mender-convert version master is being used in master
-- info:mender-gateway version master is being used in master
-- info:monitor-client version master is being used in master
-- info:mtls-ambassador version master is being used in master
-- info:reporting version master is being used in master
-- info:tenantadm version master is being used in master
-- info:useradm version master is being used in master
-- info:useradm-enterprise version master is being used in master
-- info:workflows-enterprise version master is being used in master
-- 'gitlab.ListProjectPipelines: path=Northern.tech/Mender/mender-qa,options={"status":"pending","username":"mender-test-bot"}'
-- 'gitlab.ListProjectPipelines: path=Northern.tech/Mender/mender-qa,options={"status":"running","username":"mender-test-bot"}'
-- 'gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1'
-- 'gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1'
-- 'info:syncIfOSHasEnterpriseRepo: Merge to (master) in an OS repository detected.
-  Syncing the repositories...'
-- 'git.Run: /usr/bin/git init .'
-- 'git.Run: /usr/bin/git remote add opensource git@github.com:/mendersoftware/workflows.git'
-- 'git.Run: /usr/bin/git remote add enterprise git@github.com:/mendersoftware/workflows-enterprise.git'
-- 'git.Run: /usr/bin/git remote add mender-test-bot git@github.com:/mender-test-bot/workflows-enterprise.git'
-- 'git.Run: /usr/bin/git config --add user.name mender-test-bot'
-- 'git.Run: /usr/bin/git config --add user.email mender@northern.tech'
-- 'git.Run: /usr/bin/git fetch opensource master'
-- 'git.Run: /usr/bin/git fetch enterprise master:mergeostoent_140'
-- 'git.Run: /usr/bin/git checkout mergeostoent_140'
-- 'debug:Trying to Merge OS base branch: (master) including PR: (140) into Enterprise:
-  (master)'
-- 'git.Run: /usr/bin/git merge -m Merge OS base branch: (master) including PR: (140)
-  into Enterprise: (master) opensource/master'
-- 'git.Run: /usr/bin/git push --set-upstream mender-test-bot mergeostoent_140'
-- 'info:Merged branch: opensource/workflows/master into enterprise/workflows/master
-  in the Enterprise repo'
-- 'github.CreatePullRequest: org=mendersoftware,repo=workflows-enterprise,pr={"title":"[Bot]
-  Improve logging","head":"mender-test-bot:mergeostoent_140","base":"master","body":"Original
-  PR: https://github.com/mendersoftware/workflows/pull/140\n\nChangelog: none\r\n\r\nSigned-off-by:
-  Fabio Tranchitella \u003cfabio.tranchitella@northern.tech\u003e","maintainer_can_modify":true}'
-- 'info:syncIfOSHasEnterpriseRepo: Created PR: 0 on Enterprise/workflows/master'
-- 'debug:syncIfOSHasEnterpriseRepo: Created PR: id=666510619,number=140,title=Improve
-  logging'
-- debug:Trying to @mention the user in the newly created PR
-- 'debug:userName: tranchitella'
-- 'github.CreateComment: org=mendersoftware,repo=workflows-enterprise,number=0,comment={"body":"@tranchitella
-  I have created a PR for you, ready to merge as soon as tests are passed"}'
-- 'info:Pull request event with action: closed'
-- info:workflows:140 would trigger 0 builds
+  - debug:Processing pull request action closed
+  - "git.Run: /usr/bin/git init ."
+  - "git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/Mender/workflows"
+  - "git.Run: /usr/bin/git fetch gitlab"
+  - "git.Run: /usr/bin/git push gitlab --delete pr_140"
+  - "git.Run: /usr/bin/git init ."
+  - "git.Run: /usr/bin/git remote add github git@github.com:/mendersoftware/workflows.git"
+  - "git.Run: /usr/bin/git fetch github master:local"
+  - "git.Run: /usr/bin/git fetch github pull/140/head:pr_140"
+  - info:Found no changelog entries, ignoring cherry-pick suggestions
+  - "github.IsOrganizationMember: org=mendersoftware,user=tranchitella"
+  - "debug:stopBuildsOfStalePRs: Find any running pipelines and kill mercilessly!"
+  - "git.Run: /usr/bin/git pull --rebase origin"
+  - "info:workflows/master is being used in the following integration: [master]"
+  - "info:the following integration branches: [master] are using workflows/master"
+  - info:auditlogs version master is being used in master
+  - info:create-artifact-worker version master is being used in master
+  - info:deployments version master is being used in master
+  - info:deployments-enterprise version master is being used in master
+  - info:deviceauth version master is being used in master
+  - info:deviceauth-enterprise version master is being used in master
+  - info:deviceconfig version master is being used in master
+  - info:deviceconnect version master is being used in master
+  - info:devicemonitor version master is being used in master
+  - info:gui version master is being used in master
+  - info:inventory version master is being used in master
+  - info:inventory-enterprise version master is being used in master
+  - info:iot-manager version master is being used in master
+  - info:mender version master is being used in master
+  - info:mender-artifact version master is being used in master
+  - info:mender-binary-delta version master is being used in master
+  - info:mender-cli version master is being used in master
+  - info:mender-configure-module version master is being used in master
+  - info:mender-connect version master is being used in master
+  - info:mender-convert version master is being used in master
+  - info:mender-gateway version master is being used in master
+  - info:monitor-client version master is being used in master
+  - info:mtls-ambassador version master is being used in master
+  - info:reporting version master is being used in master
+  - info:tenantadm version master is being used in master
+  - info:useradm version master is being used in master
+  - info:useradm-enterprise version master is being used in master
+  - info:workflows-enterprise version master is being used in master
+  - 'gitlab.ListProjectPipelines: path=Northern.tech/Mender/mender-qa,options={"status":"pending","username":"mender-test-bot"}'
+  - 'gitlab.ListProjectPipelines: path=Northern.tech/Mender/mender-qa,options={"status":"running","username":"mender-test-bot"}'
+  - "gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1"
+  - "gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1"
+  - "info:syncIfOSHasEnterpriseRepo: Merge to (master) in an OS repository detected.
+    Syncing the repositories..."
+  - "git.Run: /usr/bin/git init ."
+  - "git.Run: /usr/bin/git remote add opensource git@github.com:/mendersoftware/workflows.git"
+  - "git.Run: /usr/bin/git remote add enterprise git@github.com:/mendersoftware/workflows-enterprise.git"
+  - "git.Run: /usr/bin/git remote add mender-test-bot git@github.com:/mender-test-bot/workflows-enterprise.git"
+  - "git.Run: /usr/bin/git config --add user.name mender-test-bot"
+  - "git.Run: /usr/bin/git config --add user.email mender@northern.tech"
+  - "git.Run: /usr/bin/git fetch opensource master"
+  - "git.Run: /usr/bin/git fetch enterprise master:mergeostoent_140"
+  - "git.Run: /usr/bin/git checkout mergeostoent_140"
+  - "debug:Trying to Merge OS base branch: (master) including PR: (140) into Enterprise:
+    (master)"
+  - "git.Run: /usr/bin/git merge -m Merge OS base branch: (master) including PR: (140)
+    into Enterprise: (master) opensource/master"
+  - "git.Run: /usr/bin/git push --set-upstream mender-test-bot mergeostoent_140"
+  - "info:Merged branch: opensource/workflows/master into enterprise/workflows/master
+    in the Enterprise repo"
+  - 'github.CreatePullRequest: org=mendersoftware,repo=workflows-enterprise,pr={"title":"[Bot]
+    Improve logging","head":"mender-test-bot:mergeostoent_140","base":"master","body":"Original
+    PR: https://github.com/mendersoftware/workflows/pull/140\n\nChangelog: none\r\n\r\nSigned-off-by:
+    Fabio Tranchitella \u003cfabio.tranchitella@northern.tech\u003e","maintainer_can_modify":true}'
+  - "info:syncIfOSHasEnterpriseRepo: Created PR: 0 on Enterprise/workflows/master"
+  - "debug:syncIfOSHasEnterpriseRepo: Created PR: id=666510619,number=140,title=Improve
+    logging"
+  - debug:Trying to @mention the user in the newly created PR
+  - "debug:userName: tranchitella"
+  - 'github.CreateComment: org=mendersoftware,repo=workflows-enterprise,number=0,comment={"body":"@tranchitella
+    I have created a PR for you, ready to merge as soon as tests are passed"}'
+  - "info:Pull request event with action: closed"
+  - info:workflows:140 would trigger 0 builds
