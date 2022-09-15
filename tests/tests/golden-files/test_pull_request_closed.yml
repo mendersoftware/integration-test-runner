@@ -24,6 +24,7 @@ output:
   - info:deviceconfig version master is being used in master
   - info:deviceconnect version master is being used in master
   - info:devicemonitor version master is being used in master
+  - info:generate-delta-worker version master is being used in master
   - info:gui version master is being used in master
   - info:inventory version master is being used in master
   - info:inventory-enterprise version master is being used in master
