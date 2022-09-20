@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"reflect"
 	"sync"
 	"time"
 
@@ -138,10 +137,19 @@ func getConfig() (*config, error) {
 
 func getCustomLoggerFromContext(ctx *gin.Context) *logrus.Entry {
 	deliveryID, ok := ctx.Get("delivery")
-	if !ok || reflect.TypeOf(deliveryID).Kind() != reflect.String {
-		return nil
+	if !ok || !isStringType(deliveryID) {
+		return logrus.WithField("delivery", "nil")
 	}
 	return logrus.WithField("delivery", deliveryID)
+}
+
+func isStringType(i interface{}) bool {
+	switch i.(type) {
+	case string:
+		return true
+	default:
+		return false
+	}
 }
 
 func processGitHubWebhookRequest(
