@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"reflect"
 	"sync"
 	"time"
 
@@ -137,7 +138,7 @@ func getConfig() (*config, error) {
 
 func getCustomLoggerFromContext(ctx *gin.Context) *logrus.Entry {
 	deliveryID, ok := ctx.Get("delivery")
-	if !ok {
+	if !ok || reflect.TypeOf(deliveryID).Kind() != reflect.String {
 		return nil
 	}
 	return logrus.WithField("delivery", deliveryID)
