@@ -65,8 +65,12 @@ func processGitHubPullRequest(
 			err = startPRPipeline(log, prBranchName, pr, conf, isOrgMember)
 			if err != nil {
 				log.Errorf("failed to start pipeline for PR: %s", err)
-				msg := "There was an error running your pipeline, " + msgDetails
-				postGitHubMessage(ctx, pr, log, msg)
+				// post a comment only if GitLab is supposed to start a pipeline
+				gitlabReplyErrorMsg := "Missing CI config file"
+				if !strings.Contains(err.Error(), gitlabReplyErrorMsg) {
+					msg := "There was an error running your pipeline, " + msgDetails
+					postGitHubMessage(ctx, pr, log, msg)
+				}
 			}
 		}
 
