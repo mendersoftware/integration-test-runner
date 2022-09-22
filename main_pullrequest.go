@@ -42,9 +42,14 @@ func processGitHubPullRequest(
 	log.Debugf("Processing pull request action %s", action)
 	switch action {
 	case "opened", "edited", "reopened", "synchronize", "ready_for_review":
+		msgDetails := "see <a href=\"https://console.cloud.google.com/kubernetes/" +
+			"deployment/us-east1/company-websites/default/test-runner-mender-io/logs?" +
+			"project=gp-kubernetes-269000\">logs</a> for details."
 		// We always create a pr_* branch
 		if prRef, err = syncPullRequestBranch(log, pr, conf); err != nil {
 			log.Errorf("Could not create PR branch: %s", err.Error())
+			msg := "There was an error syncing branches, " + msgDetails
+			postGitHubMessage(ctx, pr, log, msg)
 		}
 		//and we run a pipeline only for the pr_* branch
 		if prRef != "" {
@@ -60,6 +65,8 @@ func processGitHubPullRequest(
 			err = startPRPipeline(log, prBranchName, pr, conf, isOrgMember)
 			if err != nil {
 				log.Errorf("failed to start pipeline for PR: %s", err)
+				msg := "There was an error running your pipeline, " + msgDetails
+				postGitHubMessage(ctx, pr, log, msg)
 			}
 		}
 
@@ -157,15 +164,7 @@ func processGitHubPullRequest(
    ` + "```" + `
    </details>
    `
-			if err := githubClient.CreateComment(
-				ctx,
-				pr.GetOrganization().GetLogin(),
-				pr.GetRepo().GetName(),
-				pr.GetNumber(),
-				&github.IssueComment{Body: github.String(msg)},
-			); err != nil {
-				log.Infof("Failed to comment on the pr: %v, Error: %s", pr, err.Error())
-			}
+			postGitHubMessage(ctx, pr, log, msg)
 		} else {
 			log.Infof(
 				"I have already commented on the pr: %s/%d, no need to keep on nagging",
@@ -174,6 +173,23 @@ func processGitHubPullRequest(
 	}
 
 	return nil
+}
+
+func postGitHubMessage(
+	ctx *gin.Context,
+	pr *github.PullRequestEvent,
+	log *logrus.Entry,
+	msg string,
+) {
+	if err := githubClient.CreateComment(
+		ctx,
+		pr.GetOrganization().GetLogin(),
+		pr.GetRepo().GetName(),
+		pr.GetNumber(),
+		&github.IssueComment{Body: github.String(msg)},
+	); err != nil {
+		log.Infof("Failed to comment on the pr: %v, Error: %s", pr, err.Error())
+	}
 }
 
 func botHasAlreadyCommentedOnPR(
