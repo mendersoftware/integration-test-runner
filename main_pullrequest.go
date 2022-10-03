@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -64,10 +65,13 @@ func processGitHubPullRequest(
 			}
 			err = startPRPipeline(log, prBranchName, pr, conf, isOrgMember)
 			if err != nil {
-				log.Errorf("failed to start pipeline for PR: %s", err)
 				// post a comment only if GitLab is supposed to start a pipeline
-				gitlabReplyErrorMsg := "Missing CI config file"
-				if !strings.Contains(err.Error(), gitlabReplyErrorMsg) {
+				re := regexp.MustCompile("Missing CI config file|" +
+					"No stages / jobs for this pipeline")
+				if re.MatchString(err.Error()) {
+					log.Infof("start pipeline for PR '%d' is skipped", pr.Number)
+				} else {
+					log.Errorf("failed to start pipeline for PR: %s", err)
 					msg := "There was an error running your pipeline, " + msgDetails
 					postGitHubMessage(ctx, pr, log, msg)
 				}
