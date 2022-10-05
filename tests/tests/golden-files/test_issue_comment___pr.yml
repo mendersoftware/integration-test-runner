@@ -1,81 +1,82 @@
 input: issue_comment___pr.json
 output:
-- 'github.IsOrganizationMember: org=mendersoftware,user=alfrunes'
-- 'info:Pull request event with action: opened'
-- 'git.Run: /usr/bin/git pull --rebase origin'
-- 'info:deviceconnect/master is being used in the following integration: [master]'
-- 'info:the following integration branches: [master] are using deviceconnect/master'
-- info:deviceconnect:109 will trigger 1 builds
-- |+
-  info:1: (main.buildOptions) {
-   pr: (string) (len=3) "109",
-   repo: (string) (len=13) "deviceconnect",
-   baseBranch: (string) (len=6) "master",
-   commitSHA: (string) (len=40) "ddc66080a35f0d1d4bc1d3ef589a8226b2c9a02b",
-   makeQEMU: (bool) false
-  }
+  - "github.IsOrganizationMember: org=mendersoftware,user=alfrunes"
+  - "info:Pull request event with action: opened"
+  - "git.Run: /usr/bin/git pull --rebase origin"
+  - "info:deviceconnect/master is being used in the following integration: [master]"
+  - "info:the following integration branches: [master] are using deviceconnect/master"
+  - info:deviceconnect:109 will trigger 1 builds
+  - |+
+    info:1: (main.buildOptions) {
+     pr: (string) (len=3) "109",
+     repo: (string) (len=13) "deviceconnect",
+     baseBranch: (string) (len=6) "master",
+     commitSHA: (string) (len=40) "ddc66080a35f0d1d4bc1d3ef589a8226b2c9a02b",
+     makeQEMU: (bool) false
+    }
 
-- info:auditlogs version master is being used in master
-- info:create-artifact-worker version master is being used in master
-- info:deployments version master is being used in master
-- info:deployments-enterprise version master is being used in master
-- info:deviceauth version master is being used in master
-- info:deviceauth-enterprise version master is being used in master
-- info:deviceconfig version master is being used in master
-- info:gui version master is being used in master
-- info:inventory version master is being used in master
-- info:inventory-enterprise version master is being used in master
-- info:iot-manager version master is being used in master
-- info:mender-artifact version master is being used in master
-- info:mender-binary-delta version master is being used in master
-- info:mender-cli version master is being used in master
-- info:mender-configure-module version master is being used in master
-- info:mender-convert version master is being used in master
-- info:mender-gateway version master is being used in master
-- info:monitor-client version master is being used in master
-- info:mtls-ambassador version master is being used in master
-- info:reporting version master is being used in master
-- info:tenantadm version master is being used in master
-- info:useradm version master is being used in master
-- info:useradm-enterprise version master is being used in master
-- info:workflows version master is being used in master
-- info:workflows-enterprise version master is being used in master
-- 'gitlab.ListProjectPipelines: path=Northern.tech/Mender/mender-qa,options={"status":"pending","username":"mender-test-bot"}'
-- 'gitlab.ListProjectPipelines: path=Northern.tech/Mender/mender-qa,options={"status":"running","username":"mender-test-bot"}'
-- 'gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1'
-- 'gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1'
-- 'info:Creating pipeline in project Northern.tech/Mender/mender-qa:master with variables:
-  AUDITLOGS_REV:master, BUILD_BEAGLEBONEBLACK:, BUILD_CLIENT:false, BUILD_QEMUX86_64_BIOS_GRUB:,
-  BUILD_QEMUX86_64_BIOS_GRUB_GPT:, BUILD_QEMUX86_64_UEFI_GRUB:, BUILD_VEXPRESS_QEMU:,
-  BUILD_VEXPRESS_QEMU_FLASH:, BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:, CREATE_ARTIFACT_WORKER_REV:master,
-  DEPLOYMENTS_ENTERPRISE_REV:master, DEPLOYMENTS_REV:master, DEVICEAUTH_ENTERPRISE_REV:master,
-  DEVICEAUTH_REV:master, DEVICECONFIG_REV:master, DEVICECONNECT_REV:pull/109/head,
-  DEVICEMONITOR_REV:pull/12/head, GUI_REV:master, INTEGRATION_REV:pull/1900/head,
-  INVENTORY_ENTERPRISE_REV:master, INVENTORY_REV:master, IOT_MANAGER_REV:master, MENDER_ARTIFACT_REV:master,
-  MENDER_BINARY_DELTA_REV:master, MENDER_CLI_REV:master, MENDER_CONFIGURE_MODULE_REV:master,
-  MENDER_CONNECT_REV:pull/4/head, MENDER_CONVERT_REV:master, MENDER_GATEWAY_REV:master,
-  MENDER_REV:3.1.x, META_MENDER_REV:pull/1/head, MONITOR_CLIENT_REV:master, MTLS_AMBASSADOR_REV:master,
-  REPORTING_REV:master, RUN_BACKEND_INTEGRATION_TESTS:true, RUN_INTEGRATION_TESTS:true,
-  TENANTADM_REV:master, TEST_QEMUX86_64_BIOS_GRUB:, TEST_QEMUX86_64_BIOS_GRUB_GPT:,
-  TEST_QEMUX86_64_UEFI_GRUB:, TEST_VEXPRESS_QEMU:, TEST_VEXPRESS_QEMU_FLASH:, TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:,
-  USERADM_ENTERPRISE_REV:master, USERADM_REV:master, WORKFLOWS_ENTERPRISE_REV:master,
-  WORKFLOWS_REV:master, '
-- 'gitlab.CreatePipeline: path=Northern.tech/Mender/mender-qa,options={"ref":"master","variables":[{"key":"AUDITLOGS_REV","value":"master"},{"key":"BUILD_BEAGLEBONEBLACK","value":""},{"key":"BUILD_CLIENT","value":"false"},{"key":"BUILD_QEMUX86_64_BIOS_GRUB","value":""},{"key":"BUILD_QEMUX86_64_BIOS_GRUB_GPT","value":""},{"key":"BUILD_QEMUX86_64_UEFI_GRUB","value":""},{"key":"BUILD_VEXPRESS_QEMU","value":""},{"key":"BUILD_VEXPRESS_QEMU_FLASH","value":""},{"key":"BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":""},{"key":"CREATE_ARTIFACT_WORKER_REV","value":"master"},{"key":"DEPLOYMENTS_ENTERPRISE_REV","value":"master"},{"key":"DEPLOYMENTS_REV","value":"master"},{"key":"DEVICEAUTH_ENTERPRISE_REV","value":"master"},{"key":"DEVICEAUTH_REV","value":"master"},{"key":"DEVICECONFIG_REV","value":"master"},{"key":"DEVICECONNECT_REV","value":"pull/109/head"},{"key":"DEVICEMONITOR_REV","value":"pull/12/head"},{"key":"GUI_REV","value":"master"},{"key":"INTEGRATION_REV","value":"pull/1900/head"},{"key":"INVENTORY_ENTERPRISE_REV","value":"master"},{"key":"INVENTORY_REV","value":"master"},{"key":"IOT_MANAGER_REV","value":"master"},{"key":"MENDER_ARTIFACT_REV","value":"master"},{"key":"MENDER_BINARY_DELTA_REV","value":"master"},{"key":"MENDER_CLI_REV","value":"master"},{"key":"MENDER_CONFIGURE_MODULE_REV","value":"master"},{"key":"MENDER_CONNECT_REV","value":"pull/4/head"},{"key":"MENDER_CONVERT_REV","value":"master"},{"key":"MENDER_GATEWAY_REV","value":"master"},{"key":"MENDER_REV","value":"3.1.x"},{"key":"META_MENDER_REV","value":"pull/1/head"},{"key":"MONITOR_CLIENT_REV","value":"master"},{"key":"MTLS_AMBASSADOR_REV","value":"master"},{"key":"REPORTING_REV","value":"master"},{"key":"RUN_BACKEND_INTEGRATION_TESTS","value":"true"},{"key":"RUN_INTEGRATION_TESTS","value":"true"},{"key":"TENANTADM_REV","value":"master"},{"key":"TEST_QEMUX86_64_BIOS_GRUB","value":""},{"key":"TEST_QEMUX86_64_BIOS_GRUB_GPT","value":""},{"key":"TEST_QEMUX86_64_UEFI_GRUB","value":""},{"key":"TEST_VEXPRESS_QEMU","value":""},{"key":"TEST_VEXPRESS_QEMU_FLASH","value":""},{"key":"TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":""},{"key":"USERADM_ENTERPRISE_REV","value":"master"},{"key":"USERADM_REV","value":"master"},{"key":"WORKFLOWS_ENTERPRISE_REV","value":"master"},{"key":"WORKFLOWS_REV","value":"master"}]}'
-- 'info:Created pipeline: '
-- 'github.CreateComment: org=mendersoftware,repo=deviceconnect,number=109,comment={"body":"\nHello
-  :smile_cat: I created a pipeline for you here: [Pipeline-0]()\n\n\u003cdetails\u003e\n    \u003csummary\u003eBuild
-  Configuration Matrix\u003c/summary\u003e\u003cp\u003e\n\n| Key   | Value |\n| -----
-  | ----- |\n| AUDITLOGS_REV | master |\n| BUILD_CLIENT | false |\n| CREATE_ARTIFACT_WORKER_REV
-  | master |\n| DEPLOYMENTS_ENTERPRISE_REV | master |\n| DEPLOYMENTS_REV | master
-  |\n| DEVICEAUTH_ENTERPRISE_REV | master |\n| DEVICEAUTH_REV | master |\n| DEVICECONFIG_REV
-  | master |\n| DEVICECONNECT_REV | pull/109/head |\n| DEVICEMONITOR_REV | pull/12/head
-  |\n| GUI_REV | master |\n| INTEGRATION_REV | pull/1900/head |\n| INVENTORY_ENTERPRISE_REV
-  | master |\n| INVENTORY_REV | master |\n| IOT_MANAGER_REV | master |\n| MENDER_ARTIFACT_REV
-  | master |\n| MENDER_BINARY_DELTA_REV | master |\n| MENDER_CLI_REV | master |\n|
-  MENDER_CONFIGURE_MODULE_REV | master |\n| MENDER_CONNECT_REV | pull/4/head |\n|
-  MENDER_CONVERT_REV | master |\n| MENDER_GATEWAY_REV | master |\n| MENDER_REV | 3.1.x
-  |\n| META_MENDER_REV | pull/1/head |\n| MONITOR_CLIENT_REV | master |\n| MTLS_AMBASSADOR_REV
-  | master |\n| REPORTING_REV | master |\n| RUN_BACKEND_INTEGRATION_TESTS | true |\n|
-  RUN_INTEGRATION_TESTS | true |\n| TENANTADM_REV | master |\n| USERADM_ENTERPRISE_REV
-  | master |\n| USERADM_REV | master |\n| WORKFLOWS_ENTERPRISE_REV | master |\n| WORKFLOWS_REV
-  | master |\n\n\n \u003c/p\u003e\u003c/details\u003e\n"}'
+  - info:auditlogs version master is being used in master
+  - info:create-artifact-worker version master is being used in master
+  - info:deployments version master is being used in master
+  - info:deployments-enterprise version master is being used in master
+  - info:deviceauth version master is being used in master
+  - info:deviceauth-enterprise version master is being used in master
+  - info:deviceconfig version master is being used in master
+  - info:generate-delta-worker version master is being used in master
+  - info:gui version master is being used in master
+  - info:inventory version master is being used in master
+  - info:inventory-enterprise version master is being used in master
+  - info:iot-manager version master is being used in master
+  - info:mender-artifact version master is being used in master
+  - info:mender-binary-delta version master is being used in master
+  - info:mender-cli version master is being used in master
+  - info:mender-configure-module version master is being used in master
+  - info:mender-convert version master is being used in master
+  - info:mender-gateway version master is being used in master
+  - info:monitor-client version master is being used in master
+  - info:mtls-ambassador version master is being used in master
+  - info:reporting version master is being used in master
+  - info:tenantadm version master is being used in master
+  - info:useradm version master is being used in master
+  - info:useradm-enterprise version master is being used in master
+  - info:workflows version master is being used in master
+  - info:workflows-enterprise version master is being used in master
+  - 'gitlab.ListProjectPipelines: path=Northern.tech/Mender/mender-qa,options={"status":"pending","username":"mender-test-bot"}'
+  - 'gitlab.ListProjectPipelines: path=Northern.tech/Mender/mender-qa,options={"status":"running","username":"mender-test-bot"}'
+  - "gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1"
+  - "gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1"
+  - "info:Creating pipeline in project Northern.tech/Mender/mender-qa:master with variables:
+    AUDITLOGS_REV:master, BUILD_BEAGLEBONEBLACK:, BUILD_CLIENT:false, BUILD_QEMUX86_64_BIOS_GRUB:,
+    BUILD_QEMUX86_64_BIOS_GRUB_GPT:, BUILD_QEMUX86_64_UEFI_GRUB:, BUILD_VEXPRESS_QEMU:,
+    BUILD_VEXPRESS_QEMU_FLASH:, BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:, CREATE_ARTIFACT_WORKER_REV:master,
+    DEPLOYMENTS_ENTERPRISE_REV:master, DEPLOYMENTS_REV:master, DEVICEAUTH_ENTERPRISE_REV:master,
+    DEVICEAUTH_REV:master, DEVICECONFIG_REV:master, DEVICECONNECT_REV:pull/109/head,
+    DEVICEMONITOR_REV:pull/12/head, GENERATE_DELTA_WORKER_REV:master, GUI_REV:master, INTEGRATION_REV:pull/1900/head,
+    INVENTORY_ENTERPRISE_REV:master, INVENTORY_REV:master, IOT_MANAGER_REV:master, MENDER_ARTIFACT_REV:master,
+    MENDER_BINARY_DELTA_REV:master, MENDER_CLI_REV:master, MENDER_CONFIGURE_MODULE_REV:master,
+    MENDER_CONNECT_REV:pull/4/head, MENDER_CONVERT_REV:master, MENDER_GATEWAY_REV:master,
+    MENDER_REV:3.1.x, META_MENDER_REV:pull/1/head, MONITOR_CLIENT_REV:master, MTLS_AMBASSADOR_REV:master,
+    REPORTING_REV:master, RUN_BACKEND_INTEGRATION_TESTS:true, RUN_INTEGRATION_TESTS:true,
+    TENANTADM_REV:master, TEST_QEMUX86_64_BIOS_GRUB:, TEST_QEMUX86_64_BIOS_GRUB_GPT:,
+    TEST_QEMUX86_64_UEFI_GRUB:, TEST_VEXPRESS_QEMU:, TEST_VEXPRESS_QEMU_FLASH:, TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:,
+    USERADM_ENTERPRISE_REV:master, USERADM_REV:master, WORKFLOWS_ENTERPRISE_REV:master,
+    WORKFLOWS_REV:master, "
+  - 'gitlab.CreatePipeline: path=Northern.tech/Mender/mender-qa,options={"ref":"master","variables":[{"key":"AUDITLOGS_REV","value":"master"},{"key":"BUILD_BEAGLEBONEBLACK","value":""},{"key":"BUILD_CLIENT","value":"false"},{"key":"BUILD_QEMUX86_64_BIOS_GRUB","value":""},{"key":"BUILD_QEMUX86_64_BIOS_GRUB_GPT","value":""},{"key":"BUILD_QEMUX86_64_UEFI_GRUB","value":""},{"key":"BUILD_VEXPRESS_QEMU","value":""},{"key":"BUILD_VEXPRESS_QEMU_FLASH","value":""},{"key":"BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":""},{"key":"CREATE_ARTIFACT_WORKER_REV","value":"master"},{"key":"DEPLOYMENTS_ENTERPRISE_REV","value":"master"},{"key":"DEPLOYMENTS_REV","value":"master"},{"key":"DEVICEAUTH_ENTERPRISE_REV","value":"master"},{"key":"DEVICEAUTH_REV","value":"master"},{"key":"DEVICECONFIG_REV","value":"master"},{"key":"DEVICECONNECT_REV","value":"pull/109/head"},{"key":"DEVICEMONITOR_REV","value":"pull/12/head"},{"key":"GENERATE_DELTA_WORKER_REV","value":"master"},{"key":"GUI_REV","value":"master"},{"key":"INTEGRATION_REV","value":"pull/1900/head"},{"key":"INVENTORY_ENTERPRISE_REV","value":"master"},{"key":"INVENTORY_REV","value":"master"},{"key":"IOT_MANAGER_REV","value":"master"},{"key":"MENDER_ARTIFACT_REV","value":"master"},{"key":"MENDER_BINARY_DELTA_REV","value":"master"},{"key":"MENDER_CLI_REV","value":"master"},{"key":"MENDER_CONFIGURE_MODULE_REV","value":"master"},{"key":"MENDER_CONNECT_REV","value":"pull/4/head"},{"key":"MENDER_CONVERT_REV","value":"master"},{"key":"MENDER_GATEWAY_REV","value":"master"},{"key":"MENDER_REV","value":"3.1.x"},{"key":"META_MENDER_REV","value":"pull/1/head"},{"key":"MONITOR_CLIENT_REV","value":"master"},{"key":"MTLS_AMBASSADOR_REV","value":"master"},{"key":"REPORTING_REV","value":"master"},{"key":"RUN_BACKEND_INTEGRATION_TESTS","value":"true"},{"key":"RUN_INTEGRATION_TESTS","value":"true"},{"key":"TENANTADM_REV","value":"master"},{"key":"TEST_QEMUX86_64_BIOS_GRUB","value":""},{"key":"TEST_QEMUX86_64_BIOS_GRUB_GPT","value":""},{"key":"TEST_QEMUX86_64_UEFI_GRUB","value":""},{"key":"TEST_VEXPRESS_QEMU","value":""},{"key":"TEST_VEXPRESS_QEMU_FLASH","value":""},{"key":"TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":""},{"key":"USERADM_ENTERPRISE_REV","value":"master"},{"key":"USERADM_REV","value":"master"},{"key":"WORKFLOWS_ENTERPRISE_REV","value":"master"},{"key":"WORKFLOWS_REV","value":"master"}]}'
+  - "info:Created pipeline: "
+  - 'github.CreateComment: org=mendersoftware,repo=deviceconnect,number=109,comment={"body":"\nHello
+    :smile_cat: I created a pipeline for you here: [Pipeline-0]()\n\n\u003cdetails\u003e\n    \u003csummary\u003eBuild
+    Configuration Matrix\u003c/summary\u003e\u003cp\u003e\n\n| Key   | Value |\n| -----
+    | ----- |\n| AUDITLOGS_REV | master |\n| BUILD_CLIENT | false |\n| CREATE_ARTIFACT_WORKER_REV
+    | master |\n| DEPLOYMENTS_ENTERPRISE_REV | master |\n| DEPLOYMENTS_REV | master
+    |\n| DEVICEAUTH_ENTERPRISE_REV | master |\n| DEVICEAUTH_REV | master |\n| DEVICECONFIG_REV
+    | master |\n| DEVICECONNECT_REV | pull/109/head |\n| DEVICEMONITOR_REV | pull/12/head
+    |\n| GENERATE_DELTA_WORKER_REV | master |\n| GUI_REV | master |\n| INTEGRATION_REV | pull/1900/head
+    |\n| INVENTORY_ENTERPRISE_REV | master |\n| INVENTORY_REV | master |\n| IOT_MANAGER_REV | master |\n| MENDER_ARTIFACT_REV
+    | master |\n| MENDER_BINARY_DELTA_REV | master |\n| MENDER_CLI_REV | master |\n|
+    MENDER_CONFIGURE_MODULE_REV | master |\n| MENDER_CONNECT_REV | pull/4/head |\n|
+    MENDER_CONVERT_REV | master |\n| MENDER_GATEWAY_REV | master |\n| MENDER_REV | 3.1.x
+    |\n| META_MENDER_REV | pull/1/head |\n| MONITOR_CLIENT_REV | master |\n| MTLS_AMBASSADOR_REV
+    | master |\n| REPORTING_REV | master |\n| RUN_BACKEND_INTEGRATION_TESTS | true |\n|
+    RUN_INTEGRATION_TESTS | true |\n| TENANTADM_REV | master |\n| USERADM_ENTERPRISE_REV
+    | master |\n| USERADM_REV | master |\n| WORKFLOWS_ENTERPRISE_REV | master |\n| WORKFLOWS_REV
+    | master |\n\n\n \u003c/p\u003e\u003c/details\u003e\n"}'
