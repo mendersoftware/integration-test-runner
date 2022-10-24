@@ -26,6 +26,9 @@ var versionsUrl = "https://docs.mender.io/releases/versions.json"
 
 var errorCherryPickConflict = errors.New("Cherry pick had conflicts")
 
+const apiWarningString = "\nNote: Suggestions could not be fetched from " +
+	"[release version endpoint](%s) and are therefore taken from integration."
+
 type versions struct {
 	Lts []string `json:",omitempty"`
 }
@@ -63,6 +66,23 @@ func getLatestReleaseFromApi(url string) ([]string, error) {
 		v.Lts[idx] = val + ".x"
 	}
 	return v.Lts, nil
+}
+
+func getLatestIntegrationRelease(number int, conf *config) ([]string, error) {
+	cmd := fmt.Sprintf(
+		"git for-each-ref --sort=-creatordate --format='%%(refname:short)' 'refs/tags' "+
+			"| sed -E '/(^[0-9]+\\.[0-9]+)\\.[0-9]+$/!d;s//\\1.x/' |  uniq "+
+			"| head -n 4 | sort -V -r | head -n %d",
+		number,
+	)
+	c := exec.Command("sh", "-c", cmd)
+	c.Dir = conf.integrationDirectory + "/extra/"
+	version, err := c.Output()
+	if err != nil {
+		err = fmt.Errorf("getLatestIntegrationRelease: Error: %v (%s)", err, version)
+	}
+	versionStr := strings.TrimSpace(string(version))
+	return strings.SplitN(versionStr, "\n", -1), err
 }
 
 // suggestCherryPicks suggests cherry-picks to release branches if the PR has been merged to master
@@ -129,10 +149,19 @@ func suggestCherryPicks(
 		return err
 	}
 
+	// nolint:lll
+	tmplString := `
+Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+{{.ReleaseBranches}}
+`
 	// get list of release versions
 	versions, err := getLatestReleaseFromApi(versionsUrl)
 	if err != nil {
-		return err
+		versions, err = getLatestIntegrationRelease(3, conf)
+		if err != nil {
+			return err
+		}
+		tmplString += fmt.Sprintf(apiWarningString, versionsUrl)
 	}
 	releaseBranches := []string{}
 	for _, version := range versions {
@@ -159,11 +188,7 @@ func suggestCherryPicks(
 	if len(releaseBranches) == 0 {
 		return nil
 	}
-	// nolint:lll
-	tmplString := `
-Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
-{{.ReleaseBranches}}
-`
+
 	// suggest cherry-picking with a comment
 	tmpl, err := template.New("Main").Parse(tmplString)
 	if err != nil {

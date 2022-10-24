@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -20,21 +21,12 @@ import (
 	"github.com/mendersoftware/integration-test-runner/logger"
 )
 
-const versionsResponse = `{
-	"lts": ["3.3", "3.0"],
-	"releases": {
-		"something": "something"
-	}
-}
-`
-
 func TestSuggestCherryPicks(t *testing.T) {
 
+	versionsUrl = ""
+	warnString := fmt.Sprintf(apiWarningString, versionsUrl)
+
 	gitHubOrg := "mendersoftware"
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.Write([]byte(versionsResponse))
-	}))
-	versionsUrl = server.URL
 
 	testCases := map[string]struct {
 		pr      *github.PullRequestEvent
@@ -105,9 +97,10 @@ func TestSuggestCherryPicks(t *testing.T) {
 			comment: &github.IssueComment{
 				Body: github.String(`
 Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+2.3.x (release 3.4.x)
 2.2.x (release 3.3.x)
-2.0.x (release 3.0.x)
-`),
+2.2.x (release 3.3.x)
+` + warnString),
 			},
 		},
 		"cherry picks, changelogs, less than three release branches": {
@@ -128,9 +121,10 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			comment: &github.IssueComment{
 				Body: github.String(`
 Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+2.1.x (release 3.4.x)
 2.0.x (release 3.3.x)
-1.2.x (release 3.0.x)
-`),
+2.0.x (release 3.3.x)
+` + warnString),
 			},
 		},
 		"cherry picks, changelogs, syntax with no space": {
@@ -151,9 +145,10 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			comment: &github.IssueComment{
 				Body: github.String(`
 Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+2.1.x (release 3.4.x)
 2.0.x (release 3.3.x)
-1.2.x (release 3.0.x)
-`),
+2.0.x (release 3.3.x)
+` + warnString),
 			},
 		},
 		"cherry picks, changelogs, bottable tag added": {
@@ -178,9 +173,10 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			comment: &github.IssueComment{
 				Body: github.String(`
 Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+3.4.x (release 3.4.x)
 3.3.x (release 3.3.x)
-3.0.x (release 3.0.x)
-`),
+3.3.x (release 3.3.x)
+` + warnString),
 			},
 		},
 	}
@@ -221,7 +217,6 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			conf.integrationDirectory = tmpdir
 
 			log := logrus.NewEntry(logrus.StandardLogger())
-			log.Infof(" TEST: %s", name)
 			err := suggestCherryPicks(log, test.pr, mclient, conf)
 			if test.err != nil {
 				assert.Error(t, err)
@@ -464,4 +459,23 @@ func TestParseSingleLineCherryTargetBranches(t *testing.T) {
 		res, _ := parseCherryTargetBranches(test.body)
 		assert.Equal(t, test.expected, res)
 	}
+}
+
+const versionsResponse = `{
+	"lts": ["3.3", "3.0"],
+	"releases": {
+		"something": "something"
+	}
+}
+`
+
+func TestGetLatestReleaseFromApi(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.Write([]byte(versionsResponse))
+	}))
+	versions, err := getLatestReleaseFromApi(server.URL)
+	assert.Nil(t, err)
+	assert.Len(t, versions, 2)
+	assert.Equal(t, versions[0], "3.3.x")
+	assert.Equal(t, versions[1], "3.0.x")
 }
