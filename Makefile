@@ -50,13 +50,11 @@ acceptance-testing-up:
 
 .PHONY: acceptance-testing-run
 acceptance-testing-run:
-	docker exec $$(docker ps --filter name=acceptance-testing --format {{.Names}}) \
-	/testing/run.sh
+	docker-compose $(COMPOSEFILES_ACCEPTANCE_TESTING) exec acceptance-testing /testing/run.sh
 
 .PHONY: acceptance-testing-update-golden-files
 acceptance-testing-update-golden-files:
-	docker exec $$(docker ps --filter name=acceptance-testing --format {{.Names}}) \
-	/testing/run.sh --update-goldens
+	docker-compose $(COMPOSEFILES_ACCEPTANCE_TESTING) exec acceptance-testing /testing/run.sh --update-goldens
 
 .PHONY: acceptance-testing-logs
 acceptance-testing-logs:
