@@ -89,16 +89,10 @@ func processGitHubPullRequest(
 			)
 		}
 
-		// make sure we only parse one pr at a time, since we use release_tool
-		mutex.Lock()
-
 		// If the pr was merged, suggest cherry-picks
 		if err := suggestCherryPicks(log, pr, githubClient, conf); err != nil {
 			log.Errorf("Failed to suggest cherry picks for the pr %v. Error: %v", pr, err)
 		}
-
-		// release the mutex
-		mutex.Unlock()
 	}
 
 	// Continue to the integration Pipeline only for organization members
@@ -113,9 +107,6 @@ func processGitHubPullRequest(
 		)
 		return nil
 	}
-
-	// make sure we only parse one pr at a time, since we use release_tool
-	mutex.Lock()
 
 	// First check if the PR has been merged. If so, stop
 	// the pipeline, and do nothing else.
@@ -135,9 +126,6 @@ func processGitHubPullRequest(
 	// get the list of builds
 	builds := parsePullRequest(log, conf, action, pr)
 	log.Infof("%s:%d would trigger %d builds", pr.GetRepo().GetName(), pr.GetNumber(), len(builds))
-
-	// release the mutex
-	mutex.Unlock()
 
 	// do not start the builds, inform the user about the `start pipeline` command instead
 	if len(builds) > 0 {

@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sync"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
@@ -20,8 +19,6 @@ import (
 	"github.com/mendersoftware/integration-test-runner/git"
 	"github.com/mendersoftware/integration-test-runner/logger"
 )
-
-var mutex = &sync.Mutex{}
 
 type config struct {
 	dryRunMode           bool
