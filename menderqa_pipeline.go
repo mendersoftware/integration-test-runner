@@ -441,16 +441,29 @@ func getBuildParameters(
 
 	// set the rest of the CI build parameters
 	runIntegrationTests := "true"
+	runBackendIntegrationTests := "true"
 	if buildOptions.Fast {
 		runIntegrationTests = "false"
 	}
+
+	if build.baseBranch == "feature-c++-client" {
+		// Avoid testing platforms for this branch. It is too early in
+		// the project. For now only BUILD_CLIENT will run, ensuring
+		// that we can at least build it. MEN-6116 exists to clean this
+		// up later.
+		runIntegrationTests = "false"
+		runBackendIntegrationTests = "false"
+	}
+
 	buildParameters = append(
 		buildParameters,
 		&gitlab.PipelineVariable{Key: "RUN_INTEGRATION_TESTS", Value: runIntegrationTests},
 	)
 	buildParameters = append(
 		buildParameters,
-		&gitlab.PipelineVariable{Key: "RUN_BACKEND_INTEGRATION_TESTS", Value: "true"},
+		&gitlab.PipelineVariable{
+			Key: "RUN_BACKEND_INTEGRATION_TESTS", Value: runBackendIntegrationTests,
+		},
 	)
 	buildParameters = append(buildParameters,
 		&gitlab.PipelineVariable{
@@ -458,11 +471,26 @@ func getBuildParameters(
 			Value: readHead,
 		})
 
+	return getClientBuildParameters(buildParameters, build)
+}
+
+func getClientBuildParameters(
+	buildParameters []*gitlab.PipelineVariable,
+	build *buildOptions,
+) ([]*gitlab.PipelineVariable, error) {
 	var qemuParam string
 	if build.makeQEMU {
 		qemuParam = "true"
 	} else {
 		qemuParam = ""
+	}
+
+	if build.baseBranch == "feature-c++-client" {
+		// Avoid testing platforms for this branch. It is too early in
+		// the project. For now only BUILD_CLIENT will run, ensuring
+		// that we can at least build it. MEN-6116 exists to clean this
+		// up later.
+		qemuParam = "false"
 	}
 
 	buildParameters = append(
