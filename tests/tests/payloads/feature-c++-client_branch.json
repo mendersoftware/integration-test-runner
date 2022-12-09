@@ -1,15 +1,15 @@
 {
   "action": "created",
   "issue": {
-    "url": "https://api.github.com/repos/mendersoftware/mender/issues/1092",
+    "url": "https://api.github.com/repos/mendersoftware/mender/issues/1090",
     "repository_url": "https://api.github.com/repos/mendersoftware/mender",
-    "labels_url": "https://api.github.com/repos/mendersoftware/mender/issues/1092/labels{/name}",
-    "comments_url": "https://api.github.com/repos/mendersoftware/mender/issues/1092/comments",
-    "events_url": "https://api.github.com/repos/mendersoftware/mender/issues/1092/events",
-    "html_url": "https://github.com/mendersoftware/mender/pull/1092",
+    "labels_url": "https://api.github.com/repos/mendersoftware/mender/issues/1090/labels{/name}",
+    "comments_url": "https://api.github.com/repos/mendersoftware/mender/issues/1090/comments",
+    "events_url": "https://api.github.com/repos/mendersoftware/mender/issues/1090/events",
+    "html_url": "https://github.com/mendersoftware/mender/pull/1090",
     "id": 920495095,
     "node_id": "MDExOlB1bGxSZXF1ZXN0NjY5NjM2MjQ5",
-    "number": 1092,
+    "number": 1090,
     "title": "[MEN-4717] Fix mender message drops due to slow NATS consumer",
     "user": {
       "login": "alfrunes",
@@ -48,18 +48,18 @@
     "author_association": "CONTRIBUTOR",
     "active_lock_reason": null,
     "pull_request": {
-      "url": "https://api.github.com/repos/mendersoftware/mender/pulls/1092",
-      "html_url": "https://github.com/mendersoftware/mender/pull/1092",
-      "diff_url": "https://github.com/mendersoftware/mender/pull/1092.diff",
-      "patch_url": "https://github.com/mendersoftware/mender/pull/1092.patch"
+      "url": "https://api.github.com/repos/mendersoftware/mender/pulls/1090",
+      "html_url": "https://github.com/mendersoftware/mender/pull/1090",
+      "diff_url": "https://github.com/mendersoftware/mender/pull/1090.diff",
+      "patch_url": "https://github.com/mendersoftware/mender/pull/1090.patch"
     },
     "body": "This is far from an optimal solution but adds 'exactly once delivery' (until a\r\nmessage is dropped) by requiring ACK for every message transmitted over\r\nNATS. If an empty ack message is not returned the session will close.\r\nThis will significantly decrease the bandwith and increase latency as\r\nthe websocket connection will be throttled while waiting for ACK\r\nmessages over NATS.",
     "performed_via_github_app": null
   },
   "comment": {
     "url": "https://api.github.com/repos/mendersoftware/mender/issues/comments/862475199",
-    "html_url": "https://github.com/mendersoftware/mender/pull/1092#issuecomment-862475199",
-    "issue_url": "https://api.github.com/repos/mendersoftware/mender/issues/1092",
+    "html_url": "https://github.com/mendersoftware/mender/pull/1090#issuecomment-862475199",
+    "issue_url": "https://api.github.com/repos/mendersoftware/mender/issues/1090",
     "id": 862475199,
     "node_id": "MDEyOklzc3VlQ29tbWVudDg2MjQ3NTE5OQ==",
     "user": {
