@@ -32,7 +32,6 @@ output:
 - info:mender version master is being used in master
 - info:mender-artifact version master is being used in master
 - info:mender-binary-delta version master is being used in master
-- info:mender-ci-workflows version master is being used in master
 - info:mender-cli version master is being used in master
 - info:mender-configure-module version master is being used in master
 - info:mender-connect version master is being used in master
