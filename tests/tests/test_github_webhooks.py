@@ -176,7 +176,7 @@ def test_issue_comment(golden, integration_test_runner_url):
 
 
 @pytest.mark.golden_test("golden-files/test_issue_comment___pr.yml")
-def test_issue_comment(golden, integration_test_runner_url):
+def test_issue_comment_pr(golden, integration_test_runner_url):
     res = requests.post(
         integration_test_runner_url + "/",
         data=load_payload(golden["input"]),
@@ -265,7 +265,7 @@ def test_conventional_commit(golden, integration_test_runner_url):
     assert res.json() == golden.out["output"]
 
 @pytest.mark.golden_test("golden-files/test_feature-c++-client_branch.yml")
-def test_issue_comment(golden, integration_test_runner_url):
+def test_feature_cpp_branch(golden, integration_test_runner_url):
     res = requests.post(
         integration_test_runner_url + "/",
         data=load_payload(golden["input"]),
