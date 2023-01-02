@@ -2,15 +2,22 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v28/github"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
+)
+
+var (
+	changelogPrefix = "Merging these commits will result in the following changelog entries:\n\n"
+	warningHeader   = "\n\n## Warning\n\nGenerating changelogs also resulted in these warnings:\n\n"
 )
 
 func processGitHubPullRequest(
@@ -78,6 +85,8 @@ func processGitHubPullRequest(
 			}
 		}
 
+		handleChangelogComments(log, ctx, githubClient, pr, conf)
+
 	case "closed":
 		// Delete merged pr branches in GitLab
 		if err := deleteStaleGitlabPRBranch(log, pr, conf); err != nil {
@@ -89,16 +98,10 @@ func processGitHubPullRequest(
 			)
 		}
 
-		// make sure we only parse one pr at a time, since we use release_tool
-		mutex.Lock()
-
 		// If the pr was merged, suggest cherry-picks
 		if err := suggestCherryPicks(log, pr, githubClient, conf); err != nil {
 			log.Errorf("Failed to suggest cherry picks for the pr %v. Error: %v", pr, err)
 		}
-
-		// release the mutex
-		mutex.Unlock()
 	}
 
 	// Continue to the integration Pipeline only for organization members
@@ -113,9 +116,6 @@ func processGitHubPullRequest(
 		)
 		return nil
 	}
-
-	// make sure we only parse one pr at a time, since we use release_tool
-	mutex.Lock()
 
 	// First check if the PR has been merged. If so, stop
 	// the pipeline, and do nothing else.
@@ -136,15 +136,12 @@ func processGitHubPullRequest(
 	builds := parsePullRequest(log, conf, action, pr)
 	log.Infof("%s:%d would trigger %d builds", pr.GetRepo().GetName(), pr.GetNumber(), len(builds))
 
-	// release the mutex
-	mutex.Unlock()
-
 	// do not start the builds, inform the user about the `start pipeline` command instead
 	if len(builds) > 0 {
 		// Only comment, if not already commented on a PR
 		botCommentString := ", Let me know if you want to start the integration pipeline by " +
 			"mentioning me and the command \""
-		if !botHasAlreadyCommentedOnPR(log, githubClient, pr, botCommentString, conf) {
+		if getFirstMatchingBotCommentInPR(log, githubClient, pr, botCommentString, conf) == nil {
 
 			msg := "@" + pr.GetSender().GetLogin() + botCommentString + commandStartPipeline + "\"."
 			msg += `
@@ -200,13 +197,14 @@ func postGitHubMessage(
 	}
 }
 
-func botHasAlreadyCommentedOnPR(
+func getFirstMatchingBotCommentInPR(
 	log *logrus.Entry,
 	githubClient clientgithub.Client,
 	pr *github.PullRequestEvent,
 	botComment string,
 	conf *config,
-) bool {
+) *github.IssueComment {
+
 	comments, err := githubClient.ListComments(
 		context.Background(),
 		conf.githubOrganization,
@@ -219,12 +217,128 @@ func botHasAlreadyCommentedOnPR(
 	if err != nil {
 		log.Errorf("Failed to list the comments on PR: %s/%d, err: '%s'",
 			pr.GetRepo().GetName(), pr.GetNumber(), err)
-		return false
+		return nil
 	}
 	for _, comment := range comments {
-		if comment.Body != nil && strings.Contains(*comment.Body, botComment) {
-			return true
+		if comment.Body != nil &&
+			strings.Contains(*comment.Body, botComment) &&
+			comment.User != nil &&
+			comment.User.Login != nil &&
+			*comment.User.Login == githubBotName {
+			return comment
 		}
 	}
-	return false
+	return nil
+}
+
+func handleChangelogComments(
+	log *logrus.Entry,
+	ctx *gin.Context,
+	githubClient clientgithub.Client,
+	pr *github.PullRequestEvent,
+	conf *config,
+) {
+	// First update integration repo.
+	err := updateIntegrationRepo(conf)
+	if err != nil {
+		log.Errorf("Could not update integration repo: %s", err.Error())
+		// Should still be safe to continue though.
+	}
+
+	changelogText, warningText, err := fetchChangelogTextForPR(log, pr, conf)
+	if err != nil {
+		log.Errorf("Error while fetching changelog text: %s", err.Error())
+		return
+	}
+
+	updatePullRequestChangelogComments(log, ctx, githubClient, pr, conf,
+		changelogText, warningText)
+}
+
+func fetchChangelogTextForPR(
+	log *logrus.Entry,
+	pr *github.PullRequestEvent,
+	conf *config,
+) (string, string, error) {
+
+	repo := pr.GetPullRequest().GetBase().GetRepo().GetName()
+	versionRange := fmt.Sprintf(
+		"%s..%s",
+		pr.GetPullRequest().GetBase().GetSHA(),
+		pr.GetPullRequest().GetHead().GetSHA(),
+	)
+
+	log.Debugf("Getting changelog for repo (%s) and range (%s)", repo, versionRange)
+
+	// Generate the changelog text for this PR.
+	changelogText, warningText, err := getChangelogText(
+		repo, versionRange, conf)
+	if err != nil {
+		err = errors.Wrap(err, "Not able to get changelog text")
+	}
+
+	log.Debugf("Prepared changelog text: %s", changelogText)
+	log.Debugf("Got warning text: %s", warningText)
+
+	return changelogText, warningText, err
+}
+
+func assembleCommentText(changelogText, warningText string) string {
+	commentText := changelogPrefix + changelogText
+	if warningText != "" {
+		commentText += warningHeader + warningText
+	}
+	return commentText
+}
+
+func updatePullRequestChangelogComments(
+	log *logrus.Entry,
+	ctx *gin.Context,
+	githubClient clientgithub.Client,
+	pr *github.PullRequestEvent,
+	conf *config,
+	changelogText string,
+	warningText string,
+) {
+	var err error
+
+	commentText := assembleCommentText(changelogText, warningText)
+
+	comment := getFirstMatchingBotCommentInPR(log, githubClient, pr, changelogPrefix, conf)
+	if comment != nil {
+		// There is a previous comment about changelog.
+		if *comment.Body == commentText {
+			log.Debugf("The changelog hasn't changed (comment ID: %d). Leave it alone.",
+				comment.ID)
+			return
+		} else {
+			log.Debugf("Deleting old changelog comment (comment ID: %d).",
+				comment.ID)
+			err = githubClient.DeleteComment(
+				ctx,
+				conf.githubOrganization,
+				pr.GetRepo().GetName(),
+				*comment.ID,
+			)
+			if err != nil {
+				log.Errorf("Could not delete changelog comment: %s",
+					err.Error())
+			}
+		}
+	}
+
+	commentBody := &github.IssueComment{
+		Body: &commentText,
+	}
+	err = githubClient.CreateComment(
+		ctx,
+		conf.githubOrganization,
+		pr.GetRepo().GetName(),
+		pr.GetNumber(),
+		commentBody,
+	)
+	if err != nil {
+		log.Errorf("Could not post changelog comment: %s. Comment text: %s",
+			err.Error(), commentText)
+	}
 }

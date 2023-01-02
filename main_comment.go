@@ -77,9 +77,6 @@ func processGitHubComment(
 	// extract the command and check it is valid
 	switch {
 	case strings.Contains(commentBody, commandStartPipeline):
-		// make sure we only parse one pr at a time, since we use release_tool
-		mutex.Lock()
-
 		buildOptions, err := parseBuildOptions(commentBody)
 		// get the list of builds
 		prRequest := &github.PullRequestEvent{
@@ -97,7 +94,6 @@ func processGitHubComment(
 				log,
 				conf,
 				prRequest)
-			mutex.Unlock()
 			return err
 		}
 		builds := parsePullRequest(log, conf, "opened", prRequest)
@@ -107,9 +103,6 @@ func processGitHubComment(
 			pr.GetNumber(),
 			len(builds),
 		)
-
-		// release the mutex
-		mutex.Unlock()
 
 		// start the builds
 		for idx, build := range builds {

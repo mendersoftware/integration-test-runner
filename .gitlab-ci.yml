@@ -21,12 +21,19 @@ include:
 
 
 test:unit:
- script:
-   - git config --global user.email test@example.com
-   - git config --global user.name  mendertester
-   - go list ./... | grep -v vendor | xargs -n1 -I {} go test -v -covermode=atomic -coverprofile=../../../{}/coverage.txt {} 2>&1 | tee /dev/stderr | go-junit-report > ${CI_PROJECT_DIR}/test-results.xml || exit $?
-   - mkdir -p tests/unit-coverage && find . -name 'coverage.txt' -exec cp --parents {} ./tests/unit-coverage \;
-   - tar -cvf ${CI_PROJECT_DIR}/unit-coverage.tar tests/unit-coverage
+  script:
+    - pip install PyGithub
+
+    - git config --global user.email test@example.com
+    - git config --global user.name  mendertester
+
+    # Clone this for use in certain tests.
+    - git clone --depth 1 https://github.com/mendersoftware/integration
+    - export INTEGRATION_DIRECTORY="$(realpath integration)"
+
+    - go list ./... | grep -v vendor | xargs -n1 -I {} go test -v -covermode=atomic -coverprofile=../../../{}/coverage.txt {} 2>&1 | tee /dev/stderr | go-junit-report > ${CI_PROJECT_DIR}/test-results.xml || exit $?
+    - mkdir -p tests/unit-coverage && find . -name 'coverage.txt' -exec cp --parents {} ./tests/unit-coverage \;
+    - tar -cvf ${CI_PROJECT_DIR}/unit-coverage.tar tests/unit-coverage
 
 test:acceptance_tests:
   stage: test

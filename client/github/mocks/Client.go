@@ -51,6 +51,20 @@ func (_m *Client) CreatePullRequest(ctx context.Context, org string, repo string
 	return r0, r1
 }
 
+// DeleteComment provides a mock function with given fields: ctx, org, repo, commentID
+func (_m *Client) DeleteComment(ctx context.Context, org string, repo string, commentID int64) error {
+	ret := _m.Called(ctx, org, repo, commentID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, int64) error); ok {
+		r0 = rf(ctx, org, repo, commentID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetPullRequest provides a mock function with given fields: ctx, org, repo, pr
 func (_m *Client) GetPullRequest(ctx context.Context, org string, repo string, pr int) (*github.PullRequest, error) {
 	ret := _m.Called(ctx, org, repo, pr)

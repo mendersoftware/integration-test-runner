@@ -4,11 +4,8 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/sirupsen/logrus"
-
-	"github.com/mendersoftware/integration-test-runner/git"
 )
 
 func getServiceRevisionFromIntegration(repo, baseBranch string, conf *config) (string, error) {
@@ -32,22 +29,6 @@ func getServiceRevisionFromIntegration(repo, baseBranch string, conf *config) (s
 		version = strings.SplitN(version, "/", 2)[1]
 	}
 	return strings.TrimSpace(string(version)), err
-}
-
-func updateIntegrationRepo(conf *config) error {
-	gitcmd := git.Command("pull", "--rebase", "origin")
-	gitcmd.Dir = conf.integrationDirectory
-
-	// timeout and kill process after gitOperationTimeout seconds
-	t := time.AfterFunc(gitOperationTimeout*time.Second, func() {
-		_ = gitcmd.Process.Kill()
-	})
-	defer t.Stop()
-
-	if err := gitcmd.Run(); err != nil {
-		return fmt.Errorf("failed to 'git pull' integration folder: %s", err.Error())
-	}
-	return nil
 }
 
 // The parameter that the build system uses for repo specific revisions is <REPO_NAME>_REV
