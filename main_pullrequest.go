@@ -262,10 +262,14 @@ func fetchChangelogTextForPR(
 ) (string, string, error) {
 
 	repo := pr.GetPullRequest().GetBase().GetRepo().GetName()
+	baseSHA := pr.GetPullRequest().GetBase().GetSHA()
+	headSHA := pr.GetPullRequest().GetHead().GetSHA()
+	baseRef := pr.GetPullRequest().GetBase().GetRef()
+	headRef := pr.GetPullRequest().GetHead().GetRef()
 	versionRange := fmt.Sprintf(
 		"%s..%s",
-		pr.GetPullRequest().GetBase().GetSHA(),
-		pr.GetPullRequest().GetHead().GetSHA(),
+		baseSHA,
+		headSHA,
 	)
 
 	log.Debugf("Getting changelog for repo (%s) and range (%s)", repo, versionRange)
@@ -276,6 +280,19 @@ func fetchChangelogTextForPR(
 	if err != nil {
 		err = errors.Wrap(err, "Not able to get changelog text")
 	}
+
+	// Replace SHAs with the original ref names, so that the changelog text
+	// does not change on every commit amend. The reason we did not use ref
+	// names to begin with is that they may live in personal forks, so it
+	// complicates the fetching mechanism. SHAs however, are always present
+	// in the repository you are merging into.
+	//
+	// Fetching changelogs online from personal forks is pretty unlikely to
+	// be useful outside of the integration-test-runner niche (better to use
+	// the local version), therefore we do this replacement instead of
+	// making the changelog-generator "fork aware".
+	changelogText = strings.ReplaceAll(changelogText, baseSHA, baseRef)
+	changelogText = strings.ReplaceAll(changelogText, headSHA, headRef)
 
 	log.Debugf("Prepared changelog text: %s", changelogText)
 	log.Debugf("Got warning text: %s", warningText)
