@@ -20,6 +20,12 @@ type Client interface {
 		number int,
 		comment *github.IssueComment,
 	) error
+	DeleteComment(
+		ctx context.Context,
+		org string,
+		repo string,
+		commentID int64,
+	) error
 	IsOrganizationMember(ctx context.Context, org string, user string) bool
 	CreatePullRequest(
 		ctx context.Context,
@@ -76,6 +82,23 @@ func (c *gitHubClient) CreateComment(
 		return nil
 	}
 	_, _, err := c.client.Issues.CreateComment(ctx, org, repo, number, comment)
+	return err
+}
+
+func (c *gitHubClient) DeleteComment(
+	ctx context.Context,
+	org string,
+	repo string,
+	commentID int64,
+) error {
+	if c.dryRunMode {
+		msg := fmt.Sprintf("github.DeleteComment: org=%s,repo=%s,commentID=%d",
+			org, repo, commentID,
+		)
+		logger.GetRequestLogger().Push(msg)
+		return nil
+	}
+	_, err := c.client.Issues.DeleteComment(ctx, org, repo, commentID)
 	return err
 }
 
