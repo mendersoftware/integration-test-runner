@@ -14,8 +14,7 @@ output:
   debug:Prepared changelog text: ### Changelogs
 
 - 'debug:Got warning text: '
-- 'github.CreateComment: org=mendersoftware,repo=workflows,number=140,comment={"body":"Merging
-  these commits will result in the following changelog entries:\n\n### Changelogs\n\n"}'
+- info:Changelog is empty, and there is no previous changelog comment. Stay silent.
 - 'github.IsOrganizationMember: org=mendersoftware,user=tranchitella'
 - "debug:stopBuildsOfStalePRs: PR not closed, therefore not stopping it's pipeline"
 - 'info:Pull request event with action: opened'

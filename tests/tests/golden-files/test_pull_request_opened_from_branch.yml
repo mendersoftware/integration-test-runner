@@ -14,8 +14,7 @@ output:
   debug:Prepared changelog text: ### Changelogs
 
 - 'debug:Got warning text: '
-- 'github.CreateComment: org=mendersoftware,repo=mender-docs,number=1483,comment={"body":"Merging
-  these commits will result in the following changelog entries:\n\n### Changelogs\n\n"}'
+- info:Changelog is empty, and there is no previous changelog comment. Stay silent.
 - 'github.IsOrganizationMember: org=mendersoftware,user=lluiscampos'
 - "debug:stopBuildsOfStalePRs: PR not closed, therefore not stopping it's pipeline"
 - 'debug:syncIfOSHasEnterpriseRepo: Repository without Enterprise fork detected: (mender-docs).

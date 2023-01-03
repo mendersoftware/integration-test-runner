@@ -333,6 +333,8 @@ func updatePullRequestChangelogComments(
 	var err error
 
 	commentText := assembleCommentText(changelogText, warningText)
+	emptyChangelog := (changelogText == "" ||
+		strings.HasSuffix(changelogText, "### Changelogs\n\n"))
 
 	comment := getFirstMatchingBotCommentInPR(log, githubClient, pr, changelogPrefix, conf)
 	if comment != nil {
@@ -355,6 +357,9 @@ func updatePullRequestChangelogComments(
 					err.Error())
 			}
 		}
+	} else if emptyChangelog {
+		log.Info("Changelog is empty, and there is no previous changelog comment. Stay silent.")
+		return
 	}
 
 	commentBody := &github.IssueComment{
