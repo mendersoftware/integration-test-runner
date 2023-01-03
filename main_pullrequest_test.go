@@ -274,6 +274,66 @@ func TestChangelogComments(t *testing.T) {
 			commentID:     123,
 			userName:      githubBotName,
 		},
+		"Empty changelog, and no previous comment": {
+			pr: &github.PullRequestEvent{
+				PullRequest: &github.PullRequest{
+					Merged: github.Bool(false),
+				},
+				Repo: &github.Repository{
+					Name: &testRepo,
+					Owner: &github.User{
+						Name: github.String("mendersoftware"),
+					},
+				},
+				Number: github.Int(6),
+			},
+			issue:         noIssue,
+			changelogText: "### Changelogs\n\n",
+			update:        false,
+			deletion:      false,
+			commentID:     123,
+			userName:      githubBotName,
+		},
+		"Empty changelog, and previous, different comment": {
+			pr: &github.PullRequestEvent{
+				PullRequest: &github.PullRequest{
+					Merged: github.Bool(false),
+				},
+				Repo: &github.Repository{
+					Name: &testRepo,
+					Owner: &github.User{
+						Name: github.String("mendersoftware"),
+					},
+				},
+				Number: github.Int(6),
+			},
+			issue:         nonMatchingIssue,
+			changelogText: "### Changelogs\n\n",
+			update:        true,
+			deletion:      true,
+			commentID:     123,
+			userName:      githubBotName,
+		},
+		"Empty changelog, and previous, identical comment": {
+			pr: &github.PullRequestEvent{
+				PullRequest: &github.PullRequest{
+					Merged: github.Bool(false),
+				},
+				Repo: &github.Repository{
+					Name: &testRepo,
+					Owner: &github.User{
+						Name: github.String("mendersoftware"),
+					},
+				},
+				Number: github.Int(6),
+			},
+			issue:         matchingIssue,
+			changelogText: "### Changelogs\n\n",
+			update:        false,
+			deletion:      false,
+			commentID:     123,
+			userName:      githubBotName,
+		},
 	}
 
 	for name, tc := range testCases {

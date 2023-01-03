@@ -9,14 +9,12 @@ output:
 - 'info:Created branch: workflows:pr_140'
 - 'gitlab.CreatePipeline: path=Northern.tech/Mender/workflows,options={"ref":"pr_140","variables":[{"key":"CI_EXTERNAL_PULL_REQUEST_IID","value":"140"},{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_REPOSITORY","value":"tranchitella/workflows"},{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_REPOSITORY","value":"mendersoftware/workflows"},{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME","value":"men-4705"},{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_SHA","value":"7b099b84cb50df18847027b0afa16820eab850d9"},{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME","value":"master"},{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_SHA","value":"70ab90b3932d3d008ebee56d6cfe4f3329d5ee7b"}]}'
 - 'debug:started pipeline for PR: '
-- 'git.Run: /usr/bin/git pull --rebase origin'
 - debug:Getting changelog for repo (workflows) and range (70ab90b3932d3d008ebee56d6cfe4f3329d5ee7b..7b099b84cb50df18847027b0afa16820eab850d9)
 - |+
   debug:Prepared changelog text: ### Changelogs
 
 - 'debug:Got warning text: '
-- 'github.CreateComment: org=mendersoftware,repo=workflows,number=140,comment={"body":"Merging
-  these commits will result in the following changelog entries:\n\n### Changelogs\n\n"}'
+- info:Changelog is empty, and there is no previous changelog comment. Stay silent.
 - 'github.IsOrganizationMember: org=mendersoftware,user=tranchitella'
 - "debug:stopBuildsOfStalePRs: PR not closed, therefore not stopping it's pipeline"
 - 'info:Pull request event with action: opened'

@@ -238,11 +238,24 @@ func handleChangelogComments(
 	pr *github.PullRequestEvent,
 	conf *config,
 ) {
-	// First update integration repo.
-	err := updateIntegrationRepo(conf)
-	if err != nil {
-		log.Errorf("Could not update integration repo: %s", err.Error())
-		// Should still be safe to continue though.
+	// It would be semantically correct to update the integration repo
+	// here. However, this step is carried out on every PR update, causing a
+	// big amount of "git fetch" requests, which both reduces performance,
+	// and could result in rate limiting. Instead, we assume that the
+	// integration repo is recent enough, since it is still updated when
+	// doing mender-qa builds.
+	//
+	// // First update integration repo.
+	// err := updateIntegrationRepo(conf)
+	// if err != nil {
+	// 	log.Errorf("Could not update integration repo: %s", err.Error())
+	// 	// Should still be safe to continue though.
+	// }
+
+	// Only do changelog commenting for mendersoftware repositories.
+	if pr.GetPullRequest().GetBase().GetRepo().GetOwner().GetLogin() != "mendersoftware" {
+		log.Info("Not a mendersoftware repository. Ignoring.")
+		return
 	}
 
 	changelogText, warningText, err := fetchChangelogTextForPR(log, pr, conf)
@@ -320,6 +333,8 @@ func updatePullRequestChangelogComments(
 	var err error
 
 	commentText := assembleCommentText(changelogText, warningText)
+	emptyChangelog := (changelogText == "" ||
+		strings.HasSuffix(changelogText, "### Changelogs\n\n"))
 
 	comment := getFirstMatchingBotCommentInPR(log, githubClient, pr, changelogPrefix, conf)
 	if comment != nil {
@@ -342,6 +357,9 @@ func updatePullRequestChangelogComments(
 					err.Error())
 			}
 		}
+	} else if emptyChangelog {
+		log.Info("Changelog is empty, and there is no previous changelog comment. Stay silent.")
+		return
 	}
 
 	commentBody := &github.IssueComment{
