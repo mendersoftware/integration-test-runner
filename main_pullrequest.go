@@ -252,6 +252,12 @@ func handleChangelogComments(
 	// 	// Should still be safe to continue though.
 	// }
 
+	// Only do changelog commenting for mendersoftware repositories.
+	if pr.GetPullRequest().GetBase().GetRepo().GetOwner().GetLogin() != "mendersoftware" {
+		log.Info("Not a mendersoftware repository. Ignoring.")
+		return
+	}
+
 	changelogText, warningText, err := fetchChangelogTextForPR(log, pr, conf)
 	if err != nil {
 		log.Errorf("Error while fetching changelog text: %s", err.Error())
