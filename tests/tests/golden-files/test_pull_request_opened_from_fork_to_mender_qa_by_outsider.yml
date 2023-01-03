@@ -10,7 +10,6 @@ output:
 - 'github.IsOrganizationMember: org=mendersoftware,user=Junglebobo'
 - warning:Junglebobo is making a pullrequest, but he/she is not a member of our organization,
   ignoring
-- 'git.Run: /usr/bin/git pull --rebase origin'
 - debug:Getting changelog for repo (mender-qa) and range (2c62b8a1d398021a76174565c56a3ba42b8fe20b..180514685919be95ebf7fc49c5a7feb5e64933f0)
 - |+
   debug:Prepared changelog text: ### Changelogs

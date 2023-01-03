@@ -238,12 +238,19 @@ func handleChangelogComments(
 	pr *github.PullRequestEvent,
 	conf *config,
 ) {
-	// First update integration repo.
-	err := updateIntegrationRepo(conf)
-	if err != nil {
-		log.Errorf("Could not update integration repo: %s", err.Error())
-		// Should still be safe to continue though.
-	}
+	// It would be semantically correct to update the integration repo
+	// here. However, this step is carried out on every PR update, causing a
+	// big amount of "git fetch" requests, which both reduces performance,
+	// and could result in rate limiting. Instead, we assume that the
+	// integration repo is recent enough, since it is still updated when
+	// doing mender-qa builds.
+	//
+	// // First update integration repo.
+	// err := updateIntegrationRepo(conf)
+	// if err != nil {
+	// 	log.Errorf("Could not update integration repo: %s", err.Error())
+	// 	// Should still be safe to continue though.
+	// }
 
 	changelogText, warningText, err := fetchChangelogTextForPR(log, pr, conf)
 	if err != nil {
