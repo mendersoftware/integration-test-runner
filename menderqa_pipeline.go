@@ -491,6 +491,10 @@ func getClientBuildParameters(
 		// that we can at least build it. MEN-6116 exists to clean this
 		// up later.
 		qemuParam = "false"
+		buildParameters = append(
+			buildParameters,
+			&gitlab.PipelineVariable{Key: "BUILD_CPP_CLIENT", Value: "true"},
+		)
 	}
 
 	buildParameters = append(
