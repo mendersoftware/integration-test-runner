@@ -208,6 +208,7 @@ func triggerBuild(
 	pipeline, err := gitlabClient.CreatePipeline(integrationPipelinePath, opt)
 	if err != nil {
 		log.Errorf("Could not create pipeline: %s", err.Error())
+		return err
 	}
 	log.Infof("Created pipeline: %s", pipeline.WebURL)
 
@@ -232,6 +233,7 @@ Hello :smile_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}]
 			"Failed to parse the build matrix template. Should never happen! Error: %s\n",
 			err.Error(),
 		)
+		return err
 	}
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, struct {
@@ -242,6 +244,7 @@ Hello :smile_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}]
 		Pipeline:  pipeline,
 	}); err != nil {
 		log.Errorf("Failed to execute the build matrix template. Error: %s\n", err.Error())
+		return err
 	}
 
 	// Comment with a pipeline-link on the PR
