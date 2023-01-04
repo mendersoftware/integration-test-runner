@@ -411,11 +411,15 @@ func getBuildParameters(
 			pokyBranch = build.baseBranch
 		} else {
 			pokyBranch = LatestStableYoctoBranch
+			metaMenderBranch := pokyBranch
+			if build.baseBranch == "feature-c++-client" {
+				metaMenderBranch = build.baseBranch
+			}
 			buildParameters = append(
 				buildParameters,
 				&gitlab.PipelineVariable{
 					Key:   repoToBuildParameter("meta-mender"),
-					Value: pokyBranch,
+					Value: metaMenderBranch,
 				},
 			)
 		}
