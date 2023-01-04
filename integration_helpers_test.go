@@ -58,7 +58,7 @@ New changes in mender since 3.0.0:
 `
 	assert.Equal(t, expected, stdout)
 
-	expected = `*** Commit a4b451ec1f32ee32e8ba1ac51c602c97069dd1d0 had a number 0000 which may be a ticket reference we missed. Should be manually checked.
+	expected = `*** One commit had a number 0000 which may be a ticket reference we missed. Should be manually checked.
 ---
 Add missing filesystem sync after populating Update Module's file tree.
 
