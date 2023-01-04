@@ -5,6 +5,7 @@ import (
 	"io"
 	"os/exec"
 	"path"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -46,7 +47,17 @@ func getChangelogText(repo, versionRange string, conf *config) (stdout,
 		"--github-repo", repo,
 		versionRange,
 	)
-	return getBothStdoutAndStderr(c)
+	stdout, stderr, retErr = getBothStdoutAndStderr(c)
+
+	// Replace commit IDs in warnings, to avoid multiple postings when they
+	// change.
+	matcher, err := regexp.Compile("Commit [0-9a-f]{40} had a number")
+	if err == nil {
+		stderr = matcher.ReplaceAllString(stderr,
+			"One commit had a number")
+	}
+
+	return stdout, stderr, retErr
 }
 
 // All this because exec doesn't have a SplitOutputs() function...
