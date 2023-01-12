@@ -93,4 +93,4 @@ publish:acceptance:
 
 sync:image:
   variables:
-    TARGET_MANIFEST_FILE: "kubernetes/mender-test-runner/test-runner-deployment.yaml,kubernetes/cfengine-repos-sync/repos-sync-cfengine-com-deployment.yaml"
+    TARGET_MANIFEST_FILE: "kubernetes/mender-test-runner/test-runner-deployment.yaml"
