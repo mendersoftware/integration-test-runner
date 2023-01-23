@@ -21,14 +21,17 @@ import (
 )
 
 type config struct {
-	dryRunMode           bool
-	githubSecret         []byte
-	githubProtocol       gitProtocol
-	githubOrganization   string
-	githubToken          string
-	gitlabToken          string
-	gitlabBaseURL        string
-	integrationDirectory string
+	dryRunMode             bool
+	githubSecret           []byte
+	githubProtocol         gitProtocol
+	githubOrganization     string
+	githubToken            string
+	gitlabToken            string
+	gitlabBaseURL          string
+	integrationDirectory   string
+	isProcessPushEvents    bool
+	isProcessPREvents      bool
+	isProcessCommentEvents bool
 }
 
 type buildOptions struct {
@@ -93,6 +96,20 @@ func getConfig() (*config, error) {
 	integrationDirectory := os.Getenv("INTEGRATION_DIRECTORY")
 	logLevel, found := os.LookupEnv("INTEGRATION_TEST_RUNNER_LOG_LEVEL")
 
+	//
+	// Currently we don't have a distinguishment between GitHub events and features.
+	// Different features might be implemented across different events, but in future
+	// it's probability that we might implement proper features selection. For now the
+	// straight goal is to being able to configure the runner to only sync repos on
+	// push events and disable all the rest (to be used by the CFEngine team).
+	//
+	// default: process push events (sync repos) if not explicitly disabled
+	isProcessPushEvents := os.Getenv("DISABLE_PUSH_EVENTS_PROCESSING") == ""
+	// default: process PR events if not explicitly disabled
+	isProcessPREvents := os.Getenv("DISABLE_PR_EVENTS_PROCESSING") == ""
+	// default: process comment events if not explicitly disabled
+	isProcessCommentEvents := os.Getenv("DISABLE_COMMENT_EVENTS_PROCESSING") == ""
+
 	logrus.SetLevel(logrus.InfoLevel)
 
 	if found {
@@ -122,13 +139,16 @@ func getConfig() (*config, error) {
 	}
 
 	return &config{
-		dryRunMode:           dryRunMode,
-		githubSecret:         []byte(githubSecret),
-		githubProtocol:       gitProtocolSSH,
-		githubToken:          githubToken,
-		gitlabToken:          gitlabToken,
-		gitlabBaseURL:        gitlabBaseURL,
-		integrationDirectory: integrationDirectory,
+		dryRunMode:             dryRunMode,
+		githubSecret:           []byte(githubSecret),
+		githubProtocol:         gitProtocolSSH,
+		githubToken:            githubToken,
+		gitlabToken:            gitlabToken,
+		gitlabBaseURL:          gitlabBaseURL,
+		integrationDirectory:   integrationDirectory,
+		isProcessPushEvents:    isProcessPushEvents,
+		isProcessPREvents:      isProcessPREvents,
+		isProcessCommentEvents: isProcessCommentEvents,
 	}, nil
 }
 
@@ -175,14 +195,20 @@ func processGitHubWebhook(
 	conf.githubOrganization = githubOrganization
 	switch webhookType {
 	case "pull_request":
-		pr := webhookEvent.(*github.PullRequestEvent)
-		return processGitHubPullRequest(ctx, pr, githubClient, conf)
+		if conf.isProcessPREvents {
+			pr := webhookEvent.(*github.PullRequestEvent)
+			return processGitHubPullRequest(ctx, pr, githubClient, conf)
+		}
 	case "push":
-		push := webhookEvent.(*github.PushEvent)
-		return processGitHubPush(ctx, push, githubClient, conf)
+		if conf.isProcessPushEvents {
+			push := webhookEvent.(*github.PushEvent)
+			return processGitHubPush(ctx, push, githubClient, conf)
+		}
 	case "issue_comment":
-		comment := webhookEvent.(*github.IssueCommentEvent)
-		return processGitHubComment(ctx, comment, githubClient, conf)
+		if conf.isProcessCommentEvents {
+			comment := webhookEvent.(*github.IssueCommentEvent)
+			return processGitHubComment(ctx, comment, githubClient, conf)
+		}
 	}
 	return nil
 }
