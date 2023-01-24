@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
@@ -32,6 +33,7 @@ type config struct {
 	isProcessPushEvents    bool
 	isProcessPREvents      bool
 	isProcessCommentEvents bool
+	reposSyncList          []string
 }
 
 type buildOptions struct {
@@ -88,13 +90,13 @@ const (
 )
 
 func getConfig() (*config, error) {
+	var reposSyncList []string
 	dryRunMode := os.Getenv("DRY_RUN") != ""
 	githubSecret := os.Getenv("GITHUB_SECRET")
 	githubToken := os.Getenv("GITHUB_TOKEN")
 	gitlabToken := os.Getenv("GITLAB_TOKEN")
 	gitlabBaseURL := os.Getenv("GITLAB_BASE_URL")
 	integrationDirectory := os.Getenv("INTEGRATION_DIRECTORY")
-	logLevel, found := os.LookupEnv("INTEGRATION_TEST_RUNNER_LOG_LEVEL")
 
 	//
 	// Currently we don't have a distinguishment between GitHub events and features.
@@ -110,8 +112,8 @@ func getConfig() (*config, error) {
 	// default: process comment events if not explicitly disabled
 	isProcessCommentEvents := os.Getenv("DISABLE_COMMENT_EVENTS_PROCESSING") == ""
 
+	logLevel, found := os.LookupEnv("INTEGRATION_TEST_RUNNER_LOG_LEVEL")
 	logrus.SetLevel(logrus.InfoLevel)
-
 	if found {
 		lvl, err := logrus.ParseLevel(logLevel)
 		if err != nil {
@@ -123,6 +125,12 @@ func getConfig() (*config, error) {
 			logrus.Infof("Set 'LogLevel' to %s", lvl)
 			logrus.SetLevel(lvl)
 		}
+	}
+
+	// Comma separated list of repos to sync (GitHub->GitLab)
+	reposSyncListRaw, found := os.LookupEnv("SYNC_REPOS_LIST")
+	if found {
+		reposSyncList = strings.Split(reposSyncListRaw, ",")
 	}
 
 	switch {
@@ -149,6 +157,7 @@ func getConfig() (*config, error) {
 		isProcessPushEvents:    isProcessPushEvents,
 		isProcessPREvents:      isProcessPREvents,
 		isProcessCommentEvents: isProcessCommentEvents,
+		reposSyncList:          reposSyncList,
 	}, nil
 }
 
