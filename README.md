@@ -2,21 +2,20 @@
 
 ## Main features
 
-### `mender-qa` Pipeline run
-
-Set `WATCH_REPOS_PIPELINE` for the list of repositories for which to run
-`mender-qa` Pipeline. See source code for defaults.
-
-This is a Mender specific feature.
-
 ### GitHub -> GitLab sync
 
-All repositories from the configured GitHub organization are synced with GitLab.
+By default all repositories from the configured GitHub organization are synced with GitLab. To select a subset of repositories to sync, set `SYNC_REPOS_LIST` env variable with a comma separated list of repositories.
 
 ### GitLab PR branches
 
-For all repositories in the organization, a pr_XXX branch will be created in
-GitLab for every pull/XXX PR from GitHub.
+For all repositories in the organization, a pr_XXX branch will be created in GitLab for every pull/XXX PR from GitHub.
+
+### Processing GitHub events
+
+Currently the following GitHub events are processed:
+* `pull_request`: enabled by default, `DISABLE_PR_EVENTS_PROCESSING` disables the processing
+* `push`: enabled by default, `DISABLE_PUSH_EVENTS_PROCESSING` disables the processing
+* `issue_comment`: enabled by default, `DISABLE_COMMENT_EVENTS_PROCESSING` disables the processing
 
 ## Infrastructure
 

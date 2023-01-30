@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
@@ -21,14 +22,18 @@ import (
 )
 
 type config struct {
-	dryRunMode           bool
-	githubSecret         []byte
-	githubProtocol       gitProtocol
-	githubOrganization   string
-	githubToken          string
-	gitlabToken          string
-	gitlabBaseURL        string
-	integrationDirectory string
+	dryRunMode             bool
+	githubSecret           []byte
+	githubProtocol         gitProtocol
+	githubOrganization     string
+	githubToken            string
+	gitlabToken            string
+	gitlabBaseURL          string
+	integrationDirectory   string
+	isProcessPushEvents    bool
+	isProcessPREvents      bool
+	isProcessCommentEvents bool
+	reposSyncList          []string
 }
 
 type buildOptions struct {
@@ -85,16 +90,30 @@ const (
 )
 
 func getConfig() (*config, error) {
+	var reposSyncList []string
 	dryRunMode := os.Getenv("DRY_RUN") != ""
 	githubSecret := os.Getenv("GITHUB_SECRET")
 	githubToken := os.Getenv("GITHUB_TOKEN")
 	gitlabToken := os.Getenv("GITLAB_TOKEN")
 	gitlabBaseURL := os.Getenv("GITLAB_BASE_URL")
 	integrationDirectory := os.Getenv("INTEGRATION_DIRECTORY")
+
+	//
+	// Currently we don't have a distinguishment between GitHub events and features.
+	// Different features might be implemented across different events, but in future
+	// it's probability that we might implement proper features selection. For now the
+	// straight goal is to being able to configure the runner to only sync repos on
+	// push events and disable all the rest (to be used by the CFEngine team).
+	//
+	// default: process push events (sync repos) if not explicitly disabled
+	isProcessPushEvents := os.Getenv("DISABLE_PUSH_EVENTS_PROCESSING") == ""
+	// default: process PR events if not explicitly disabled
+	isProcessPREvents := os.Getenv("DISABLE_PR_EVENTS_PROCESSING") == ""
+	// default: process comment events if not explicitly disabled
+	isProcessCommentEvents := os.Getenv("DISABLE_COMMENT_EVENTS_PROCESSING") == ""
+
 	logLevel, found := os.LookupEnv("INTEGRATION_TEST_RUNNER_LOG_LEVEL")
-
 	logrus.SetLevel(logrus.InfoLevel)
-
 	if found {
 		lvl, err := logrus.ParseLevel(logLevel)
 		if err != nil {
@@ -106,6 +125,12 @@ func getConfig() (*config, error) {
 			logrus.Infof("Set 'LogLevel' to %s", lvl)
 			logrus.SetLevel(lvl)
 		}
+	}
+
+	// Comma separated list of repos to sync (GitHub->GitLab)
+	reposSyncListRaw, found := os.LookupEnv("SYNC_REPOS_LIST")
+	if found {
+		reposSyncList = strings.Split(reposSyncListRaw, ",")
 	}
 
 	switch {
@@ -122,13 +147,17 @@ func getConfig() (*config, error) {
 	}
 
 	return &config{
-		dryRunMode:           dryRunMode,
-		githubSecret:         []byte(githubSecret),
-		githubProtocol:       gitProtocolSSH,
-		githubToken:          githubToken,
-		gitlabToken:          gitlabToken,
-		gitlabBaseURL:        gitlabBaseURL,
-		integrationDirectory: integrationDirectory,
+		dryRunMode:             dryRunMode,
+		githubSecret:           []byte(githubSecret),
+		githubProtocol:         gitProtocolSSH,
+		githubToken:            githubToken,
+		gitlabToken:            gitlabToken,
+		gitlabBaseURL:          gitlabBaseURL,
+		integrationDirectory:   integrationDirectory,
+		isProcessPushEvents:    isProcessPushEvents,
+		isProcessPREvents:      isProcessPREvents,
+		isProcessCommentEvents: isProcessCommentEvents,
+		reposSyncList:          reposSyncList,
 	}, nil
 }
 
@@ -175,14 +204,20 @@ func processGitHubWebhook(
 	conf.githubOrganization = githubOrganization
 	switch webhookType {
 	case "pull_request":
-		pr := webhookEvent.(*github.PullRequestEvent)
-		return processGitHubPullRequest(ctx, pr, githubClient, conf)
+		if conf.isProcessPREvents {
+			pr := webhookEvent.(*github.PullRequestEvent)
+			return processGitHubPullRequest(ctx, pr, githubClient, conf)
+		}
 	case "push":
-		push := webhookEvent.(*github.PushEvent)
-		return processGitHubPush(ctx, push, githubClient, conf)
+		if conf.isProcessPushEvents {
+			push := webhookEvent.(*github.PushEvent)
+			return processGitHubPush(ctx, push, githubClient, conf)
+		}
 	case "issue_comment":
-		comment := webhookEvent.(*github.IssueCommentEvent)
-		return processGitHubComment(ctx, comment, githubClient, conf)
+		if conf.isProcessCommentEvents {
+			comment := webhookEvent.(*github.IssueCommentEvent)
+			return processGitHubComment(ctx, comment, githubClient, conf)
+		}
 	}
 	return nil
 }

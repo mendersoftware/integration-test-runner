@@ -1,6 +1,7 @@
 input: push_cfengine.json
 output:
 - 'debug:Got push event :: repo website :: ref refs/heads/master'
+- debug:Syncing repo cfengine/website
 - 'git.Run: /usr/bin/git init .'
 - 'git.Run: /usr/bin/git remote add github git@github.com:/cfengine/website.git'
 - 'git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/CFEngine/website'

@@ -21,9 +21,22 @@ func processGitHubPush(
 
 	log.Debugf("Got push event :: repo %s :: ref %s", repoName, refName)
 
-	err := syncRemoteRef(log, repoOrg, repoName, refName, conf)
-	if err != nil {
-		log.Errorf("Could not sync branch: %s", err.Error())
+	if len(conf.reposSyncList) == 0 || isRepoManaged(repoName, conf.reposSyncList) {
+		log.Debugf("Syncing repo %s/%s", repoOrg, repoName)
+		err := syncRemoteRef(log, repoOrg, repoName, refName, conf)
+		if err != nil {
+			log.Errorf("Could not sync branch: %s", err.Error())
+			return err
+		}
 	}
-	return err
+	return nil
+}
+
+func isRepoManaged(repo string, reposList []string) bool {
+	for _, r := range reposList {
+		if r == repo {
+			return true
+		}
+	}
+	return false
 }

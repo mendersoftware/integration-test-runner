@@ -15,10 +15,15 @@ import (
 
 func TestProcessGitHubWebhook(t *testing.T) {
 	gitHubOrg := "mendersoftware"
+	ref := "refs/heads/master"
 
 	testCases := map[string]struct {
 		webhookType  string
 		webhookEvent interface{}
+
+		isCommentEventProcessingEnabled  bool
+		isPREventsProcessingEnabled      bool
+		isCommentEventsProcessingEnabled bool
 
 		repo     string
 		prNumber int
@@ -40,6 +45,7 @@ func TestProcessGitHubWebhook(t *testing.T) {
 					},
 				},
 			},
+			isCommentEventProcessingEnabled: true,
 		},
 		"comment from non-mendersoftware user, ignore": {
 			webhookType: "issue_comment",
@@ -54,6 +60,8 @@ func TestProcessGitHubWebhook(t *testing.T) {
 					},
 				},
 			},
+
+			isCommentEventProcessingEnabled: true,
 
 			isOrganizationMember: github.Bool(false),
 		},
@@ -74,6 +82,8 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				},
 			},
 
+			isCommentEventProcessingEnabled: true,
+
 			isOrganizationMember: github.Bool(false),
 		},
 		"comment from organization user, command not recognized": {
@@ -93,6 +103,8 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				},
 			},
 
+			isCommentEventProcessingEnabled: true,
+
 			isOrganizationMember: github.Bool(false),
 		},
 		"comment from organization user, no pull request associated": {
@@ -111,6 +123,8 @@ func TestProcessGitHubWebhook(t *testing.T) {
 					},
 				},
 			},
+
+			isCommentEventProcessingEnabled: true,
 
 			isOrganizationMember: github.Bool(true),
 		},
@@ -135,6 +149,8 @@ func TestProcessGitHubWebhook(t *testing.T) {
 					},
 				},
 			},
+
+			isCommentEventProcessingEnabled: true,
 
 			isOrganizationMember: github.Bool(true),
 
@@ -162,6 +178,8 @@ func TestProcessGitHubWebhook(t *testing.T) {
 					Login: github.String("member"),
 				},
 			},
+
+			isCommentEventProcessingEnabled: true,
 
 			isOrganizationMember: github.Bool(true),
 
@@ -193,6 +211,8 @@ func TestProcessGitHubWebhook(t *testing.T) {
 					Login: github.String("member"),
 				},
 			},
+
+			isCommentEventProcessingEnabled: true,
 
 			isOrganizationMember: github.Bool(true),
 
@@ -228,6 +248,8 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				},
 			},
 
+			isCommentEventProcessingEnabled: true,
+
 			isOrganizationMember: github.Bool(true),
 
 			repo:     "integration-test-runner",
@@ -262,6 +284,8 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				},
 			},
 
+			isCommentEventProcessingEnabled: true,
+
 			isOrganizationMember: github.Bool(true),
 
 			repo:     "integration-test-runner",
@@ -275,6 +299,77 @@ func TestProcessGitHubWebhook(t *testing.T) {
 			},
 			err:           errors.New("parse error near 'deviceconnect', I need, e.g.: start pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
 			createComment: true,
+		},
+		"comment created, feature disabled": {
+			webhookType: "issue_comment",
+			webhookEvent: &github.IssueCommentEvent{
+				Action: github.String("created"),
+			},
+
+			isCommentEventProcessingEnabled: false,
+		},
+		"pull request created, feature enabled": {
+			webhookType: "pull_request",
+
+			webhookEvent: &github.PullRequestEvent{
+				PullRequest: &github.PullRequest{
+					Merged: github.Bool(false),
+				},
+				Repo: &github.Repository{
+					Name: github.String("integration-test-runner"),
+					Owner: &github.User{
+						Name: github.String(gitHubOrg),
+					},
+				},
+				Number: github.Int(6),
+			},
+
+			isOrganizationMember: github.Bool(true),
+
+			isPREventsProcessingEnabled: true,
+		},
+		"pull request created, feature disabled": {
+			webhookType: "pull_request",
+
+			webhookEvent: &github.PullRequestEvent{
+				PullRequest: &github.PullRequest{
+					Merged: github.Bool(false),
+				},
+				Repo: &github.Repository{
+					Name: github.String("integration-test-runner"),
+					Owner: &github.User{
+						Name: github.String(gitHubOrg),
+					},
+				},
+				Number: github.Int(6),
+			},
+
+			isPREventsProcessingEnabled: false,
+		},
+		"push event, feature enabled": {
+			webhookType: "push",
+
+			webhookEvent: &github.PushEvent{
+				Repo: &github.PushEventRepository{
+					Name:         github.String("integration-test-runner"),
+					Organization: github.String(gitHubOrg),
+				},
+				Ref: &ref,
+			},
+
+			isCommentEventsProcessingEnabled: true,
+		},
+		"push event, feature disabled": {
+			webhookType: "push",
+
+			webhookEvent: &github.PushEvent{
+				Repo: &github.PushEventRepository{
+					Name:         github.String("integration-test-runner"),
+					Organization: github.String(gitHubOrg),
+				},
+			},
+
+			isCommentEventsProcessingEnabled: false,
 		},
 	}
 
@@ -291,12 +386,22 @@ func TestProcessGitHubWebhook(t *testing.T) {
 			githubClient = mclient
 
 			if tc.isOrganizationMember != nil {
+				var user string
+				org := gitHubOrg
+				if tc.isCommentEventProcessingEnabled {
+					user = tc.webhookEvent.(*github.IssueCommentEvent).GetSender().GetLogin()
+				} else if tc.isPREventsProcessingEnabled {
+					user = tc.webhookEvent.(*github.PullRequestEvent).GetSender().GetLogin()
+					org = ""
+				} else if tc.isCommentEventsProcessingEnabled {
+					user = tc.webhookEvent.(*github.PushEvent).GetRepo().GetOrganization()
+				}
 				mclient.On("IsOrganizationMember",
 					mock.MatchedBy(func(ctx context.Context) bool {
 						return true
 					}),
-					gitHubOrg,
-					tc.webhookEvent.(*github.IssueCommentEvent).GetSender().GetLogin(),
+					org,
+					user,
 				).Return(*tc.isOrganizationMember)
 			}
 
@@ -324,8 +429,11 @@ func TestProcessGitHubWebhook(t *testing.T) {
 			}
 
 			conf := &config{
-				githubProtocol:     gitProtocolHTTP,
-				githubOrganization: gitHubOrg,
+				githubProtocol:         gitProtocolHTTP,
+				githubOrganization:     gitHubOrg,
+				isProcessCommentEvents: tc.isCommentEventProcessingEnabled,
+				isProcessPREvents:      tc.isPREventsProcessingEnabled,
+				isProcessPushEvents:    tc.isCommentEventsProcessingEnabled,
 			}
 
 			ctx := &gin.Context{}
