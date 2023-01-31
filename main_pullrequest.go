@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v28/github"
@@ -19,6 +20,28 @@ var (
 	changelogPrefix = "Merging these commits will result in the following changelog entries:\n\n"
 	warningHeader   = "\n\n## Warning\n\nGenerating changelogs also resulted in these warnings:\n\n"
 )
+
+type retryParams struct {
+	retryFunc func() error
+	compFunc  func(error) bool
+}
+
+const (
+	doRetry bool = true
+	noRetry      = false
+)
+
+func retryOnError(args retryParams) error {
+	var maxBackoff int = 8 * 8
+	err := args.retryFunc()
+	i := 1
+	for i <= maxBackoff && args.compFunc(err) {
+		err = args.retryFunc()
+		i = i * 2
+		time.Sleep(time.Duration(i) * time.Second)
+	}
+	return err
+}
 
 func processGitHubPullRequest(
 	ctx *gin.Context,
@@ -70,18 +93,28 @@ func processGitHubPullRequest(
 					pr.Sender.GetLogin(),
 				)
 			}
-			err = startPRPipeline(log, prBranchName, pr, conf, isOrgMember)
+			err = retryOnError(retryParams{
+				retryFunc: func() error {
+					return startPRPipeline(log, prBranchName, pr, conf, isOrgMember)
+				},
+				compFunc: func(err_ error) bool {
+					re := regexp.MustCompile("Missing CI config file|" +
+						"No stages / jobs for this pipeline")
+					switch {
+					case err_ == nil:
+						return noRetry
+					case re.MatchString(err_.Error()):
+						log.Infof("start pipeline for PR '%d' is skipped", pr.Number)
+						return noRetry
+					default:
+						log.Errorf("failed to start pipeline for PR: %s", err)
+						return doRetry
+					}
+				},
+			})
 			if err != nil {
-				// post a comment only if GitLab is supposed to start a pipeline
-				re := regexp.MustCompile("Missing CI config file|" +
-					"No stages / jobs for this pipeline")
-				if re.MatchString(err.Error()) {
-					log.Infof("start pipeline for PR '%d' is skipped", pr.Number)
-				} else {
-					log.Errorf("failed to start pipeline for PR: %s", err)
-					msg := "There was an error running your pipeline, " + msgDetails
-					postGitHubMessage(ctx, pr, log, msg)
-				}
+				msg := "There was an error running your pipeline, " + msgDetails
+				postGitHubMessage(ctx, pr, log, msg)
 			}
 		}
 
