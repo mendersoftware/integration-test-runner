@@ -262,7 +262,14 @@ func doMain() {
 	logrus.Infoln("using settings: ", spew.Sdump(conf))
 
 	githubClient = clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
-	r := gin.Default()
+
+	r := gin.New()
+	r.Use(
+		gin.LoggerWithWriter(gin.DefaultWriter, "/_health"),
+	)
+	if logrus.GetLevel() == logrus.DebugLevel || logrus.GetLevel() == logrus.TraceLevel {
+		r = gin.Default()
+	}
 	r.Use(gin.Recovery())
 
 	// webhook for GitHub
@@ -283,6 +290,7 @@ func doMain() {
 	})
 
 	// 200 replay for the loadbalancer
+	r.GET("/_health", func(_ *gin.Context) {})
 	r.GET("/", func(_ *gin.Context) {})
 
 	// dry-run mode, end-point to retrieve and clear logs
