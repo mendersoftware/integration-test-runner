@@ -207,16 +207,22 @@ func processGitHubWebhook(
 		if conf.isProcessPREvents {
 			pr := webhookEvent.(*github.PullRequestEvent)
 			return processGitHubPullRequest(ctx, pr, githubClient, conf)
+		} else {
+			logrus.Infof("Webhook event %s processing is skipped", webhookType)
 		}
 	case "push":
 		if conf.isProcessPushEvents {
 			push := webhookEvent.(*github.PushEvent)
 			return processGitHubPush(ctx, push, githubClient, conf)
+		} else {
+			logrus.Infof("Webhook event %s processing is skipped", webhookType)
 		}
 	case "issue_comment":
 		if conf.isProcessCommentEvents {
 			comment := webhookEvent.(*github.IssueCommentEvent)
 			return processGitHubComment(ctx, comment, githubClient, conf)
+		} else {
+			logrus.Infof("Webhook event %s processing is skipped", webhookType)
 		}
 	}
 	return nil
@@ -263,13 +269,12 @@ func doMain() {
 
 	githubClient = clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
 
-	r := gin.New()
-	r.Use(
-		gin.LoggerWithWriter(gin.DefaultWriter, "/_health"),
-	)
+	r := gin.Default()
+	filter := "/_health"
 	if logrus.GetLevel() == logrus.DebugLevel || logrus.GetLevel() == logrus.TraceLevel {
-		r = gin.Default()
+		filter = ""
 	}
+	r.Use(gin.LoggerWithWriter(gin.DefaultWriter, filter))
 	r.Use(gin.Recovery())
 
 	// webhook for GitHub
