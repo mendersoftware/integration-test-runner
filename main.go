@@ -207,16 +207,22 @@ func processGitHubWebhook(
 		if conf.isProcessPREvents {
 			pr := webhookEvent.(*github.PullRequestEvent)
 			return processGitHubPullRequest(ctx, pr, githubClient, conf)
+		} else {
+			logrus.Infof("Webhook event %s processing is skipped", webhookType)
 		}
 	case "push":
 		if conf.isProcessPushEvents {
 			push := webhookEvent.(*github.PushEvent)
 			return processGitHubPush(ctx, push, githubClient, conf)
+		} else {
+			logrus.Infof("Webhook event %s processing is skipped", webhookType)
 		}
 	case "issue_comment":
 		if conf.isProcessCommentEvents {
 			comment := webhookEvent.(*github.IssueCommentEvent)
 			return processGitHubComment(ctx, comment, githubClient, conf)
+		} else {
+			logrus.Infof("Webhook event %s processing is skipped", webhookType)
 		}
 	}
 	return nil
@@ -262,7 +268,13 @@ func doMain() {
 	logrus.Infoln("using settings: ", spew.Sdump(conf))
 
 	githubClient = clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
+
 	r := gin.Default()
+	filter := "/_health"
+	if logrus.GetLevel() == logrus.DebugLevel || logrus.GetLevel() == logrus.TraceLevel {
+		filter = ""
+	}
+	r.Use(gin.LoggerWithWriter(gin.DefaultWriter, filter))
 	r.Use(gin.Recovery())
 
 	// webhook for GitHub
@@ -283,6 +295,7 @@ func doMain() {
 	})
 
 	// 200 replay for the loadbalancer
+	r.GET("/_health", func(_ *gin.Context) {})
 	r.GET("/", func(_ *gin.Context) {})
 
 	// dry-run mode, end-point to retrieve and clear logs
