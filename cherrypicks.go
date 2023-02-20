@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os/exec"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"text/template"
@@ -27,13 +28,12 @@ var versionsUrl = "https://docs.mender.io/releases/versions.json"
 var errorCherryPickConflict = errors.New("Cherry pick had conflicts")
 
 type versions struct {
-	Lts []string `json:",omitempty"`
+	Releases map[string]map[string]interface{} `json:"releases"`
+	Lts      []string                          `json:",omitempty"`
 }
 
-func (v *versions) Unmarshal(bytes []byte) error {
-	return json.Unmarshal(bytes, v)
-}
-
+// Returns the supported LTS versions, as well as the latest release if it is
+// not LTS.
 func getLatestReleaseFromApi(url string) ([]string, error) {
 	client := http.Client{
 		Timeout: time.Second * 2,
@@ -52,7 +52,7 @@ func getLatestReleaseFromApi(url string) ([]string, error) {
 		return nil, err
 	}
 	v := versions{}
-	err = v.Unmarshal(body)
+	err = json.Unmarshal(body, &v)
 	if err != nil {
 		return nil, err
 	}
@@ -61,6 +61,15 @@ func getLatestReleaseFromApi(url string) ([]string, error) {
 	}
 	for idx, val := range v.Lts {
 		v.Lts[idx] = val + ".x"
+	}
+	allReleases := []string{}
+	for key := range v.Releases {
+		allReleases = append(allReleases, key+".x")
+	}
+	// Only add to the list if the latest patch != latest LTS
+	sort.Sort(sort.Reverse(sort.StringSlice(allReleases)))
+	if allReleases[0] != v.Lts[0] {
+		return append([]string{allReleases[0]}, v.Lts...), nil
 	}
 	return v.Lts, nil
 }

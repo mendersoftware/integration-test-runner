@@ -21,10 +21,383 @@ import (
 )
 
 const versionsResponse = `{
-	"lts": ["3.3", "3.0"],
-	"releases": {
-		"something": "something"
-	}
+  "lts": ["3.3", "3.0"],
+  "releases": {
+    "3.4": {
+      "3.4.0": {
+	      "release_date": "2022-09-25",
+	      "release": "3.4.0",
+	      "repos": [
+		{ "name": "auditlogs", "version": "3.0.2" },
+		{ "name": "create-artifact-worker", "version": "1.2.0" },
+		{ "name": "deployments", "version": "4.3.0" },
+		{ "name": "deployments-enterprise", "version": "4.3.0" },
+		{ "name": "deviceauth", "version": "3.3.0" },
+		{ "name": "deviceauth-enterprise", "version": "3.3.0" },
+		{ "name": "deviceconfig", "version": "1.2.2" },
+		{ "name": "deviceconnect", "version": "1.3.3" },
+		{ "name": "devicemonitor", "version": "1.3.0" },
+		{ "name": "gui", "version": "3.4.0" },
+		{ "name": "integration", "version": "3.4.0" },
+		{ "name": "inventory", "version": "4.2.1" },
+		{ "name": "inventory-enterprise", "version": "4.2.1" },
+		{ "name": "iot-manager", "version": "1.1.0" },
+		{ "name": "mender", "version": "3.4.0" },
+		{ "name": "mender-artifact", "version": "3.9.0" },
+		{ "name": "mender-binary-delta", "version": "1.4.1" },
+		{ "name": "mender-cli", "version": "1.9.0" },
+		{ "name": "mender-configure-module", "version": "1.0.4" },
+		{ "name": "mender-connect", "version": "2.1.0" },
+		{ "name": "mender-convert", "version": "3.0.1" },
+		{ "name": "mender-gateway", "version": "1.0.1" },
+		{ "name": "monitor-client", "version": "1.2.1" },
+		{ "name": "mtls-ambassador", "version": "1.1.0" },
+		{ "name": "tenantadm", "version": "3.5.0" },
+		{ "name": "useradm", "version": "1.19.0" },
+		{ "name": "useradm-enterprise", "version": "1.19.0" },
+		{ "name": "workflows", "version": "2.3.0" },
+		{ "name": "workflows-enterprise", "version": "2.3.0" }
+	      ]
+	    }
+    },
+"3.3": {
+      "supported_until": "2023-06",
+      "3.3.1": {
+        "release_date": "2022-10-19",
+        "release": "3.3.1",
+        "repos": [
+          { "name": "auditlogs", "version": "3.0.2" },
+          { "name": "create-artifact-worker", "version": "1.1.2" },
+          { "name": "deployments", "version": "4.2.1" },
+          { "name": "deployments-enterprise", "version": "4.2.1" },
+          { "name": "deviceauth", "version": "3.2.2" },
+          { "name": "deviceauth-enterprise", "version": "3.2.2" },
+          { "name": "deviceconfig", "version": "1.2.2" },
+          { "name": "deviceconnect", "version": "1.3.3" },
+          { "name": "devicemonitor", "version": "1.2.1" },
+          { "name": "gui", "version": "3.3.1" },
+          { "name": "integration", "version": "3.3.1" },
+          { "name": "inventory", "version": "4.2.1" },
+          { "name": "inventory-enterprise", "version": "4.2.1" },
+          { "name": "iot-manager", "version": "1.0.3" },
+          { "name": "mender", "version": "3.3.1" },
+          { "name": "mender-artifact", "version": "3.8.1" },
+          { "name": "mender-binary-delta", "version": "1.4.1" },
+          { "name": "mender-cli", "version": "1.8.1" },
+          { "name": "mender-configure-module", "version": "1.0.4" },
+          { "name": "mender-connect", "version": "2.0.2" },
+          { "name": "mender-convert", "version": "3.0.1" },
+          { "name": "mender-gateway", "version": "1.0.1" },
+          { "name": "monitor-client", "version": "1.2.1" },
+          { "name": "mtls-ambassador", "version": "1.0.2" },
+          { "name": "tenantadm", "version": "3.4.1" },
+          { "name": "useradm", "version": "1.18.1" },
+          { "name": "useradm-enterprise", "version": "1.18.1" },
+          { "name": "workflows", "version": "2.2.2" },
+          { "name": "workflows-enterprise", "version": "2.2.2" }
+        ]
+      },
+      "3.3.0": {
+        "release_date": "2022-06-14",
+        "release": "3.3.0",
+        "repos": [
+          { "name": "auditlogs", "version": "3.0.1" },
+          { "name": "create-artifact-worker", "version": "1.1.2" },
+          { "name": "deployments", "version": "4.2.0" },
+          { "name": "deployments-enterprise", "version": "4.2.0" },
+          { "name": "deviceauth", "version": "3.2.1" },
+          { "name": "deviceauth-enterprise", "version": "3.2.1" },
+          { "name": "deviceconfig", "version": "1.2.1" },
+          { "name": "deviceconnect", "version": "1.3.2" },
+          { "name": "devicemonitor", "version": "1.2.0" },
+          { "name": "gui", "version": "3.3.0" },
+          { "name": "integration", "version": "3.3.0" },
+          { "name": "inventory", "version": "4.2.0" },
+          { "name": "inventory-enterprise", "version": "4.2.0" },
+          { "name": "iot-manager", "version": "1.0.2" },
+          { "name": "mender", "version": "3.3.0" },
+          { "name": "mender-artifact", "version": "3.8.0" },
+          { "name": "mender-binary-delta", "version": "1.3.1" },
+          { "name": "mender-cli", "version": "1.8.0" },
+          { "name": "mender-configure-module", "version": "1.0.4" },
+          { "name": "mender-connect", "version": "2.0.2" },
+          { "name": "mender-convert", "version": "3.0.0" },
+          { "name": "mender-gateway", "version": "1.0.0" },
+          { "name": "monitor-client", "version": "1.2.0" },
+          { "name": "mtls-ambassador", "version": "1.0.2" },
+          { "name": "reporting", "version": "master" },
+          { "name": "tenantadm", "version": "3.4.0" },
+          { "name": "useradm", "version": "1.18.0" },
+          { "name": "useradm-enterprise", "version": "1.18.0" },
+          { "name": "workflows", "version": "2.2.1" },
+          { "name": "workflows-enterprise", "version": "2.2.1" }
+        ]
+      }
+    },
+    "3.2": {
+      "3.2.2": {
+        "release_date": "2022-04-21",
+        "release": "3.2.2",
+        "repos": [
+          { "name": "auditlogs", "version": "3.0.0" },
+          { "name": "create-artifact-worker", "version": "1.1.1" },
+          { "name": "deployments", "version": "4.1.0" },
+          { "name": "deployments-enterprise", "version": "4.1.0" },
+          { "name": "deviceauth", "version": "3.2.0" },
+          { "name": "deviceauth-enterprise", "version": "3.2.0" },
+          { "name": "deviceconfig", "version": "1.2.0" },
+          { "name": "deviceconnect", "version": "1.3.1" },
+          { "name": "devicemonitor", "version": "1.1.0" },
+          { "name": "gui", "version": "3.2.0" },
+          { "name": "integration", "version": "3.2.2" },
+          { "name": "inventory", "version": "4.1.0" },
+          { "name": "inventory-enterprise", "version": "4.1.0" },
+          { "name": "iot-manager", "version": "1.0.1" },
+          { "name": "mender", "version": "3.2.1" },
+          { "name": "mender-artifact", "version": "3.7.1" },
+          { "name": "mender-binary-delta", "version": "1.3.0" },
+          { "name": "mender-cli", "version": "1.7.0" },
+          { "name": "mender-configure-module", "version": "1.0.3" },
+          { "name": "mender-connect", "version": "2.0.1" },
+          { "name": "mender-convert", "version": "2.6.2" },
+          { "name": "monitor-client", "version": "1.1.0" },
+          { "name": "mtls-ambassador", "version": "1.0.1" },
+          { "name": "tenantadm", "version": "3.3.0" },
+          { "name": "useradm", "version": "1.17.0" },
+          { "name": "useradm-enterprise", "version": "1.17.0" },
+          { "name": "workflows", "version": "2.2.0" },
+          { "name": "workflows-enterprise", "version": "2.2.0" }
+        ]
+      },
+      "3.2.1": {
+        "release_date": "2022-02-02",
+        "release": "3.2.1",
+        "repos": [
+          { "name": "auditlogs", "version": "3.0.0" },
+          { "name": "create-artifact-worker", "version": "1.1.0" },
+          { "name": "deployments", "version": "4.1.0" },
+          { "name": "deployments-enterprise", "version": "4.1.0" },
+          { "name": "deviceauth", "version": "3.2.0" },
+          { "name": "deviceauth-enterprise", "version": "3.2.0" },
+          { "name": "deviceconfig", "version": "1.2.0" },
+          { "name": "deviceconnect", "version": "1.3.0" },
+          { "name": "devicemonitor", "version": "1.1.0" },
+          { "name": "gui", "version": "3.2.0" },
+          { "name": "integration", "version": "3.2.1" },
+          { "name": "inventory", "version": "4.1.0" },
+          { "name": "inventory-enterprise", "version": "4.1.0" },
+          { "name": "iot-manager", "version": "1.0.0" },
+          { "name": "mender", "version": "3.2.1" },
+          { "name": "mender-artifact", "version": "3.7.0" },
+          { "name": "mender-binary-delta", "version": "1.3.0" },
+          { "name": "mender-cli", "version": "1.7.0" },
+          { "name": "mender-configure-module", "version": "1.0.3" },
+          { "name": "mender-connect", "version": "2.0.1" },
+          { "name": "mender-convert", "version": "2.6.2" },
+          { "name": "monitor-client", "version": "1.1.0" },
+          { "name": "mtls-ambassador", "version": "1.0.1" },
+          { "name": "tenantadm", "version": "3.3.0" },
+          { "name": "useradm", "version": "1.17.0" },
+          { "name": "useradm-enterprise", "version": "1.17.0" },
+          { "name": "workflows", "version": "2.2.0" },
+          { "name": "workflows-enterprise", "version": "2.2.0" }
+        ]
+      },
+      "3.2.0": {
+        "release_date": "2022-01-24",
+        "release": "3.2.0",
+        "repos": [
+          { "name": "auditlogs", "version": "3.0.0" },
+          { "name": "create-artifact-worker", "version": "1.1.0" },
+          { "name": "deployments", "version": "4.1.0" },
+          { "name": "deployments-enterprise", "version": "4.1.0" },
+          { "name": "deviceauth", "version": "3.2.0" },
+          { "name": "deviceauth-enterprise", "version": "3.2.0" },
+          { "name": "deviceconfig", "version": "1.2.0" },
+          { "name": "deviceconnect", "version": "1.3.0" },
+          { "name": "devicemonitor", "version": "1.1.0" },
+          { "name": "gui", "version": "3.2.0" },
+          { "name": "integration", "version": "3.2.0" },
+          { "name": "inventory", "version": "4.1.0" },
+          { "name": "inventory-enterprise", "version": "4.1.0" },
+          { "name": "iot-manager", "version": "1.0.0" },
+          { "name": "mender", "version": "3.2.0" },
+          { "name": "mender-artifact", "version": "3.7.0" },
+          { "name": "mender-binary-delta", "version": "1.3.0" },
+          { "name": "mender-cli", "version": "1.7.0" },
+          { "name": "mender-configure-module", "version": "1.0.3" },
+          { "name": "mender-connect", "version": "2.0.0" },
+          { "name": "mender-convert", "version": "2.6.1" },
+          { "name": "monitor-client", "version": "1.1.0" },
+          { "name": "mtls-ambassador", "version": "1.0.1" },
+          { "name": "tenantadm", "version": "3.3.0" },
+          { "name": "useradm", "version": "1.17.0" },
+          { "name": "useradm-enterprise", "version": "1.17.0" },
+          { "name": "workflows", "version": "2.2.0" },
+          { "name": "workflows-enterprise", "version": "2.2.0" }
+        ]
+      }
+    },
+    "3.1": {
+      "3.1.1": {
+        "release_date": "2022-02-09",
+        "release": "3.1.1",
+        "repos": [
+          { "name": "auditlogs", "version": "2.0.0" },
+          { "name": "create-artifact-worker", "version": "1.0.3" },
+          { "name": "deployments", "version": "4.0.1" },
+          { "name": "deployments-enterprise", "version": "4.0.1" },
+          { "name": "deviceauth", "version": "3.1.0" },
+          { "name": "deviceconfig", "version": "1.1.0" },
+          { "name": "deviceconnect", "version": "1.2.1" },
+          { "name": "devicemonitor", "version": "1.0.1" },
+          { "name": "gui", "version": "3.1.1" },
+          { "name": "integration", "version": "3.1.1" },
+          { "name": "inventory", "version": "4.0.1" },
+          { "name": "inventory-enterprise", "version": "4.0.1" },
+          { "name": "mender", "version": "3.1.1" },
+          { "name": "mender-artifact", "version": "3.6.1" },
+          { "name": "mender-cli", "version": "1.7.0" },
+          { "name": "mender-connect", "version": "1.2.1" },
+          { "name": "monitor-client", "version": "1.0.1" },
+          { "name": "mtls-ambassador", "version": "1.0.1" },
+          { "name": "tenantadm", "version": "3.3.0" },
+          { "name": "useradm", "version": "1.16.0" },
+          { "name": "useradm-enterprise", "version": "1.16.0" },
+          { "name": "workflows", "version": "2.1.0" },
+          { "name": "workflows-enterprise", "version": "2.1.0" }
+        ]
+      },
+      "3.1.0": {
+        "release_date": "2021-09-28",
+        "release": "3.1.0",
+        "repos": [
+          { "name": "auditlogs", "version": "2.0.0" },
+          { "name": "create-artifact-worker", "version": "1.0.2" },
+          { "name": "deployments", "version": "4.0.0" },
+          { "name": "deployments-enterprise", "version": "4.0.0" },
+          { "name": "deviceauth", "version": "3.1.0" },
+          { "name": "deviceconfig", "version": "1.1.0" },
+          { "name": "deviceconnect", "version": "1.2.1" },
+          { "name": "devicemonitor", "version": "1.0.0" },
+          { "name": "gui", "version": "3.1.0" },
+          { "name": "integration", "version": "3.1.0" },
+          { "name": "inventory", "version": "4.0.0" },
+          { "name": "inventory-enterprise", "version": "4.0.0" },
+          { "name": "mender", "version": "3.1.0" },
+          { "name": "mender-artifact", "version": "3.6.1" },
+          { "name": "mender-cli", "version": "1.7.0" },
+          { "name": "mender-connect", "version": "1.2.0" },
+          { "name": "monitor-client", "version": "1.0.0" },
+          { "name": "mtls-ambassador", "version": "1.0.0" },
+          { "name": "tenantadm", "version": "3.3.0" },
+          { "name": "useradm", "version": "1.16.0" },
+          { "name": "useradm-enterprise", "version": "1.16.0" },
+          { "name": "workflows", "version": "2.1.0" },
+          { "name": "workflows-enterprise", "version": "2.1.0" }
+        ]
+      }
+    },
+    "3.0": {
+      "supported_until": "2022-07",
+      "3.0.2": {
+        "release_date": "2022-02-09",
+        "release": "3.0.2",
+        "repos": [
+          { "name": "auditlogs", "version": "1.2.0" },
+          { "name": "create-artifact-worker", "version": "1.0.3" },
+          { "name": "deployments", "version": "3.0.1" },
+          { "name": "deployments-enterprise", "version": "3.0.1" },
+          { "name": "deviceauth", "version": "3.0.0" },
+          { "name": "deviceconfig", "version": "1.1.0" },
+          { "name": "deviceconnect", "version": "1.2.1" },
+          { "name": "gui", "version": "3.0.2" },
+          { "name": "integration", "version": "3.0.2" },
+          { "name": "inventory", "version": "3.0.1" },
+          { "name": "inventory-enterprise", "version": "3.0.1" },
+          { "name": "mender", "version": "3.0.2" },
+          { "name": "mender-artifact", "version": "3.6.1" },
+          { "name": "mender-cli", "version": "1.7.0" },
+          { "name": "mender-connect", "version": "1.2.1" },
+          { "name": "mtls-ambassador", "version": "1.0.1" },
+          { "name": "tenantadm", "version": "3.2.0" },
+          { "name": "useradm", "version": "1.15.0" },
+          { "name": "useradm-enterprise", "version": "1.15.0" },
+          { "name": "workflows", "version": "2.0.0" },
+          { "name": "workflows-enterprise", "version": "2.0.0" }
+        ]
+      },
+      "3.0.1": {
+        "release_date": "2021-09-29",
+        "release": "3.0.1",
+        "repos": [
+          { "name": "auditlogs", "version": "1.2.0" },
+          { "name": "create-artifact-worker", "version": "1.0.2" },
+          { "name": "deployments", "version": "3.0.1" },
+          { "name": "deployments-enterprise", "version": "3.0.1" },
+          { "name": "deviceauth", "version": "3.0.0" },
+          { "name": "deviceconfig", "version": "1.1.0" },
+          { "name": "deviceconnect", "version": "1.2.1" },
+          { "name": "gui", "version": "3.0.1" },
+          { "name": "integration", "version": "3.0.1" },
+          { "name": "inventory", "version": "3.0.0" },
+          { "name": "inventory-enterprise", "version": "3.0.0" },
+          { "name": "mender", "version": "3.0.1" },
+          { "name": "mender-artifact", "version": "3.6.1" },
+          { "name": "mender-cli", "version": "1.7.0" },
+          { "name": "mender-connect", "version": "1.2.0" },
+          { "name": "mtls-ambassador", "version": "1.0.0" },
+          { "name": "tenantadm", "version": "3.2.0" },
+          { "name": "useradm", "version": "1.15.0" },
+          { "name": "useradm-enterprise", "version": "1.15.0" },
+          { "name": "workflows", "version": "2.0.0" },
+          { "name": "workflows-enterprise", "version": "2.0.0" }
+        ]
+      },
+      "3.0.0": {
+        "release_date": "2021-07-13",
+        "release": "3.0.0",
+        "repos": [
+          { "name": "auditlogs", "version": "1.2.0" },
+          { "name": "create-artifact-worker", "version": "1.0.2" },
+          { "name": "deployments", "version": "3.0.0" },
+          { "name": "deployments-enterprise", "version": "3.0.0" },
+          { "name": "deviceauth", "version": "3.0.0" },
+          { "name": "deviceconfig", "version": "1.1.0" },
+          { "name": "deviceconnect", "version": "1.2.0" },
+          { "name": "gui", "version": "3.0.0" },
+          { "name": "integration", "version": "3.0.0" },
+          { "name": "inventory", "version": "3.0.0" },
+          { "name": "inventory-enterprise", "version": "3.0.0" },
+          { "name": "mender", "version": "3.0.0" },
+          { "name": "mender-artifact", "version": "3.6.0" },
+          { "name": "mender-cli", "version": "1.7.0" },
+          { "name": "mender-connect", "version": "1.2.0" },
+          { "name": "mtls-ambassador", "version": "1.0.0" },
+          { "name": "tenantadm", "version": "3.2.0" },
+          { "name": "useradm", "version": "1.15.0" },
+          { "name": "useradm-enterprise", "version": "1.15.0" },
+          { "name": "workflows", "version": "2.0.0" },
+          { "name": "workflows-enterprise", "version": "2.0.0" }
+        ]
+      }
+    }
+  },
+  "saas": [
+    { "tag": "saas-v2022.03.10", "date": "2022-03-09" },
+    { "tag": "saas-v2022.01.24", "date": "2022-01-22" },
+    { "tag": "saas-v2021.11.02", "date": "2021-11-02" },
+    { "tag": "saas-v2021.01.14", "date": "2021-01-14" },
+    { "tag": "saas-v2020.12.02", "date": "2020-12-02" },
+    { "tag": "saas-v2020.11.19", "date": "2020-11-19" },
+    { "tag": "saas-v2020.10.14", "date": "2020-10-14" },
+    { "tag": "saas-v2020.09.25", "date": "2020-09-24" },
+    { "tag": "saas-v2020.09.09", "date": "2020-09-08" },
+    { "tag": "saas-v2020.08.11", "date": "2020-08-11" },
+    { "tag": "saas-v2020.07.31", "date": "2020-07-31" },
+    { "tag": "saas-v2020.07.22", "date": "2020-07-22" },
+    { "tag": "saas-v2020.07.09", "date": "2020-07-09" }
+  ]
 }
 `
 
@@ -105,6 +478,7 @@ func TestSuggestCherryPicks(t *testing.T) {
 			comment: &github.IssueComment{
 				Body: github.String(`
 Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+2.3.x (release 3.4.x)
 2.2.x (release 3.3.x)
 2.0.x (release 3.0.x)
 `),
@@ -128,6 +502,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			comment: &github.IssueComment{
 				Body: github.String(`
 Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+2.1.x (release 3.4.x)
 2.0.x (release 3.3.x)
 1.2.x (release 3.0.x)
 `),
@@ -151,6 +526,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			comment: &github.IssueComment{
 				Body: github.String(`
 Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+2.1.x (release 3.4.x)
 2.0.x (release 3.3.x)
 1.2.x (release 3.0.x)
 `),
@@ -178,6 +554,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			comment: &github.IssueComment{
 				Body: github.String(`
 Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+3.4.x (release 3.4.x)
 3.3.x (release 3.3.x)
 3.0.x (release 3.0.x)
 `),
