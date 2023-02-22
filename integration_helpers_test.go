@@ -35,7 +35,7 @@ New changes in mender since 3.0.0:
   client will now remove the cached authorization token upon the next restart of
   the dameon, and hence respect the new configuration, as opposed to letting it
   expire, which was the old functionality.
-  ([MEN-3420](https://tracker.mender.io/browse/MEN-3420))
+  ([MEN-3420](https://northerntech.atlassian.net/browse/MEN-3420))
 * Implement support for non-U-Boot tool names.
 
   The tools still have to be command line compatible with the U-Boot
@@ -50,7 +50,7 @@ New changes in mender since 3.0.0:
   names. If no names are set, then the default is to try the
   grub-mender-grubenv tools first, followed by the "fw_" tools if the
   former are not found.
-  ([MEN-3978](https://tracker.mender.io/browse/MEN-3978))
+  ([MEN-3978](https://northerntech.atlassian.net/browse/MEN-3978))
 * Support passing docker run CLI arguments when deploying
   an artifact using the ` + "`" + `docker` + "`" + ` _update module_.
 * [FIX] Fetch geo location data once per power cycle
