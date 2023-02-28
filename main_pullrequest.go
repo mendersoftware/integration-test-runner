@@ -72,7 +72,7 @@ func processGitHubPullRequest(
 
 	log.Debugf("Processing pull request action %s", action)
 	switch action {
-	case "opened", "edited", "reopened", "synchronize", "ready_for_review":
+	case "opened", "reopened", "synchronize", "ready_for_review":
 		msgDetails := "see <a href=\"https://console.cloud.google.com/kubernetes/" +
 			"deployment/us-east1/company-websites/default/test-runner-mender-io/logs?" +
 			"project=gp-kubernetes-269000\">logs</a> for details."
