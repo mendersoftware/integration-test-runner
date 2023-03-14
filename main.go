@@ -87,6 +87,7 @@ const (
 	commandStartPipeline      = "start pipeline"
 	commandCherryPickBranch   = "cherry-pick to:"
 	commandConventionalCommit = "mark-pr as"
+	commandSyncRepos          = "sync"
 )
 
 func getConfig() (*config, error) {
@@ -185,7 +186,7 @@ func processGitHubWebhookRequest(
 	conf *config,
 ) {
 	webhookType := github.WebHookType(ctx.Request)
-	webhookEvent, _ := github.ParseWebHook(github.WebHookType(ctx.Request), payload)
+	webhookEvent, _ := github.ParseWebHook(webhookType, payload)
 	_ = processGitHubWebhook(ctx, webhookType, webhookEvent, githubClient, conf)
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v28/github"
+	"github.com/sirupsen/logrus"
 
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 )
@@ -136,12 +137,34 @@ func processGitHubComment(
 		if err != nil {
 			log.Error(err)
 		}
+	case strings.Contains(commentBody, commandSyncRepos):
+		syncPRBranch(ctx, comment, pr, log, conf)
 	default:
 		log.Warnf("no command found: %s", commentBody)
 		return nil
 	}
 
 	return nil
+}
+
+func syncPRBranch(
+	ctx *gin.Context,
+	comment *github.IssueCommentEvent,
+	pr *github.PullRequest,
+	log *logrus.Entry,
+	conf *config,
+) {
+	prEvent := &github.PullRequestEvent{
+		Repo:        comment.GetRepo(),
+		Number:      github.Int(pr.GetNumber()),
+		PullRequest: pr,
+	}
+	if _, err := syncPullRequestBranch(log, prEvent, conf); err != nil {
+		mainErrMsg := "There was an error syncing branches"
+		log.Errorf(mainErrMsg+": %s", err.Error())
+		msg := mainErrMsg + ", " + msgDetailsKubernetesLog
+		postGitHubMessage(ctx, prEvent, log, msg)
+	}
 }
 
 //parsing `start pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head

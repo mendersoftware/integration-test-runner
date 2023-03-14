@@ -19,6 +19,10 @@ import (
 var (
 	changelogPrefix = "Merging these commits will result in the following changelog entries:\n\n"
 	warningHeader   = "\n\n## Warning\n\nGenerating changelogs also resulted in these warnings:\n\n"
+
+	msgDetailsKubernetesLog = "see <a href=\"https://console.cloud.google.com/kubernetes/" +
+		"deployment/us-east1/company-websites/default/test-runner-mender-io/logs?" +
+		"project=gp-kubernetes-269000\">logs</a> for details."
 )
 
 type retryParams struct {
@@ -73,13 +77,10 @@ func processGitHubPullRequest(
 	log.Debugf("Processing pull request action %s", action)
 	switch action {
 	case "opened", "reopened", "synchronize", "ready_for_review":
-		msgDetails := "see <a href=\"https://console.cloud.google.com/kubernetes/" +
-			"deployment/us-east1/company-websites/default/test-runner-mender-io/logs?" +
-			"project=gp-kubernetes-269000\">logs</a> for details."
 		// We always create a pr_* branch
 		if prRef, err = syncPullRequestBranch(log, pr, conf); err != nil {
 			log.Errorf("Could not create PR branch: %s", err.Error())
-			msg := "There was an error syncing branches, " + msgDetails
+			msg := "There was an error syncing branches, " + msgDetailsKubernetesLog
 			postGitHubMessage(ctx, pr, log, msg)
 		}
 		//and we run a pipeline only for the pr_* branch
@@ -113,7 +114,7 @@ func processGitHubPullRequest(
 				},
 			})
 			if err != nil {
-				msg := "There was an error running your pipeline, " + msgDetails
+				msg := "There was an error running your pipeline, " + msgDetailsKubernetesLog
 				postGitHubMessage(ctx, pr, log, msg)
 			}
 		}
@@ -185,15 +186,15 @@ func processGitHubPullRequest(
    <summary>my commands and options</summary>
    <br />
    You can trigger a pipeline on multiple prs with:
-
    - mentioning me and ` + "`" + `start pipeline --pr mender/127 --pr mender-connect/255` + "`" + `
 
    You can start a fast pipeline, disabling full integration tests with:
-
    - mentioning me and ` + "`" + `start pipeline --fast` + "`" + `
 
-   You can cherry pick to a given branch or branches with:
+   You can trigger GitHub->GitLab branch sync with:
+   - mentioning me and ` + "`" + `sync` + "`" + `
 
+   You can cherry pick to a given branch or branches with:
    - mentioning me and:
    ` + "```" + `
     cherry-pick to:
