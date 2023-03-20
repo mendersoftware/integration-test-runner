@@ -98,17 +98,17 @@ func processGitHubPullRequest(
 				retryFunc: func() error {
 					return startPRPipeline(log, prBranchName, pr, conf, isOrgMember)
 				},
-				compFunc: func(err_ error) bool {
+				compFunc: func(compareError error) bool {
 					re := regexp.MustCompile("Missing CI config file|" +
 						"No stages / jobs for this pipeline")
 					switch {
-					case err_ == nil:
+					case compareError == nil:
 						return noRetry
-					case re.MatchString(err_.Error()):
+					case re.MatchString(compareError.Error()):
 						log.Infof("start pipeline for PR '%d' is skipped", pr.Number)
 						return noRetry
 					default:
-						log.Errorf("failed to start pipeline for PR: %s", err)
+						log.Errorf("failed to start pipeline for PR: %s", compareError)
 						return doRetry
 					}
 				},
