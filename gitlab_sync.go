@@ -10,6 +10,10 @@ import (
 	"github.com/mendersoftware/integration-test-runner/git"
 )
 
+type branchDepth int
+
+const fullDepth = -1
+
 func shouldStartPipeline(branchName string) bool {
 	startByName := []string{
 		"master",
@@ -54,10 +58,38 @@ func syncRemoteRef(log *logrus.Entry, org, repo, ref string, conf *config) error
 		return err
 	}
 
+	depths := []branchDepth{5, 10, 50, 100, fullDepth} // 0 = infinite depth
+	for _, depth := range depths {
+
+		log.Infof("Fetching branch at depth: %d", depth)
+		err := fetchCmd(ref, repo, state, depth)
+		if err == nil {
+			break
+		}
+		log.Infof("Failed to sync the remotes at depth: %d", depth)
+	}
+
+	log.Infof("Pushed ref to GitLab: %s:%s", repo, ref)
+	return nil
+}
+
+func setDepth(depth branchDepth) string {
+	switch depth {
+	case fullDepth:
+		return ""
+	default:
+		return fmt.Sprintf("--depth=%d", depth)
+
+	}
+}
+
+func fetchCmd(ref, repo string, state *git.State, depth branchDepth) error {
+
 	if strings.Contains(ref, "tags") {
 		tagName := strings.TrimPrefix(ref, "refs/tags/")
 
-		err := git.Command("fetch", "--tags", "github").With(state).Run()
+		err := git.Command("fetch", setDepth(depth), "--tags", "github").With(state).Run()
+
 		if err != nil {
 			return err
 		}
@@ -68,7 +100,7 @@ func syncRemoteRef(log *logrus.Entry, org, repo, ref string, conf *config) error
 	} else if strings.Contains(ref, "heads") {
 		branchName := strings.TrimPrefix(ref, "refs/heads/")
 
-		err := git.Command("fetch", "github").With(state).Run()
+		err := git.Command("fetch", setDepth(depth), "github").With(state).Run()
 		if err != nil {
 			return err
 		}
@@ -93,6 +125,5 @@ func syncRemoteRef(log *logrus.Entry, org, repo, ref string, conf *config) error
 		return fmt.Errorf("Unrecognized ref %s", ref)
 	}
 
-	log.Infof("Pushed ref to GitLab: %s:%s", repo, ref)
 	return nil
 }
