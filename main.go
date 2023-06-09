@@ -54,6 +54,7 @@ var extraWatchRepositoriesPipeline = []string{
 var gitHubOrganizationToGitLabGroup = map[string]string{
 	"mendersoftware": "Mender",
 	"cfengine":       "CFEngine",
+	"NorthernTechHQ": "NorthernTechHQ",
 }
 
 // Mapping of special repos that have a custom group/project
