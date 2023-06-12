@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/google/go-github/v28/github"
 	"github.com/sirupsen/logrus"
@@ -106,6 +107,10 @@ func syncIfOSHasEnterpriseRepo(
 			// Get the link to the original PR, so that it can be linked to
 			// in the commit body
 			PRURL := pr.GetHTMLURL()
+			var assignees []string
+			if issuer := pr.GetUser().GetLogin(); issuer != "" {
+				assignees = append(assignees, issuer)
+			}
 
 			enterprisePR, err := createPullRequestFromTestBotFork(createPRArgs{
 				conf:        conf,
@@ -114,6 +119,7 @@ func syncIfOSHasEnterpriseRepo(
 				baseBranch:  branchRef,
 				message:     fmt.Sprintf("[Bot] %s", pr.GetTitle()),
 				messageBody: fmt.Sprintf("Original PR: %s\n\n%s", PRURL, pr.GetBody()),
+				assignees:   assignees,
 			})
 			if err != nil {
 				return fmt.Errorf(
@@ -242,9 +248,13 @@ type createPRArgs struct {
 	baseBranch  string
 	message     string
 	messageBody string
+	assignees   []string
 }
 
 func createPullRequestFromTestBotFork(args createPRArgs) (*github.PullRequest, error) {
+
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*30)
+	defer cancel()
 
 	newPR := &github.NewPullRequest{
 		Title:               github.String(args.message),
@@ -255,13 +265,24 @@ func createPullRequestFromTestBotFork(args createPRArgs) (*github.PullRequest, e
 	}
 
 	pr, err := githubClient.CreatePullRequest(
-		context.Background(),
+		ctx,
 		args.conf.githubOrganization,
 		args.repo,
 		newPR,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create the PR for: (%s) %v", args.repo, err)
+	}
+
+	if len(args.assignees) > 0 {
+		err = githubClient.AssignPullRequest(
+			ctx, args.conf.githubOrganization,
+			args.repo, pr.GetNumber(),
+			args.assignees,
+		)
+		if err != nil {
+			logrus.Warnf("failed to assign users %v to PR: %s", args.assignees, err)
+		}
 	}
 
 	return pr, nil
