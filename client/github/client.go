@@ -33,6 +33,13 @@ type Client interface {
 		repo string,
 		pr *github.NewPullRequest,
 	) (*github.PullRequest, error)
+	AssignPullRequest(
+		ctx context.Context,
+		owner, repo string,
+		prNumber int,
+		assignees []string,
+	) error
+
 	GetPullRequest(
 		ctx context.Context,
 		org string,
@@ -128,6 +135,27 @@ func (c *gitHubClient) CreatePullRequest(
 	}
 	newPR, _, err := c.client.PullRequests.Create(ctx, org, repo, pr)
 	return newPR, err
+}
+
+func (c *gitHubClient) AssignPullRequest(
+	ctx context.Context,
+	owner, repo string,
+	prNumber int, assignees []string,
+) error {
+	if len(assignees) == 0 {
+		return nil
+	}
+	_, res, err := c.client.Issues.AddAssignees(ctx, owner, repo, prNumber, assignees)
+	if err != nil {
+		return fmt.Errorf("failed to assign pull request: %w", err)
+	}
+	if res.StatusCode >= 300 {
+		return fmt.Errorf(
+			"failed to assign pull request: unexpected status code %d",
+			res.StatusCode,
+		)
+	}
+	return nil
 }
 
 func (c *gitHubClient) GetPullRequest(
