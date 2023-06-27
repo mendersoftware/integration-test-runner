@@ -11,7 +11,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	github.com/xanzy/go-gitlab v0.20.2-0.20190923085917-a59c72c5a3c7
 	golang.org/x/oauth2 v0.6.0
 	golang.org/x/sys v0.8.0
