@@ -756,6 +756,11 @@ func TestParseMultiLineCherryTargetBranches(t *testing.T) {
 		* master`,
 			expected: []string{"master"},
 		},
+		"main": {
+			body: `cherry-pick to:
+		* main`,
+			expected: []string{"main"},
+		},
 		"hosted": {
 			body: `cherry-pick to:
 		* hosted`,
@@ -784,9 +789,10 @@ func TestParseMultiLineCherryTargetBranches(t *testing.T) {
 		"multiple branches": {
 			body: `cherry-pick to:
 		* master
+		* main
 		* hosted
 		* example-branch`,
-			expected: []string{"master", "hosted", "example-branch"},
+			expected: []string{"master", "main", "hosted", "example-branch"},
 		},
 	}
 
@@ -805,6 +811,10 @@ func TestParseSingleLineCherryTargetBranches(t *testing.T) {
 		"master": {
 			body:     "cherry-pick to: `master`",
 			expected: []string{"master"},
+		},
+		"main": {
+			body:     "cherry-pick to: `main`",
+			expected: []string{"main"},
 		},
 		"hosted": {
 			body:     "cherry-pick to: `hosted`",
