@@ -89,9 +89,9 @@ func suggestCherryPicks(
 		return nil
 	}
 
-	// ignore PRs if they don't target the master branch
+	// ignore PRs if they don't target the master or main branch
 	baseRef := pr.GetPullRequest().GetBase().GetRef()
-	if baseRef != "master" {
+	if baseRef != "master" && baseRef != "main" {
 		log.Infof("Ignoring cherry-pick suggestions for base ref: %s", baseRef)
 		return nil
 	}

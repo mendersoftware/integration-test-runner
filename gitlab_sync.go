@@ -20,6 +20,7 @@ func shouldStartPipeline(branchName string) bool {
 		"staging",
 		"production",
 		"hosted",
+		"main",
 	}
 	for _, n := range startByName {
 		if branchName == n {
