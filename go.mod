@@ -6,13 +6,12 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/go-github/v28 v28.1.1
-	github.com/google/go-querystring v1.0.1-0.20190318165438-c8c88dbee036 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
-	github.com/xanzy/go-gitlab v0.20.2-0.20190923085917-a59c72c5a3c7
+	github.com/xanzy/go-gitlab v0.86.0
 	golang.org/x/oauth2 v0.9.0
 	golang.org/x/sys v0.9.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect

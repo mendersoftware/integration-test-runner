@@ -162,6 +162,18 @@ func getBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEvent) []b
 	return builds
 }
 
+func filterOutEmptyVariables(
+	optionsIn []*gitlab.PipelineVariableOptions,
+) []*gitlab.PipelineVariableOptions {
+	var optionsOut []*gitlab.PipelineVariableOptions
+	for _, option := range optionsIn {
+		if *option.Value != "" {
+			optionsOut = append(optionsOut, option)
+		}
+	}
+	return optionsOut
+}
+
 func triggerBuild(
 	log *logrus.Entry,
 	conf *config,
@@ -191,12 +203,12 @@ func triggerBuild(
 	ref := "master"
 	opt := &gitlab.CreatePipelineOptions{
 		Ref:       &ref,
-		Variables: buildParameters,
+		Variables: &buildParameters,
 	}
 
 	variablesString := ""
-	for _, variable := range opt.Variables {
-		variablesString += variable.Key + ":" + variable.Value + ", "
+	for _, variable := range *opt.Variables {
+		variablesString += *variable.Key + ":" + *variable.Value + ", "
 	}
 	log.Infof(
 		"Creating pipeline in project %s:%s with variables: %s",
@@ -237,10 +249,10 @@ Hello :smile_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}]
 	}
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, struct {
-		BuildVars []*gitlab.PipelineVariable
+		BuildVars []*gitlab.PipelineVariableOptions
 		Pipeline  *gitlab.Pipeline
 	}{
-		BuildVars: opt.Variables,
+		BuildVars: filterOutEmptyVariables(*opt.Variables),
 		Pipeline:  pipeline,
 	}); err != nil {
 		log.Errorf("Failed to execute the build matrix template. Error: %s\n", err.Error())
@@ -265,12 +277,12 @@ Hello :smile_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}]
 func stopStalePipelines(
 	log *logrus.Entry,
 	client clientgitlab.Client,
-	vars []*gitlab.PipelineVariable,
+	vars []*gitlab.PipelineVariableOptions,
 ) {
 	integrationPipelinePath := "Northern.tech/Mender/mender-qa"
 
 	sort.SliceStable(vars, func(i, j int) bool {
-		return vars[i].Key < vars[j].Key
+		return *vars[i].Key < *vars[j].Key
 	})
 
 	username := githubBotName
@@ -326,10 +338,10 @@ func getBuildParameters(
 	conf *config,
 	build *buildOptions,
 	buildOptions *BuildOptions,
-) ([]*gitlab.PipelineVariable, error) {
+) ([]*gitlab.PipelineVariableOptions, error) {
 	var err error
 	readHead := "pull/" + build.pr + "/head"
-	var buildParameters []*gitlab.PipelineVariable
+	var buildParameters []*gitlab.PipelineVariableOptions
 
 	var versionedRepositories []string
 	if build.repo == "meta-mender" {
@@ -354,12 +366,16 @@ func getBuildParameters(
 		if versionedRepo != build.repo &&
 			versionedRepo != "integration" &&
 			build.repo != "meta-mender" {
+
+			repoKey := repoToBuildParameter(versionedRepo)
+
 			if _, exists := buildOptions.PullRequests[versionedRepo]; exists {
+				prVersion := buildOptions.PullRequests[versionedRepo]
 				buildParameters = append(
 					buildParameters,
-					&gitlab.PipelineVariable{
-						Key:   repoToBuildParameter(versionedRepo),
-						Value: buildOptions.PullRequests[versionedRepo],
+					&gitlab.PipelineVariableOptions{
+						Key:   &repoKey,
+						Value: &prVersion,
 					},
 				)
 				continue
@@ -376,7 +392,10 @@ func getBuildParameters(
 			log.Infof("%s version %s is being used in %s", versionedRepo, version, build.baseBranch)
 			buildParameters = append(
 				buildParameters,
-				&gitlab.PipelineVariable{Key: repoToBuildParameter(versionedRepo), Value: version},
+				&gitlab.PipelineVariableOptions{
+					Key:   &repoKey,
+					Value: &version,
+				},
 			)
 		}
 	}
@@ -384,21 +403,23 @@ func getBuildParameters(
 	// set the correct integration branches if we aren't performing a pull request against
 	// integration
 	if build.repo != "integration" && build.repo != "meta-mender" {
-		revision := build.baseBranch
+		integrationRevision := build.baseBranch
 		if _, exists := buildOptions.PullRequests["integration"]; exists {
-			revision = buildOptions.PullRequests["integration"]
+			integrationRevision = buildOptions.PullRequests["integration"]
 		}
+		integrationRepoKey := repoToBuildParameter("integration")
 		buildParameters = append(buildParameters,
-			&gitlab.PipelineVariable{
-				Key:   repoToBuildParameter("integration"),
-				Value: revision})
+			&gitlab.PipelineVariableOptions{
+				Key:   &integrationRepoKey,
+				Value: &integrationRevision})
 
 		if _, exists := buildOptions.PullRequests["meta-mender"]; exists {
-			revision = buildOptions.PullRequests["meta-mender"]
+			metaMenderRevision := buildOptions.PullRequests["meta-mender"]
+			metaMenderRepoKey := repoToBuildParameter("meta-mender")
 			buildParameters = append(buildParameters,
-				&gitlab.PipelineVariable{
-					Key:   repoToBuildParameter("meta-mender"),
-					Value: revision})
+				&gitlab.PipelineVariableOptions{
+					Key:   &metaMenderRepoKey,
+					Value: &metaMenderRevision})
 		}
 	}
 
@@ -418,30 +439,34 @@ func getBuildParameters(
 			if build.baseBranch == "feature-c++-client" {
 				metaMenderBranch = build.baseBranch
 			}
+			metaMenderBranchKey := repoToBuildParameter("meta-mender")
 			buildParameters = append(
 				buildParameters,
-				&gitlab.PipelineVariable{
-					Key:   repoToBuildParameter("meta-mender"),
-					Value: metaMenderBranch,
+				&gitlab.PipelineVariableOptions{
+					Key:   &metaMenderBranchKey,
+					Value: &metaMenderBranch,
 				},
 			)
 		}
+		pokyBranchKey := repoToBuildParameter("poky")
 		buildParameters = append(
 			buildParameters,
-			&gitlab.PipelineVariable{Key: repoToBuildParameter("poky"), Value: pokyBranch},
+			&gitlab.PipelineVariableOptions{Key: &pokyBranchKey, Value: &pokyBranch},
 		)
+		metaOEPokyBranchKey := repoToBuildParameter("meta-openembedded")
 		buildParameters = append(
 			buildParameters,
-			&gitlab.PipelineVariable{
-				Key:   repoToBuildParameter("meta-openembedded"),
-				Value: pokyBranch,
+			&gitlab.PipelineVariableOptions{
+				Key:   &metaOEPokyBranchKey,
+				Value: &pokyBranch,
 			},
 		)
+		metaRPIPokyBranchKey := repoToBuildParameter("meta-raspberrypi")
 		buildParameters = append(
 			buildParameters,
-			&gitlab.PipelineVariable{
-				Key:   repoToBuildParameter("meta-raspberrypi"),
-				Value: pokyBranch,
+			&gitlab.PipelineVariableOptions{
+				Key:   &metaRPIPokyBranchKey,
+				Value: &pokyBranch,
 			},
 		)
 	}
@@ -462,29 +487,32 @@ func getBuildParameters(
 		runBackendIntegrationTests = "false"
 	}
 
+	runIntegrationTestsKey := "RUN_INTEGRATION_TESTS"
 	buildParameters = append(
 		buildParameters,
-		&gitlab.PipelineVariable{Key: "RUN_INTEGRATION_TESTS", Value: runIntegrationTests},
+		&gitlab.PipelineVariableOptions{Key: &runIntegrationTestsKey, Value: &runIntegrationTests},
 	)
+	runBackendIntegrationTestsKey := "RUN_BACKEND_INTEGRATION_TESTS"
 	buildParameters = append(
 		buildParameters,
-		&gitlab.PipelineVariable{
-			Key: "RUN_BACKEND_INTEGRATION_TESTS", Value: runBackendIntegrationTests,
+		&gitlab.PipelineVariableOptions{
+			Key: &runBackendIntegrationTestsKey, Value: &runBackendIntegrationTests,
 		},
 	)
+	buildRepoKey := repoToBuildParameter(build.repo)
 	buildParameters = append(buildParameters,
-		&gitlab.PipelineVariable{
-			Key:   repoToBuildParameter(build.repo),
-			Value: readHead,
+		&gitlab.PipelineVariableOptions{
+			Key:   &buildRepoKey,
+			Value: &readHead,
 		})
 
 	return getClientBuildParameters(buildParameters, build)
 }
 
 func getClientBuildParameters(
-	buildParameters []*gitlab.PipelineVariable,
+	buildParameters []*gitlab.PipelineVariableOptions,
 	build *buildOptions,
-) ([]*gitlab.PipelineVariable, error) {
+) ([]*gitlab.PipelineVariableOptions, error) {
 	var qemuParam string
 	if build.makeQEMU {
 		qemuParam = "true"
@@ -498,79 +526,98 @@ func getClientBuildParameters(
 		// that we can at least build it. MEN-6116 exists to clean this
 		// up later.
 		qemuParam = "false"
+		buildCppClient := "true"
+		buildCppClientKey := "BUILD_CPP_CLIENT"
 		buildParameters = append(
 			buildParameters,
-			&gitlab.PipelineVariable{Key: "BUILD_CPP_CLIENT", Value: "true"},
+			&gitlab.PipelineVariableOptions{Key: &buildCppClientKey, Value: &buildCppClient},
 		)
 	}
 
+	buildX86UefiGrubKey := "BUILD_QEMUX86_64_UEFI_GRUB"
 	buildParameters = append(
 		buildParameters,
-		&gitlab.PipelineVariable{Key: "BUILD_QEMUX86_64_UEFI_GRUB", Value: qemuParam},
+		&gitlab.PipelineVariableOptions{Key: &buildX86UefiGrubKey, Value: &qemuParam},
 	)
+	testX86UefiGrubKey := "TEST_QEMUX86_64_UEFI_GRUB"
 	buildParameters = append(
 		buildParameters,
-		&gitlab.PipelineVariable{Key: "TEST_QEMUX86_64_UEFI_GRUB", Value: qemuParam},
-	)
-
-	buildParameters = append(
-		buildParameters,
-		&gitlab.PipelineVariable{Key: "BUILD_QEMUX86_64_BIOS_GRUB", Value: qemuParam},
-	)
-	buildParameters = append(
-		buildParameters,
-		&gitlab.PipelineVariable{Key: "TEST_QEMUX86_64_BIOS_GRUB", Value: qemuParam},
+		&gitlab.PipelineVariableOptions{Key: &testX86UefiGrubKey, Value: &qemuParam},
 	)
 
+	buildX86BiosGrubKey := "BUILD_QEMUX86_64_BIOS_GRUB"
 	buildParameters = append(
 		buildParameters,
-		&gitlab.PipelineVariable{Key: "BUILD_QEMUX86_64_BIOS_GRUB_GPT", Value: qemuParam},
+		&gitlab.PipelineVariableOptions{Key: &buildX86BiosGrubKey, Value: &qemuParam},
 	)
+	testX86BiosGrubKey := "TEST_QEMUX86_64_BIOS_GRUB"
 	buildParameters = append(
 		buildParameters,
-		&gitlab.PipelineVariable{Key: "TEST_QEMUX86_64_BIOS_GRUB_GPT", Value: qemuParam},
-	)
-
-	buildParameters = append(
-		buildParameters,
-		&gitlab.PipelineVariable{Key: "BUILD_VEXPRESS_QEMU", Value: qemuParam},
-	)
-	buildParameters = append(
-		buildParameters,
-		&gitlab.PipelineVariable{Key: "TEST_VEXPRESS_QEMU", Value: qemuParam},
+		&gitlab.PipelineVariableOptions{Key: &testX86BiosGrubKey, Value: &qemuParam},
 	)
 
+	buildX86BiosGrubGptKey := "BUILD_QEMUX86_64_BIOS_GRUB_GPT"
 	buildParameters = append(
 		buildParameters,
-		&gitlab.PipelineVariable{Key: "BUILD_VEXPRESS_QEMU_FLASH", Value: qemuParam},
+		&gitlab.PipelineVariableOptions{Key: &buildX86BiosGrubGptKey, Value: &qemuParam},
 	)
+	testX86BiosGrubGptKey := "TEST_QEMUX86_64_BIOS_GRUB_GPT"
 	buildParameters = append(
 		buildParameters,
-		&gitlab.PipelineVariable{Key: "TEST_VEXPRESS_QEMU_FLASH", Value: qemuParam},
-	)
-
-	buildParameters = append(
-		buildParameters,
-		&gitlab.PipelineVariable{Key: "BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB", Value: qemuParam},
-	)
-	buildParameters = append(
-		buildParameters,
-		&gitlab.PipelineVariable{Key: "TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB", Value: qemuParam},
+		&gitlab.PipelineVariableOptions{Key: &testX86BiosGrubGptKey, Value: &qemuParam},
 	)
 
+	buildVexpress := "BUILD_VEXPRESS_QEMU"
 	buildParameters = append(
 		buildParameters,
-		&gitlab.PipelineVariable{Key: "BUILD_BEAGLEBONEBLACK", Value: qemuParam},
+		&gitlab.PipelineVariableOptions{Key: &buildVexpress, Value: &qemuParam},
+	)
+	testVexpress := "TEST_VEXPRESS_QEMU"
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariableOptions{Key: &testVexpress, Value: &qemuParam},
+	)
+
+	buildVexpressFlash := "BUILD_VEXPRESS_QEMU_FLASH"
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariableOptions{Key: &buildVexpressFlash, Value: &qemuParam},
+	)
+	testVexpressFlash := "TEST_VEXPRESS_QEMU_FLASH"
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariableOptions{Key: &testVexpressFlash, Value: &qemuParam},
+	)
+
+	buildVexpressUbootUefiGrub := "BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB"
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariableOptions{Key: &buildVexpressUbootUefiGrub, Value: &qemuParam},
+	)
+	testVexpressUbootUefiGrub := "TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB"
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariableOptions{Key: &testVexpressUbootUefiGrub, Value: &qemuParam},
+	)
+
+	buildBBBKey := "BUILD_BEAGLEBONEBLACK"
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariableOptions{Key: &buildBBBKey, Value: &qemuParam},
 	)
 
 	// Set BUILD_CLIENT = false, if target repo not in the qemuBuildRepositories list
-	buildClient := &gitlab.PipelineVariable{Key: "BUILD_CLIENT", Value: "false"}
+	buildClientKey := "BUILD_CLIENT"
+	buildClient := "false"
 	for _, prebuiltClientRepo := range qemuBuildRepositories {
 		if build.repo == prebuiltClientRepo {
-			buildClient.Value = "true"
+			buildClient = "true"
 		}
 	}
-	buildParameters = append(buildParameters, buildClient)
+	buildParameters = append(
+		buildParameters,
+		&gitlab.PipelineVariableOptions{Key: &buildClientKey, Value: &buildClient},
+	)
 
 	return buildParameters, nil
 }
