@@ -17,7 +17,7 @@ type Client interface {
 	ListProjectPipelines(
 		path string,
 		options *gitlab.ListProjectPipelinesOptions,
-	) (gitlab.PipelineList, error)
+	) ([]*gitlab.PipelineInfo, error)
 }
 
 type gitLabClient struct {
@@ -27,8 +27,7 @@ type gitLabClient struct {
 
 // NewGitLabClient returns a new GitLabClient for the given conf
 func NewGitLabClient(accessToken string, baseURL string, dryRunMode bool) (Client, error) {
-	gitlabClient := gitlab.NewClient(nil, accessToken)
-	err := gitlabClient.SetBaseURL(baseURL)
+	gitlabClient, err := gitlab.NewClient(accessToken, gitlab.WithBaseURL(baseURL))
 	if err != nil {
 		return nil, err
 	}
@@ -88,18 +87,14 @@ func (c *gitLabClient) GetPipelineVariables(
 func (c *gitLabClient) ListProjectPipelines(
 	path string,
 	options *gitlab.ListProjectPipelinesOptions,
-) (gitlab.PipelineList, error) {
+) ([]*gitlab.PipelineInfo, error) {
 	if c.dryRunMode {
 		optionsJSON, _ := json.Marshal(options)
 		msg := fmt.Sprintf("gitlab.ListProjectPipelines: path=%s,options=%s",
 			path, string(optionsJSON),
 		)
 		logger.GetRequestLogger().Push(msg)
-		return gitlab.PipelineList{
-			&gitlab.PipelineInfo{
-				ID: 1,
-			},
-		}, nil
+		return []*gitlab.PipelineInfo{{ID: 1}}, nil
 	}
 	pipelines, _, err := c.client.Pipelines.ListProjectPipelines(path, options, nil)
 	return pipelines, err

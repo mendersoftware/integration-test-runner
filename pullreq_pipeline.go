@@ -56,30 +56,32 @@ func startPRPipeline(
 	}
 	gitlabPath := repoHostURI[1]
 
+	ciIIDKey := "CI_EXTERNAL_PULL_REQUEST_IID"
+	ciIID := strconv.Itoa(event.GetNumber())
+	ciSourceRepoKey := "CI_EXTERNAL_PULL_REQUEST_SOURCE_REPOSITORY"
+	ciSourceRepo := head.GetRepo().GetFullName()
+	ciTargetRepoKey := "CI_EXTERNAL_PULL_REQUEST_TARGET_REPOSITORY"
+	ciTargetRepo := repo.GetFullName()
+	ciSourceBranchNameKey := "CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME"
+	ciSourceBranchName := head.GetRef()
+	ciSourceBranchSHAKey := "CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_SHA"
+	ciSourceBranchSHA := head.GetSHA()
+	ciTargetBranchNameKey := "CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME"
+	ciTargetBranchName := base.GetRef()
+	ciTargetBranchShaKey := "CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_SHA"
+	ciTargetBranchSha := base.GetSHA()
+
 	pipeline, err := client.CreatePipeline(gitlabPath, &gitlab.CreatePipelineOptions{
 		Ref: &ref,
-		Variables: []*gitlab.PipelineVariable{{
-			Key:   "CI_EXTERNAL_PULL_REQUEST_IID",
-			Value: strconv.Itoa(event.GetNumber()),
-		}, {
-			Key:   "CI_EXTERNAL_PULL_REQUEST_SOURCE_REPOSITORY",
-			Value: head.GetRepo().GetFullName(),
-		}, {
-			Key:   "CI_EXTERNAL_PULL_REQUEST_TARGET_REPOSITORY",
-			Value: repo.GetFullName(),
-		}, {
-			Key:   "CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME",
-			Value: head.GetRef(),
-		}, {
-			Key:   "CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_SHA",
-			Value: head.GetSHA(),
-		}, {
-			Key:   "CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME",
-			Value: base.GetRef(),
-		}, {
-			Key:   "CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_SHA",
-			Value: base.GetSHA(),
-		}},
+		Variables: &[]*gitlab.PipelineVariableOptions{
+			{Key: &ciIIDKey, Value: &ciIID},
+			{Key: &ciSourceRepoKey, Value: &ciSourceRepo},
+			{Key: &ciTargetRepoKey, Value: &ciTargetRepo},
+			{Key: &ciSourceBranchNameKey, Value: &ciSourceBranchName},
+			{Key: &ciSourceBranchSHAKey, Value: &ciSourceBranchSHA},
+			{Key: &ciTargetBranchNameKey, Value: &ciTargetBranchName},
+			{Key: &ciTargetBranchShaKey, Value: &ciTargetBranchSha},
+		},
 	})
 	if err != nil {
 		return err
