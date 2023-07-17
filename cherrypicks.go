@@ -104,7 +104,7 @@ func suggestCherryPicks(
 	state, err := git.Commands(
 		git.Command("init", "."),
 		git.Command("remote", "add", "github", repoURL),
-		git.Command("fetch", "github", "master:local"),
+		git.Command("fetch", "github", baseRef+":local"),
 		git.Command("fetch", "github", "pull/"+prNumber+"/head:"+prBranchName),
 	)
 	defer state.Cleanup()
