@@ -10,6 +10,7 @@ RUN apk add git openssh python3 py3-pip
 RUN pip3 install --upgrade pyyaml PyGithub
 RUN mkdir -p /root/.ssh
 RUN git clone https://github.com/mendersoftware/integration.git /integration
+ENV INTEGRATION_DIRECTORY="/integration/"
 ENV PATH="/integration/extra:${PATH}"
 ENV GIN_RELEASE=release
 ENV INTEGRATION_TEST_RUNNER_LOG_LEVEL=debug
