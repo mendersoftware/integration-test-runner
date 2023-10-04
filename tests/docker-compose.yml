@@ -12,7 +12,6 @@ services:
       GITHUB_TOKEN: ${GITHUB_TOKEN}
       GITLAB_BASE_URL: https://gitlab.com/api/v4
       GITLAB_TOKEN: ${GITLAB_TOKEN}
-      INTEGRATION_DIRECTORY: /integration
       INTEGRATION_TEST_RUNNER_LOG_LEVEL: debug
     volumes:
       - ".:/testing"

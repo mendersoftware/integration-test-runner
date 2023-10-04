@@ -98,7 +98,10 @@ func getConfig() (*config, error) {
 	githubToken := os.Getenv("GITHUB_TOKEN")
 	gitlabToken := os.Getenv("GITLAB_TOKEN")
 	gitlabBaseURL := os.Getenv("GITLAB_BASE_URL")
-	integrationDirectory := os.Getenv("INTEGRATION_DIRECTORY")
+	integrationDirectory := "/integration/"
+	if integrationDirEnv := os.Getenv("INTEGRATION_DIRECTORY"); integrationDirEnv != "" {
+		integrationDirectory = integrationDirEnv
+	}
 
 	//
 	// Currently we don't have a distinguishment between GitHub events and features.
