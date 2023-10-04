@@ -12,7 +12,6 @@ RUN mkdir -p /root/.ssh
 RUN git clone https://github.com/mendersoftware/integration.git /integration
 ENV PATH="/integration/extra:${PATH}"
 ENV GIN_RELEASE=release
-ENV INTEGRATION_TEST_RUNNER_LOG_LEVEL=debug
 COPY --from=builder /go/src/github.com/mendersoftware/integration-test-runner/integration-test-runner /
 ADD ./entrypoint /
 ENTRYPOINT ["/entrypoint"]
