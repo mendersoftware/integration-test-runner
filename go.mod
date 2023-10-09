@@ -11,5 +11,5 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/xanzy/go-gitlab v0.92.3
 	golang.org/x/oauth2 v0.12.0
-	golang.org/x/sys v0.12.0
+	golang.org/x/sys v0.13.0
 )
