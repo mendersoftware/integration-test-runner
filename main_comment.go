@@ -167,8 +167,9 @@ func syncPRBranch(
 	}
 }
 
-//parsing `start pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head
-//--pr mender/3.1.x --fast sugar pretty please`
+// parsing `start pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head
+// --pr mender/3.1.x --fast sugar pretty please`
+//
 //	BuildOptions {
 //		Fast: true,
 //		PullRequests: map[string]string{
