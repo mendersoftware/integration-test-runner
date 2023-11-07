@@ -479,11 +479,9 @@ func getBuildParameters(
 	}
 
 	if build.baseBranch == "feature-c++-client" {
-		// Avoid testing platforms for this branch. It is too early in
-		// the project. For now only BUILD_CLIENT will run, ensuring
-		// that we can at least build it. MEN-6116 exists to clean this
-		// up later.
-		runIntegrationTests = "false"
+		// Most of integration tests can be run for the C++ client \o/
+		// To be cleaned-up after MEN-6671
+		runIntegrationTests = "true"
 		runBackendIntegrationTests = "false"
 	}
 
