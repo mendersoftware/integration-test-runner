@@ -612,6 +612,10 @@ func getClientBuildParameters(
 			buildClient = "true"
 		}
 	}
+	if build.baseBranch == "feature-c++-client" {
+		// While developing the C++ client, we cannot use pre-built QEMU images.
+		buildClient = "true"
+	}
 	buildParameters = append(
 		buildParameters,
 		&gitlab.PipelineVariableOptions{Key: &buildClientKey, Value: &buildClient},
