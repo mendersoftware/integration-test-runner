@@ -41,7 +41,6 @@ output:
 - info:mender-snapshot version master is being used in master
 - info:monitor-client version master is being used in master
 - info:mtls-ambassador version master is being used in master
-- info:reporting version master is being used in master
 - info:tenantadm version master is being used in master
 - info:useradm version master is being used in master
 - info:useradm-enterprise version master is being used in master
