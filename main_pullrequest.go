@@ -185,6 +185,7 @@ func processGitHubPullRequest(
    <details>
    <summary>my commands and options</summary>
    <br />
+
    You can trigger a pipeline on multiple prs with:
    - mentioning me and ` + "`" + `start pipeline --pr mender/127 --pr mender-connect/255` + "`" + `
 
