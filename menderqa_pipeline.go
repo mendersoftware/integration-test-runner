@@ -519,11 +519,7 @@ func getClientBuildParameters(
 	}
 
 	if build.baseBranch == "feature-c++-client" {
-		// Avoid testing platforms for this branch. It is too early in
-		// the project. For now only BUILD_CLIENT will run, ensuring
-		// that we can at least build it. MEN-6116 exists to clean this
-		// up later.
-		qemuParam = "false"
+		// MEN-6116 exists to clean up feature-c++-client references later.
 		buildCppClient := "true"
 		buildCppClientKey := "BUILD_CPP_CLIENT"
 		buildParameters = append(

@@ -50,10 +50,10 @@ output:
 - 'gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1'
 - 'gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1'
 - 'info:Creating pipeline in project Northern.tech/Mender/mender-qa:master with variables:
-  AUDITLOGS_REV:master, BUILD_BEAGLEBONEBLACK:false, BUILD_CLIENT:true, BUILD_CPP_CLIENT:true,
-  BUILD_QEMUX86_64_BIOS_GRUB:false, BUILD_QEMUX86_64_BIOS_GRUB_GPT:false,
-  BUILD_QEMUX86_64_UEFI_GRUB:false, BUILD_VEXPRESS_QEMU:false, BUILD_VEXPRESS_QEMU_FLASH:false,
-  BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:false, CREATE_ARTIFACT_WORKER_REV:master,
+  AUDITLOGS_REV:master, BUILD_BEAGLEBONEBLACK:true, BUILD_CLIENT:true, BUILD_CPP_CLIENT:true,
+  BUILD_QEMUX86_64_BIOS_GRUB:true, BUILD_QEMUX86_64_BIOS_GRUB_GPT:true,
+  BUILD_QEMUX86_64_UEFI_GRUB:true, BUILD_VEXPRESS_QEMU:true, BUILD_VEXPRESS_QEMU_FLASH:true,
+  BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:true, CREATE_ARTIFACT_WORKER_REV:master,
   DEPLOYMENTS_ENTERPRISE_REV:master, DEPLOYMENTS_REV:master, DEVICEAUTH_ENTERPRISE_REV:master,
   DEVICEAUTH_REV:master, DEVICECONFIG_REV:master, DEVICECONNECT_REV:master,
   DEVICEMONITOR_REV:master, GENERATE_DELTA_WORKER_REV:master, GUI_REV:master,
@@ -64,21 +64,21 @@ output:
   MENDER_SETUP_REV:master, MENDER_SNAPSHOT_REV:master, META_MENDER_REV:feature-c++-client,
   META_OPENEMBEDDED_REV:kirkstone, META_RASPBERRYPI_REV:kirkstone, MONITOR_CLIENT_REV:master,
   MTLS_AMBASSADOR_REV:master, POKY_REV:kirkstone, RUN_BACKEND_INTEGRATION_TESTS:false,
-  RUN_INTEGRATION_TESTS:true, TENANTADM_REV:master, TEST_QEMUX86_64_BIOS_GRUB:false,
-  TEST_QEMUX86_64_BIOS_GRUB_GPT:false, TEST_QEMUX86_64_UEFI_GRUB:false, TEST_VEXPRESS_QEMU:false,
-  TEST_VEXPRESS_QEMU_FLASH:false, TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:false,
+  RUN_INTEGRATION_TESTS:true, TENANTADM_REV:master, TEST_QEMUX86_64_BIOS_GRUB:true,
+  TEST_QEMUX86_64_BIOS_GRUB_GPT:true, TEST_QEMUX86_64_UEFI_GRUB:true, TEST_VEXPRESS_QEMU:true,
+  TEST_VEXPRESS_QEMU_FLASH:true, TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:true,
   USERADM_ENTERPRISE_REV:master, USERADM_REV:master, WORKFLOWS_ENTERPRISE_REV:master,
   WORKFLOWS_REV:master, '
-- 'gitlab.CreatePipeline: path=Northern.tech/Mender/mender-qa,options={"ref":"master","variables":[{"key":"AUDITLOGS_REV","value":"master"},{"key":"BUILD_BEAGLEBONEBLACK","value":"false"},{"key":"BUILD_CLIENT","value":"true"},{"key":"BUILD_CPP_CLIENT","value":"true"},{"key":"BUILD_QEMUX86_64_BIOS_GRUB","value":"false"},{"key":"BUILD_QEMUX86_64_BIOS_GRUB_GPT","value":"false"},{"key":"BUILD_QEMUX86_64_UEFI_GRUB","value":"false"},{"key":"BUILD_VEXPRESS_QEMU","value":"false"},{"key":"BUILD_VEXPRESS_QEMU_FLASH","value":"false"},{"key":"BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":"false"},{"key":"CREATE_ARTIFACT_WORKER_REV","value":"master"},{"key":"DEPLOYMENTS_ENTERPRISE_REV","value":"master"},{"key":"DEPLOYMENTS_REV","value":"master"},{"key":"DEVICEAUTH_ENTERPRISE_REV","value":"master"},{"key":"DEVICEAUTH_REV","value":"master"},{"key":"DEVICECONFIG_REV","value":"master"},{"key":"DEVICECONNECT_REV","value":"master"},{"key":"DEVICEMONITOR_REV","value":"master"},{"key":"GENERATE_DELTA_WORKER_REV","value":"master"},{"key":"GUI_REV","value":"master"},{"key":"INTEGRATION_REV","value":"feature-c++-client"},{"key":"INVENTORY_ENTERPRISE_REV","value":"master"},{"key":"INVENTORY_REV","value":"master"},{"key":"IOT_MANAGER_REV","value":"master"},{"key":"MENDER_ARTIFACT_REV","value":"master"},{"key":"MENDER_BINARY_DELTA_REV","value":"master"},{"key":"MENDER_CLI_REV","value":"master"},{"key":"MENDER_CONFIGURE_MODULE_REV","value":"master"},{"key":"MENDER_CONNECT_REV","value":"master"},{"key":"MENDER_CONVERT_REV","value":"master"},{"key":"MENDER_GATEWAY_REV","value":"master"},{"key":"MENDER_REV","value":"pull/1090/head"},{"key":"MENDER_SETUP_REV","value":"master"},{"key":"MENDER_SNAPSHOT_REV","value":"master"},{"key":"META_MENDER_REV","value":"feature-c++-client"},{"key":"META_OPENEMBEDDED_REV","value":"kirkstone"},{"key":"META_RASPBERRYPI_REV","value":"kirkstone"},{"key":"MONITOR_CLIENT_REV","value":"master"},{"key":"MTLS_AMBASSADOR_REV","value":"master"},{"key":"POKY_REV","value":"kirkstone"},{"key":"RUN_BACKEND_INTEGRATION_TESTS","value":"false"},{"key":"RUN_INTEGRATION_TESTS","value":"true"},{"key":"TENANTADM_REV","value":"master"},{"key":"TEST_QEMUX86_64_BIOS_GRUB","value":"false"},{"key":"TEST_QEMUX86_64_BIOS_GRUB_GPT","value":"false"},{"key":"TEST_QEMUX86_64_UEFI_GRUB","value":"false"},{"key":"TEST_VEXPRESS_QEMU","value":"false"},{"key":"TEST_VEXPRESS_QEMU_FLASH","value":"false"},{"key":"TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":"false"},{"key":"USERADM_ENTERPRISE_REV","value":"master"},{"key":"USERADM_REV","value":"master"},{"key":"WORKFLOWS_ENTERPRISE_REV","value":"master"},{"key":"WORKFLOWS_REV","value":"master"}]}'
+- 'gitlab.CreatePipeline: path=Northern.tech/Mender/mender-qa,options={"ref":"master","variables":[{"key":"AUDITLOGS_REV","value":"master"},{"key":"BUILD_BEAGLEBONEBLACK","value":"true"},{"key":"BUILD_CLIENT","value":"true"},{"key":"BUILD_CPP_CLIENT","value":"true"},{"key":"BUILD_QEMUX86_64_BIOS_GRUB","value":"true"},{"key":"BUILD_QEMUX86_64_BIOS_GRUB_GPT","value":"true"},{"key":"BUILD_QEMUX86_64_UEFI_GRUB","value":"true"},{"key":"BUILD_VEXPRESS_QEMU","value":"true"},{"key":"BUILD_VEXPRESS_QEMU_FLASH","value":"true"},{"key":"BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":"true"},{"key":"CREATE_ARTIFACT_WORKER_REV","value":"master"},{"key":"DEPLOYMENTS_ENTERPRISE_REV","value":"master"},{"key":"DEPLOYMENTS_REV","value":"master"},{"key":"DEVICEAUTH_ENTERPRISE_REV","value":"master"},{"key":"DEVICEAUTH_REV","value":"master"},{"key":"DEVICECONFIG_REV","value":"master"},{"key":"DEVICECONNECT_REV","value":"master"},{"key":"DEVICEMONITOR_REV","value":"master"},{"key":"GENERATE_DELTA_WORKER_REV","value":"master"},{"key":"GUI_REV","value":"master"},{"key":"INTEGRATION_REV","value":"feature-c++-client"},{"key":"INVENTORY_ENTERPRISE_REV","value":"master"},{"key":"INVENTORY_REV","value":"master"},{"key":"IOT_MANAGER_REV","value":"master"},{"key":"MENDER_ARTIFACT_REV","value":"master"},{"key":"MENDER_BINARY_DELTA_REV","value":"master"},{"key":"MENDER_CLI_REV","value":"master"},{"key":"MENDER_CONFIGURE_MODULE_REV","value":"master"},{"key":"MENDER_CONNECT_REV","value":"master"},{"key":"MENDER_CONVERT_REV","value":"master"},{"key":"MENDER_GATEWAY_REV","value":"master"},{"key":"MENDER_REV","value":"pull/1090/head"},{"key":"MENDER_SETUP_REV","value":"master"},{"key":"MENDER_SNAPSHOT_REV","value":"master"},{"key":"META_MENDER_REV","value":"feature-c++-client"},{"key":"META_OPENEMBEDDED_REV","value":"kirkstone"},{"key":"META_RASPBERRYPI_REV","value":"kirkstone"},{"key":"MONITOR_CLIENT_REV","value":"master"},{"key":"MTLS_AMBASSADOR_REV","value":"master"},{"key":"POKY_REV","value":"kirkstone"},{"key":"RUN_BACKEND_INTEGRATION_TESTS","value":"false"},{"key":"RUN_INTEGRATION_TESTS","value":"true"},{"key":"TENANTADM_REV","value":"master"},{"key":"TEST_QEMUX86_64_BIOS_GRUB","value":"true"},{"key":"TEST_QEMUX86_64_BIOS_GRUB_GPT","value":"true"},{"key":"TEST_QEMUX86_64_UEFI_GRUB","value":"true"},{"key":"TEST_VEXPRESS_QEMU","value":"true"},{"key":"TEST_VEXPRESS_QEMU_FLASH","value":"true"},{"key":"TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":"true"},{"key":"USERADM_ENTERPRISE_REV","value":"master"},{"key":"USERADM_REV","value":"master"},{"key":"WORKFLOWS_ENTERPRISE_REV","value":"master"},{"key":"WORKFLOWS_REV","value":"master"}]}'
 - 'info:Created pipeline: '
 - 'github.CreateComment: org=mendersoftware,repo=mender,number=1090,comment={"body":"\nHello
   :smile_cat: I created a pipeline for you here: [Pipeline-0]()\n\n\u003cdetails\u003e\n    \u003csummary\u003eBuild
   Configuration Matrix\u003c/summary\u003e\u003cp\u003e\n\n| Key   | Value |\n| ----- | ----- |\n|
-  AUDITLOGS_REV | master |\n| BUILD_BEAGLEBONEBLACK | false |\n| BUILD_CLIENT | true |\n|
-  BUILD_CPP_CLIENT | true |\n| BUILD_QEMUX86_64_BIOS_GRUB | false |\n|
-  BUILD_QEMUX86_64_BIOS_GRUB_GPT | false |\n| BUILD_QEMUX86_64_UEFI_GRUB | false |\n|
-  BUILD_VEXPRESS_QEMU | false |\n| BUILD_VEXPRESS_QEMU_FLASH | false |\n|
-  BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB | false |\n| CREATE_ARTIFACT_WORKER_REV | master |\n|
+  AUDITLOGS_REV | master |\n| BUILD_BEAGLEBONEBLACK | true |\n| BUILD_CLIENT | true |\n|
+  BUILD_CPP_CLIENT | true |\n| BUILD_QEMUX86_64_BIOS_GRUB | true |\n|
+  BUILD_QEMUX86_64_BIOS_GRUB_GPT | true |\n| BUILD_QEMUX86_64_UEFI_GRUB | true |\n|
+  BUILD_VEXPRESS_QEMU | true |\n| BUILD_VEXPRESS_QEMU_FLASH | true |\n|
+  BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB | true |\n| CREATE_ARTIFACT_WORKER_REV | master |\n|
   DEPLOYMENTS_ENTERPRISE_REV | master |\n| DEPLOYMENTS_REV | master |\n| DEVICEAUTH_ENTERPRISE_REV |
   master |\n| DEVICEAUTH_REV | master |\n| DEVICECONFIG_REV | master |\n| DEVICECONNECT_REV | master
   |\n| DEVICEMONITOR_REV | master |\n| GENERATE_DELTA_WORKER_REV | master |\n| GUI_REV | master |\n|
@@ -90,9 +90,9 @@ output:
   master |\n| META_MENDER_REV | feature-c++-client |\n| META_OPENEMBEDDED_REV | kirkstone |\n|
   META_RASPBERRYPI_REV | kirkstone |\n| MONITOR_CLIENT_REV | master |\n| MTLS_AMBASSADOR_REV |
   master |\n| POKY_REV | kirkstone |\n| RUN_BACKEND_INTEGRATION_TESTS | false |\n|
-  RUN_INTEGRATION_TESTS | true |\n| TENANTADM_REV | master |\n| TEST_QEMUX86_64_BIOS_GRUB | false
-  |\n| TEST_QEMUX86_64_BIOS_GRUB_GPT | false |\n| TEST_QEMUX86_64_UEFI_GRUB | false |\n|
-  TEST_VEXPRESS_QEMU | false |\n| TEST_VEXPRESS_QEMU_FLASH | false |\n|
-  TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB | false |\n| USERADM_ENTERPRISE_REV | master |\n| USERADM_REV |
+  RUN_INTEGRATION_TESTS | true |\n| TENANTADM_REV | master |\n| TEST_QEMUX86_64_BIOS_GRUB | true
+  |\n| TEST_QEMUX86_64_BIOS_GRUB_GPT | true |\n| TEST_QEMUX86_64_UEFI_GRUB | true |\n|
+  TEST_VEXPRESS_QEMU | true |\n| TEST_VEXPRESS_QEMU_FLASH | true |\n|
+  TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB | true |\n| USERADM_ENTERPRISE_REV | master |\n| USERADM_REV |
   master |\n| WORKFLOWS_ENTERPRISE_REV | master |\n| WORKFLOWS_REV | master |\n\n\n
   \u003c/p\u003e\u003c/details\u003e\n"}'
