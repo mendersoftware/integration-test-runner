@@ -518,16 +518,6 @@ func getClientBuildParameters(
 		qemuParam = ""
 	}
 
-	if build.baseBranch == "feature-c++-client" {
-		// MEN-6116 exists to clean up feature-c++-client references later.
-		buildCppClient := "true"
-		buildCppClientKey := "BUILD_CPP_CLIENT"
-		buildParameters = append(
-			buildParameters,
-			&gitlab.PipelineVariableOptions{Key: &buildCppClientKey, Value: &buildCppClient},
-		)
-	}
-
 	buildX86UefiGrubKey := "BUILD_QEMUX86_64_UEFI_GRUB"
 	buildParameters = append(
 		buildParameters,
