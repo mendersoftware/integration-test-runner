@@ -71,7 +71,9 @@ output:
   Improve logging","head":"mender-test-bot:mergeostoent_140","base":"master","body":"Original
   PR: https://github.com/mendersoftware/workflows/pull/140\n\nChangelog: none\r\n\r\nSigned-off-by:
   Fabio Tranchitella \u003cfabio.tranchitella@northern.tech\u003e","maintainer_can_modify":true}'
-- 'warning:failed to assign users [tranchitella] to PR: failed to assign pull request: POST https://api.github.com/repos/mendersoftware/workflows-enterprise/issues/0/assignees: 404 Not Found []'
+- 'warning:failed to assign users [tranchitella] to PR: failed to assign pull request:
+  POST https://api.github.com/repos/mendersoftware/workflows-enterprise/issues/0/assignees:
+  404 Not Found []'
 - 'info:syncIfOSHasEnterpriseRepo: Created PR: 0 on Enterprise/workflows/master'
 - 'debug:syncIfOSHasEnterpriseRepo: Created PR: id=666510619,number=140,title=Improve
   logging'
