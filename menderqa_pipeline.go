@@ -228,7 +228,7 @@ func triggerBuild(
 	// drop-down tab
 	// nolint:lll
 	tmplString := `
-Hello :smile_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}]({{.Pipeline.WebURL}})
+Hello :smiley_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}]({{.Pipeline.WebURL}})
 
 <details>
     <summary>Build Configuration Matrix</summary><p>
