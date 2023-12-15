@@ -237,7 +237,7 @@ func tryCherryPickToBranch(
 		return "", state, err
 	}
 
-	if err = git.Command("cherry-pick", "-x",
+	if err = git.Command("cherry-pick", "-x", "--allow-empty",
 		pr.GetHead().GetSHA(), "^"+pr.GetBase().GetSHA()).
 		With(state).Run(); err != nil {
 		if strings.Contains(err.Error(), "conflict") {
