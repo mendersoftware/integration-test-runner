@@ -170,7 +170,7 @@ func suggestCherryPicks(
 	}
 	// nolint:lll
 	tmplString := `
-Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+Hello :smiley_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
 {{.ReleaseBranches}}
 `
 	// suggest cherry-picking with a comment
