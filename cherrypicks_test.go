@@ -477,7 +477,7 @@ func TestSuggestCherryPicks(t *testing.T) {
 			},
 			comment: &github.IssueComment{
 				Body: github.String(`
-Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+Hello :smiley_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
 2.3.x (release 3.4.x)
 2.2.x (release 3.3.x)
 2.0.x (release 3.0.x)
@@ -501,7 +501,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			},
 			comment: &github.IssueComment{
 				Body: github.String(`
-Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+Hello :smiley_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
 2.1.x (release 3.4.x)
 2.0.x (release 3.3.x)
 1.2.x (release 3.0.x)
@@ -525,7 +525,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			},
 			comment: &github.IssueComment{
 				Body: github.String(`
-Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+Hello :smiley_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
 2.1.x (release 3.4.x)
 2.0.x (release 3.3.x)
 1.2.x (release 3.0.x)
@@ -553,7 +553,7 @@ Hello :smile_cat: This PR contains changelog entries. Please, verify the need of
 			},
 			comment: &github.IssueComment{
 				Body: github.String(`
-Hello :smile_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
+Hello :smiley_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
 3.4.x (release 3.4.x)
 3.3.x (release 3.3.x)
 3.0.x (release 3.0.x)
