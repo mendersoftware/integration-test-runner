@@ -9,7 +9,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
-	github.com/xanzy/go-gitlab v0.98.0
-	golang.org/x/oauth2 v0.17.0
-	golang.org/x/sys v0.17.0
+	github.com/xanzy/go-gitlab v0.100.0
+	golang.org/x/oauth2 v0.18.0
+	golang.org/x/sys v0.18.0
 )
