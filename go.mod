@@ -9,7 +9,9 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
-	github.com/xanzy/go-gitlab v0.101.0
-	golang.org/x/oauth2 v0.18.0
-	golang.org/x/sys v0.18.0
+	github.com/xanzy/go-gitlab v0.102.0
+	golang.org/x/net v0.22.0 // indirect
+	golang.org/x/oauth2 v0.19.0
+	golang.org/x/sys v0.19.0
+	google.golang.org/protobuf v1.31.0 // indirect
 )
