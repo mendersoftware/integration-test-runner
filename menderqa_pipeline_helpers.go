@@ -114,13 +114,3 @@ func getListOfAllRepositories(conf *config) ([]string, error) {
 
 	return strings.Split(strings.TrimSpace(string(output)), "\n"), nil
 }
-
-func getListOfWatchedRepositories(conf *config) ([]string, error) {
-
-	listOfAllRepositories, err := getListOfAllRepositories(conf)
-	if err != nil {
-		return nil, err
-	}
-
-	return append(listOfAllRepositories, extraWatchRepositoriesPipeline...), nil
-}

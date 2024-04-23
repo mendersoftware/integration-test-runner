@@ -44,12 +44,6 @@ type buildOptions struct {
 	makeQEMU   bool
 }
 
-// List of repos besides the ones in release_tool.py for
-// which the integration pipeline shall be run
-var extraWatchRepositoriesPipeline = []string{
-	"meta-mender",
-}
-
 // Mapping https://github.com/<org> -> https://gitlab.com/Northern.tech/<group>
 var gitHubOrganizationToGitLabGroup = map[string]string{
 	"mendersoftware": "Mender",
