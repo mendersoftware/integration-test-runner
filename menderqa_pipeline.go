@@ -89,12 +89,12 @@ func getBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEvent) []b
 		log.Warnf(err.Error())
 	}
 
-	watchRepositoriesTriggerPipeline, err := getListOfWatchedRepositories(conf)
+	allRepositories, err := getListOfAllRepositories(conf)
 	if err != nil {
 		log.Warnf(err.Error())
 	}
 
-	for _, watchRepo := range watchRepositoriesTriggerPipeline {
+	for _, watchRepo := range allRepositories {
 		// make sure the repo that the pull request is performed against is
 		// one that we are watching.
 
