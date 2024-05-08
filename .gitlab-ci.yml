@@ -38,7 +38,7 @@ test:unit:
 test:acceptance_tests:
   stage: test
   tags:
-    - docker
+    - hetzner-amd-beefy
   image: tiangolo/docker-with-compose
   services:
     - docker:dind
