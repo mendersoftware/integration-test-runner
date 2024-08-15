@@ -64,6 +64,7 @@ var qemuBuildRepositories = []string{
 	"monitor-client",
 	"mender-auth-azure-iot",
 	"mender-gateway",
+	"mender-snapshot",
 }
 
 const (
