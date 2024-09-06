@@ -39,6 +39,7 @@ func syncIfOSHasEnterpriseRepo(
 	case "useradm":
 	case "workflows":
 	case "deviceauth":
+	case "mender-server":
 	default:
 		log.Debugf(
 			"syncIfOSHasEnterpriseRepo: Repository without Enterprise fork detected: (%s). "+
@@ -69,7 +70,7 @@ func syncIfOSHasEnterpriseRepo(
 		}
 
 		syncBranches := regexp.MustCompile(
-			`(master|[0-9]+\.[0-9]+\.x|` + featureBranchPrefix + `.+)`,
+			`(main|master|[0-9]+\.[0-9]+\.x|` + featureBranchPrefix + `.+)`,
 		)
 		branchRef := branch.GetRef()
 		if branchRef == "" {
