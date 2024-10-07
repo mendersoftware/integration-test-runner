@@ -174,6 +174,31 @@ func filterOutEmptyVariables(
 	return optionsOut
 }
 
+func getMenderQARef(build *buildOptions, buildParameters []*gitlab.PipelineVariableOptions) string {
+	// We define a legacy build as either:
+	// * A PR in integration repo with baseBranch 3.7.x
+	// * A PR in any repo for which INTEGRATION_REV variable is set to 3.7.x
+	// In both cases we use the legacy branch of mender-qa (iow the legacy integration pipeline)
+	legacyBuildsRef := "legacy-mender-3.7-lts"
+
+	if build.repo == "integration" {
+		if build.baseBranch == "3.7.x" {
+			return legacyBuildsRef
+		}
+		return "master"
+	}
+	for _, param := range buildParameters {
+		if *param.Key == "INTEGRATION_REV" {
+			if *param.Value == "3.7.x" {
+				return legacyBuildsRef
+			}
+			return "master"
+		}
+	}
+	// This should never happen, INTEGRATION_REV must be found! But just in case...
+	return "master"
+}
+
 func triggerBuild(
 	log *logrus.Entry,
 	conf *config,
@@ -200,7 +225,7 @@ func triggerBuild(
 
 	// trigger the new pipeline
 	integrationPipelinePath := "Northern.tech/Mender/mender-qa"
-	ref := "master"
+	ref := getMenderQARef(build, buildParameters)
 	opt := &gitlab.CreatePipelineOptions{
 		Ref:       &ref,
 		Variables: &buildParameters,
