@@ -174,28 +174,26 @@ func filterOutEmptyVariables(
 	return optionsOut
 }
 
-func getMenderQARef(build *buildOptions, buildParameters []*gitlab.PipelineVariableOptions) string {
+func isLegacyBuild(build *buildOptions, buildParameters []*gitlab.PipelineVariableOptions) bool {
 	// We define a legacy build as either:
 	// * A PR in integration repo with baseBranch 3.7.x
 	// * A PR in any repo for which INTEGRATION_REV variable is set to 3.7.x
-	// In both cases we use the legacy branch of mender-qa (iow the legacy integration pipeline)
-	legacyBuildsRef := "legacy-mender-3.7-lts"
-
 	if build.repo == "integration" {
-		if build.baseBranch == "3.7.x" {
-			return legacyBuildsRef
-		}
-		return "master"
+		return build.baseBranch == "3.7.x"
 	}
 	for _, param := range buildParameters {
 		if *param.Key == "INTEGRATION_REV" {
-			if *param.Value == "3.7.x" {
-				return legacyBuildsRef
-			}
-			return "master"
+			return *param.Value == "3.7.x"
 		}
 	}
 	// This should never happen, INTEGRATION_REV must be found! But just in case...
+	return false
+}
+
+func getMenderQARef(build *buildOptions, buildParameters []*gitlab.PipelineVariableOptions) string {
+	if isLegacyBuild(build, buildParameters) {
+		return "legacy-mender-3.7-lts"
+	}
 	return "master"
 }
 
@@ -495,23 +493,28 @@ func getBuildParameters(
 
 	// set the rest of the CI build parameters
 	runIntegrationTests := "true"
-	runBackendIntegrationTests := "true"
-	if buildOptions.Fast {
-		runIntegrationTests = "false"
-	}
-
 	runIntegrationTestsKey := "RUN_INTEGRATION_TESTS"
 	buildParameters = append(
 		buildParameters,
 		&gitlab.PipelineVariableOptions{Key: &runIntegrationTestsKey, Value: &runIntegrationTests},
 	)
-	runBackendIntegrationTestsKey := "RUN_BACKEND_INTEGRATION_TESTS"
-	buildParameters = append(
-		buildParameters,
-		&gitlab.PipelineVariableOptions{
-			Key: &runBackendIntegrationTestsKey, Value: &runBackendIntegrationTests,
-		},
-	)
+
+	// Backend integration tests, from mender-qa pipeline, are only relevant for legacy builds
+	if isLegacyBuild(build, buildParameters) {
+		runBackendIntegrationTests := "true"
+		if buildOptions.Fast {
+			runIntegrationTests = "false"
+		}
+
+		runBackendIntegrationTestsKey := "RUN_BACKEND_INTEGRATION_TESTS"
+		buildParameters = append(
+			buildParameters,
+			&gitlab.PipelineVariableOptions{
+				Key: &runBackendIntegrationTestsKey, Value: &runBackendIntegrationTests,
+			},
+		)
+	}
+
 	buildRepoKey := repoToBuildParameter(build.repo)
 	buildParameters = append(buildParameters,
 		&gitlab.PipelineVariableOptions{
