@@ -461,9 +461,6 @@ func getBuildParameters(
 		} else {
 			pokyBranch = LatestStableYoctoBranch
 			metaMenderBranch := pokyBranch
-			if build.baseBranch == "feature-c++-client" {
-				metaMenderBranch = build.baseBranch
-			}
 			metaMenderBranchKey := repoToBuildParameter("meta-mender")
 			buildParameters = append(
 				buildParameters,
@@ -501,13 +498,6 @@ func getBuildParameters(
 	runBackendIntegrationTests := "true"
 	if buildOptions.Fast {
 		runIntegrationTests = "false"
-	}
-
-	if build.baseBranch == "feature-c++-client" {
-		// Most of integration tests can be run for the C++ client \o/
-		// To be cleaned-up after MEN-6671
-		runIntegrationTests = "true"
-		runBackendIntegrationTests = "false"
 	}
 
 	runIntegrationTestsKey := "RUN_INTEGRATION_TESTS"
@@ -622,10 +612,6 @@ func getClientBuildParameters(
 		if build.repo == prebuiltClientRepo {
 			buildClient = "true"
 		}
-	}
-	if build.baseBranch == "feature-c++-client" {
-		// While developing the C++ client, we cannot use pre-built QEMU images.
-		buildClient = "true"
 	}
 	buildParameters = append(
 		buildParameters,
