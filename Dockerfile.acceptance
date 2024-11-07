@@ -1,4 +1,4 @@
-FROM golang:1.20.4-alpine3.16 as builder
+FROM golang:1.20.4-alpine3.16 AS builder
 RUN mkdir -p /go/src/github.com/mendersoftware/integration-test-runner
 WORKDIR /go/src/github.com/mendersoftware/integration-test-runner
 ADD ./ .

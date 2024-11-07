@@ -10,6 +10,7 @@
   - [Continuous Delivery](#continuous-delivery)
     - [Setup access to GKE](#setup-access-to-gke)
     - [Disaster Recovery](#disaster-recovery)
+  - [Acceptance tests](#acceptance-tests)
 
 ## Main features
 
@@ -99,3 +100,22 @@ From the `sre-tools` repository:
 ```bash
 $ kubectl apply -Rf kubernetes/mender-test-runner/
 ```
+
+## Acceptance Tests
+
+We have a set of acceptance tests that run with recorded payloads from GitHub webhooks and check
+the exact output of the `integration-test-runner`. The intention for changes in our CI infra
+(namely, `integration` repository) do not go unnoticed.
+
+The expected output of the tool is saved as golden files using a Pytest plugin for it. When changes
+are made that need update, you can automatically update the files with:
+
+```bash
+make acceptance-testing-build
+make acceptance-testing-up
+make acceptance-testing-update-golden-files
+```
+
+After that **review the changes**, commit, and submit them into a PR.
+
+Also note that `GITHUB_TOKEN` and `GITLAB_TOKEN` env variables are required to run these tests.
