@@ -20,7 +20,7 @@ output:
 - "debug:stopBuildsOfStalePRs: PR not closed, therefore not stopping it's pipeline"
 - 'info:Pull request event with action: opened'
 - 'git.Run: /usr/bin/git pull --rebase origin'
-- 'info:workflows/master is being used in the following integration: [master]'
-- 'info:the following integration branches: [master] are using workflows/master'
+- 'info:workflows/master is being used in the following integration: []'
+- 'info:the following integration branches: [] are using workflows/master'
 - info:workflows:140 would trigger 1 builds
 - 'info:I have already commented on the pr: workflows/140, no need to keep on nagging'
