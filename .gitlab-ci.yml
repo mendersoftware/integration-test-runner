@@ -1,5 +1,6 @@
 variables:
   DOCKER_REPOSITORY: mendersoftware/integration-test-runner
+  DOCKER_VERSION: "27.3"
 
 stages:
   - test
@@ -39,9 +40,10 @@ test:acceptance_tests:
   stage: test
   tags:
     - hetzner-amd-beefy
-  image: tiangolo/docker-with-compose
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/tiangolo/docker-with-compose
   services:
-    - docker:dind
+    - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:${DOCKER_VERSION}-dind
+      alias: docker
   variables:
     DOCKER_HOST: "tcp://docker:2376"
     DOCKER_CERT_PATH: "/certs/client"
