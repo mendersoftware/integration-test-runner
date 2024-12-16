@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/go-github/v28/github"
 	"github.com/sirupsen/logrus"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 
 	clientgitlab "github.com/mendersoftware/integration-test-runner/client/gitlab"
 	"github.com/mendersoftware/integration-test-runner/git"
