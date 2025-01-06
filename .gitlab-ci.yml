@@ -22,8 +22,11 @@ include:
 
 
 test:unit:
+  variables:
+    MONGODB_DEBIAN_RELEASE: "bookworm"
+    MONGODB_VERSION: "8.0"
   script:
-    - pip install PyGithub
+    - pip install PyGithub --break-system-packages
 
     - git config --global user.email test@example.com
     - git config --global user.name  mendertester
