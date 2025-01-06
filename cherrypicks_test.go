@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -562,7 +561,7 @@ Hello :smiley_cat: This PR contains changelog entries. Please, verify the need o
 		},
 	}
 
-	tmpdir, err := ioutil.TempDir("", "*")
+	tmpdir, err := os.MkdirTemp("", "*")
 	if err != nil {
 		panic(err)
 	}

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -102,7 +101,7 @@ func syncPullRequestBranch(
 	org := pr.GetOrganization().GetLogin()
 	prNum := strconv.Itoa(pr.GetNumber())
 
-	tmpdir, err := ioutil.TempDir("", repo)
+	tmpdir, err := os.MkdirTemp("", repo)
 	if err != nil {
 		return "", err
 	}
@@ -166,7 +165,7 @@ func deleteStaleGitlabPRBranch(log *logrus.Entry, pr *github.PullRequestEvent, c
 	repoName := pr.GetRepo().GetName()
 	repoOrg := pr.GetOrganization().GetLogin()
 
-	tmpdir, err := ioutil.TempDir("", repoName)
+	tmpdir, err := os.MkdirTemp("", repoName)
 	if err != nil {
 		return err
 	}

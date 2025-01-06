@@ -86,12 +86,12 @@ func getBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEvent) []b
 
 	// we need to have the latest integration/master branch in order to use the release_tool.py
 	if err := updateIntegrationRepo(conf); err != nil {
-		log.Warnf(err.Error())
+		log.Warn(err.Error())
 	}
 
 	allRepositories, err := getListOfAllRepositories(conf)
 	if err != nil {
-		log.Warnf(err.Error())
+		log.Warn(err.Error())
 	}
 
 	for _, watchRepo := range allRepositories {
