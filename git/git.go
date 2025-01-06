@@ -2,7 +2,6 @@ package git
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 
@@ -58,7 +57,7 @@ func (s *State) Cleanup() {
 
 // Commands runs multiple git commands
 func Commands(cmds ...*Cmd) (*State, error) {
-	tdir, err := ioutil.TempDir("", "gitcmd")
+	tdir, err := os.MkdirTemp("", "gitcmd")
 	if err != nil {
 		return &State{}, err
 	}
