@@ -23,7 +23,7 @@ include:
 
 test:unit:
   script:
-    - pip install PyGithub
+    - pip install PyGithub --break-system-packages
 
     - git config --global user.email test@example.com
     - git config --global user.name  mendertester
