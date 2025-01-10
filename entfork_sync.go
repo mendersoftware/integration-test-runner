@@ -39,7 +39,6 @@ func syncIfOSHasEnterpriseRepo(
 	case "useradm":
 	case "workflows":
 	case "deviceauth":
-	case "mender-server":
 	default:
 		log.Debugf(
 			"syncIfOSHasEnterpriseRepo: Repository without Enterprise fork detected: (%s). "+
