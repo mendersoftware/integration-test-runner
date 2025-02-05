@@ -1,7 +1,7 @@
 #!/bin/sh
 
-git config --global user.name ${GIT_CONFIG_USER_NAME-Mender Root}
-git config --global user.email ${GIT_CONFIG_USER_EMAIL-root@mender-jenkins.mender.io}
+git config --global user.name "${GIT_CONFIG_USER_NAME-Mender Test Bot}"
+git config --global user.email ${GIT_CONFIG_USER_EMAIL-mender@northern.tech}
 
 ssh-keyscan github.com >> /root/.ssh/known_hosts
 ssh-keyscan gitlab.com >> /root/.ssh/known_hosts
