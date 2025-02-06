@@ -6,7 +6,7 @@ RUN CGO_ENABLED=0 go build
 
 FROM golang:1.23.5-alpine3.21
 EXPOSE 8080
-RUN apk add git openssh python3 py3-pip
+RUN apk add git openssh python3 py3-pip gpg gpg-agent
 RUN pip3 install --upgrade pyyaml PyGithub --break-system-packages
 RUN mkdir -p /root/.ssh
 RUN git clone https://github.com/mendersoftware/integration.git /integration
