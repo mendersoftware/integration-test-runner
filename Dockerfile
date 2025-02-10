@@ -1,10 +1,10 @@
-FROM golang:1.23.5-alpine3.21 AS builder
+FROM golang:1.23.6-alpine3.21 AS builder
 RUN mkdir -p /go/src/github.com/mendersoftware/integration-test-runner
 WORKDIR /go/src/github.com/mendersoftware/integration-test-runner
 ADD ./ .
 RUN CGO_ENABLED=0 go build
 
-FROM golang:1.23.5-alpine3.21
+FROM golang:1.23.6-alpine3.21
 EXPOSE 8080
 RUN apk add git openssh python3 py3-pip gpg gpg-agent
 RUN pip3 install --upgrade pyyaml PyGithub --break-system-packages
