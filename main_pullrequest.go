@@ -105,10 +105,10 @@ func processGitHubPullRequest(
 					case compareError == nil:
 						return noRetry
 					case re.MatchString(compareError.Error()):
-						log.Infof("start pipeline for PR '%d' is skipped", pr.Number)
+						log.Infof("start client pipeline for PR '%d' is skipped", pr.Number)
 						return noRetry
 					default:
-						log.Errorf("failed to start pipeline for PR: %s", compareError)
+						log.Errorf("failed to start client pipeline for PR: %s", compareError)
 						return doRetry
 					}
 				},
@@ -167,17 +167,19 @@ func processGitHubPullRequest(
 	}
 
 	// get the list of builds
-	builds := parsePullRequest(log, conf, action, pr)
+	builds := parseClientPullRequest(log, conf, action, pr)
 	log.Infof("%s:%d would trigger %d builds", pr.GetRepo().GetName(), pr.GetNumber(), len(builds))
 
-	// do not start the builds, inform the user about the `start pipeline` command instead
+	// do not start the builds, inform the user about the `start client pipeline` command instead
 	if len(builds) > 0 {
 		// Only comment, if not already commented on a PR
 		botCommentString := ", Let me know if you want to start the integration pipeline by " +
 			"mentioning me and the command \""
 		if getFirstMatchingBotCommentInPR(log, githubClient, pr, botCommentString, conf) == nil {
 
-			msg := "@" + pr.GetSender().GetLogin() + botCommentString + commandStartPipeline + "\"."
+			msg := "@" + pr.GetSender().GetLogin() + botCommentString +
+				commandStartClientPipeline + "\"."
+			// nolint:lll
 			msg += `
 
    ---
@@ -187,10 +189,10 @@ func processGitHubPullRequest(
    <br />
 
    You can trigger a pipeline on multiple prs with:
-   - mentioning me and ` + "`" + `start pipeline --pr mender/127 --pr mender-connect/255` + "`" + `
+   - mentioning me and ` + "`" + `start client pipeline --pr mender/127 --pr mender-connect/255` + "`" + `
 
    You can start a fast pipeline, disabling full integration tests with:
-   - mentioning me and ` + "`" + `start pipeline --fast` + "`" + `
+   - mentioning me and ` + "`" + `start client pipeline --fast` + "`" + `
 
    You can trigger GitHub->GitLab branch sync with:
    - mentioning me and ` + "`" + `sync` + "`" + `

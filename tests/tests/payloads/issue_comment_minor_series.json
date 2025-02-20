@@ -98,7 +98,7 @@
     "created_at": "2021-10-04T07:50:29Z",
     "updated_at": "2021-10-04T07:50:29Z",
     "author_association": "MEMBER",
-    "body": "@mender-test-bot start pipeline",
+    "body": "@mender-test-bot start client pipeline",
     "reactions": {
       "url": "https://api.github.com/repos/mendersoftware/mender/issues/comments/933232490/reactions",
       "total_count": 0,
