@@ -96,6 +96,20 @@ func syncPullRequestBranch(
 	pr *github.PullRequestEvent,
 	conf *config,
 ) (string, error) {
+	prBranchName := "pr_" + strconv.Itoa(pr.GetNumber())
+	if err := syncBranch(prBranchName, log, pr, conf); err != nil {
+		mainErrMsg := "There was an error syncing branches"
+		return "", fmt.Errorf("%v returned error: %s: %s", err, mainErrMsg, err.Error())
+	}
+	return prBranchName, nil
+}
+
+func syncBranch(
+	prBranchName string,
+	log *logrus.Entry,
+	pr *github.PullRequestEvent,
+	conf *config,
+) error {
 
 	repo := pr.GetRepo().GetName()
 	org := pr.GetOrganization().GetLogin()
@@ -103,7 +117,7 @@ func syncPullRequestBranch(
 
 	tmpdir, err := os.MkdirTemp("", repo)
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer os.RemoveAll(tmpdir)
 
@@ -111,7 +125,7 @@ func syncPullRequestBranch(
 	gitcmd.Dir = tmpdir
 	out, err := gitcmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
+		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
 	repoURL := getRemoteURLGitHub(conf.githubProtocol, conf.githubOrganization, repo)
@@ -119,27 +133,26 @@ func syncPullRequestBranch(
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
+		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
 	remoteURL, err := getRemoteURLGitLab(org, repo)
 	if err != nil {
-		return "", fmt.Errorf("getRemoteURLGitLab returned error: %s", err.Error())
+		return fmt.Errorf("getRemoteURLGitLab returned error: %s", err.Error())
 	}
 
 	gitcmd = git.Command("remote", "add", "gitlab", remoteURL)
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
+		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
-	prBranchName := "pr_" + prNum
 	gitcmd = git.Command("fetch", "github", "pull/"+prNum+"/head:"+prBranchName)
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
+		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
 	// Push but not don't trigger CI (yet)
@@ -147,11 +160,11 @@ func syncPullRequestBranch(
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
+		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
 	log.Infof("Created branch: %s:%s", repo, prBranchName)
-	return prBranchName, nil
+	return nil
 }
 
 func deleteStaleGitlabPRBranch(log *logrus.Entry, pr *github.PullRequestEvent, conf *config) error {
