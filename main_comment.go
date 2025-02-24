@@ -77,7 +77,7 @@ func processGitHubComment(
 
 	// extract the command and check it is valid
 	switch {
-	case strings.Contains(commentBody, commandStartPipeline):
+	case strings.Contains(commentBody, commandStartClientPipeline):
 		buildOptions, err := parseBuildOptions(commentBody)
 		// get the list of builds
 		prRequest := &github.PullRequestEvent{
@@ -97,7 +97,7 @@ func processGitHubComment(
 				prRequest)
 			return err
 		}
-		builds := parsePullRequest(log, conf, "opened", prRequest)
+		builds := parseClientPullRequest(log, conf, "opened", prRequest)
 		log.Infof(
 			"%s:%d will trigger %d builds",
 			comment.GetRepo().GetName(),
@@ -112,7 +112,7 @@ func processGitHubComment(
 				log.Info("Skipping build targeting meta-mender:master-next")
 				continue
 			}
-			if err := triggerBuild(log, conf, &build, prRequest, buildOptions); err != nil {
+			if err := triggerClientBuild(log, conf, &build, prRequest, buildOptions); err != nil {
 				log.Errorf("Could not start build: %s", err.Error())
 			}
 		}
@@ -167,7 +167,7 @@ func syncPRBranch(
 	}
 }
 
-// parsing `start pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head
+// parsing `start client pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head
 // --pr mender/3.1.x --fast sugar pretty please`
 //
 //	BuildOptions {
@@ -204,8 +204,8 @@ func parseBuildOptions(commentBody string) (*BuildOptions, error) {
 					revision = strings.Join(userInputParts[1:], "/")
 				default:
 					err = errors.New(
-						"parse error near '" + userInput + "', I need, e.g.: start pipeline --pr" +
-							" somerepo/pull/12/head --pr somerepo/1.0.x ",
+						"parse error near '" + userInput + "', I need, e.g.: start client" +
+							" pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x ",
 					)
 				}
 				buildOptions.PullRequests[userInputParts[0]] = revision

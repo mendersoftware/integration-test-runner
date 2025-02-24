@@ -53,7 +53,7 @@ func say(
 	return err
 }
 
-func parsePullRequest(
+func parseClientPullRequest(
 	log *logrus.Entry,
 	conf *config,
 	action string,
@@ -66,13 +66,13 @@ func parsePullRequest(
 	if action == "opened" || action == "edited" || action == "reopened" ||
 		action == "synchronize" || action == "ready_for_review" {
 
-		return getBuilds(log, conf, pr)
+		return getClientBuilds(log, conf, pr)
 	}
 
 	return builds
 }
 
-func getBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEvent) []buildOptions {
+func getClientBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEvent) []buildOptions {
 
 	var builds []buildOptions
 
@@ -197,7 +197,7 @@ func getMenderQARef(build *buildOptions, buildParameters []*gitlab.PipelineVaria
 	return "master"
 }
 
-func triggerBuild(
+func triggerClientBuild(
 	log *logrus.Entry,
 	conf *config,
 	build *buildOptions,
@@ -222,7 +222,7 @@ func triggerBuild(
 	stopStalePipelines(log, gitlabClient, buildParameters)
 
 	// trigger the new pipeline
-	integrationPipelinePath := "Northern.tech/Mender/mender-qa"
+	clientPipelinePath := "Northern.tech/Mender/mender-qa"
 	ref := getMenderQARef(build, buildParameters)
 	opt := &gitlab.CreatePipelineOptions{
 		Ref:       &ref,
@@ -235,12 +235,12 @@ func triggerBuild(
 	}
 	log.Infof(
 		"Creating pipeline in project %s:%s with variables: %s",
-		integrationPipelinePath,
+		clientPipelinePath,
 		*opt.Ref,
 		variablesString,
 	)
 
-	pipeline, err := gitlabClient.CreatePipeline(integrationPipelinePath, opt)
+	pipeline, err := gitlabClient.CreatePipeline(clientPipelinePath, opt)
 	if err != nil {
 		log.Errorf("Could not create pipeline: %s", err.Error())
 		return err
@@ -302,7 +302,7 @@ func stopStalePipelines(
 	client clientgitlab.Client,
 	vars []*gitlab.PipelineVariableOptions,
 ) {
-	integrationPipelinePath := "Northern.tech/Mender/mender-qa"
+	clientPipelinePath := "Northern.tech/Mender/mender-qa"
 
 	sort.SliceStable(vars, func(i, j int) bool {
 		return *vars[i].Key < *vars[j].Key
@@ -315,7 +315,7 @@ func stopStalePipelines(
 		Status:   &status,
 	}
 
-	pipelinesPending, err := client.ListProjectPipelines(integrationPipelinePath, opt)
+	pipelinesPending, err := client.ListProjectPipelines(clientPipelinePath, opt)
 	if err != nil {
 		log.Errorf("stopStalePipelines: Could not list pending pipelines: %s", err.Error())
 	}
@@ -326,14 +326,14 @@ func stopStalePipelines(
 		Status:   &status,
 	}
 
-	pipelinesRunning, err := client.ListProjectPipelines(integrationPipelinePath, opt)
+	pipelinesRunning, err := client.ListProjectPipelines(clientPipelinePath, opt)
 	if err != nil {
 		log.Errorf("stopStalePipelines: Could not list running pipelines: %s", err.Error())
 	}
 
 	for _, pipeline := range append(pipelinesPending, pipelinesRunning...) {
 
-		variables, err := client.GetPipelineVariables(integrationPipelinePath, pipeline.ID)
+		variables, err := client.GetPipelineVariables(clientPipelinePath, pipeline.ID)
 		if err != nil {
 			log.Errorf("stopStalePipelines: Could not get variables for pipeline: %s", err.Error())
 			continue
@@ -346,7 +346,7 @@ func stopStalePipelines(
 		if reflect.DeepEqual(vars, variables) {
 			log.Infof("Cancelling stale pipeline %d, url: %s", pipeline.ID, pipeline.WebURL)
 
-			err := client.CancelPipelineBuild(integrationPipelinePath, pipeline.ID)
+			err := client.CancelPipelineBuild(clientPipelinePath, pipeline.ID)
 			if err != nil {
 				log.Errorf("stopStalePipelines: Could not cancel pipeline: %s", err.Error())
 			}
@@ -636,7 +636,7 @@ func stopBuildsOfStalePRs(log *logrus.Entry, pr *github.PullRequestEvent, conf *
 
 	log.Debug("stopBuildsOfStalePRs: Find any running pipelines and kill mercilessly!")
 
-	for _, build := range getBuilds(log, conf, pr) {
+	for _, build := range getClientBuilds(log, conf, pr) {
 
 		gitlabClient, err := clientgitlab.NewGitLabClient(
 			conf.gitlabToken,
