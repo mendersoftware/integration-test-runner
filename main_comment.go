@@ -17,6 +17,7 @@ import (
 	clientgitlab "github.com/mendersoftware/integration-test-runner/client/gitlab"
 )
 
+// nolint: gocyclo
 func processGitHubComment(
 	ctx *gin.Context,
 	comment *github.IssueCommentEvent,
@@ -81,6 +82,33 @@ func processGitHubComment(
 
 	// extract the command and check it is valid
 	switch {
+	case strings.Contains(commentBody, commandStartIntegrationPipeline):
+		prRequest := &github.PullRequestEvent{
+			Repo:        comment.GetRepo(),
+			Number:      github.Int(pr.GetNumber()),
+			PullRequest: pr,
+		}
+		build := getIntegrationBuild(log, conf, prRequest)
+
+		_, err = syncProtectedBranch(log, prRequest, conf, integrationPipelinePath)
+		if err != nil {
+			_ = say(ctx, "There was an error while syncing branches: {{.ErrorMessage}}",
+				struct {
+					ErrorMessage string
+				}{
+					ErrorMessage: err.Error(),
+				},
+				log,
+				conf,
+				prRequest)
+			return err
+
+		}
+
+		// start the build
+		if err := triggerIntegrationBuild(log, conf, &build, prRequest, nil); err != nil {
+			log.Errorf("Could not start build: %s", err.Error())
+		}
 	case strings.Contains(commentBody, commandStartClientPipeline):
 		buildOptions, err := parseBuildOptions(commentBody)
 		// get the list of builds
