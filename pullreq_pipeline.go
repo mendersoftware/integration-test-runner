@@ -112,7 +112,6 @@ func syncBranch(
 ) error {
 
 	repo := pr.GetRepo().GetName()
-	org := pr.GetOrganization().GetLogin()
 	prNum := strconv.Itoa(pr.GetNumber())
 
 	tmpdir, err := os.MkdirTemp("", repo)
@@ -136,7 +135,7 @@ func syncBranch(
 		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
-	remoteURL, err := getRemoteURLGitLab(org, repo)
+	remoteURL, err := getRemoteURLGitLab(conf.githubOrganization, repo)
 	if err != nil {
 		return fmt.Errorf("getRemoteURLGitLab returned error: %s", err.Error())
 	}
