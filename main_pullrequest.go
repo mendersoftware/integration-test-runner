@@ -153,7 +153,7 @@ func processGitHubPullRequest(
 
 	// First check if the PR has been merged. If so, stop
 	// the pipeline, and do nothing else.
-	if err := stopBuildsOfStalePRs(log, pr, conf); err != nil {
+	if err := stopBuildsOfStaleClientPRs(log, pr, conf); err != nil {
 		log.Errorf(
 			"Failed to stop a stale build after the PR: %v was merged or closed. Error: %v",
 			pr,

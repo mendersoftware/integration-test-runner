@@ -17,7 +17,7 @@ output:
 - 'debug:Got warning text: '
 - info:Changelog is empty, and there is no previous changelog comment. Stay silent.
 - 'github.IsOrganizationMember: org=mendersoftware,user=lluiscampos'
-- "debug:stopBuildsOfStalePRs: PR not closed, therefore not stopping it's pipeline"
+- "debug:stopBuildsOfStaleClientPRs: PR not closed, therefore not stopping it's pipeline"
 - 'debug:syncIfOSHasEnterpriseRepo: Repository without Enterprise fork detected: (mender-docs).
   Not syncing'
 - 'info:Pull request event with action: opened'

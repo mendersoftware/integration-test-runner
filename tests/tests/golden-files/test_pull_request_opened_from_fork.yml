@@ -17,7 +17,7 @@ output:
 - 'debug:Got warning text: '
 - info:Changelog is empty, and there is no previous changelog comment. Stay silent.
 - 'github.IsOrganizationMember: org=mendersoftware,user=tranchitella'
-- "debug:stopBuildsOfStalePRs: PR not closed, therefore not stopping it's pipeline"
+- "debug:stopBuildsOfStaleClientPRs: PR not closed, therefore not stopping it's pipeline"
 - 'info:Pull request event with action: opened'
 - 'git.Run: /usr/bin/git pull --rebase origin'
 - 'info:workflows/master is being used in the following integration: []'
