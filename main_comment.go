@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -10,9 +11,13 @@ import (
 	"github.com/google/go-github/v28/github"
 	"github.com/sirupsen/logrus"
 
+	gitlab "gitlab.com/gitlab-org/api/client-go"
+
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
+	clientgitlab "github.com/mendersoftware/integration-test-runner/client/gitlab"
 )
 
+// nolint: gocyclo
 func processGitHubComment(
 	ctx *gin.Context,
 	comment *github.IssueCommentEvent,
@@ -77,7 +82,34 @@ func processGitHubComment(
 
 	// extract the command and check it is valid
 	switch {
-	case strings.Contains(commentBody, commandStartPipeline):
+	case strings.Contains(commentBody, commandStartIntegrationPipeline):
+		prRequest := &github.PullRequestEvent{
+			Repo:        comment.GetRepo(),
+			Number:      github.Int(pr.GetNumber()),
+			PullRequest: pr,
+		}
+		build := getIntegrationBuild(log, conf, prRequest)
+
+		_, err = syncProtectedBranch(log, prRequest, conf, integrationPipelinePath)
+		if err != nil {
+			_ = say(ctx, "There was an error while syncing branches: {{.ErrorMessage}}",
+				struct {
+					ErrorMessage string
+				}{
+					ErrorMessage: err.Error(),
+				},
+				log,
+				conf,
+				prRequest)
+			return err
+
+		}
+
+		// start the build
+		if err := triggerIntegrationBuild(log, conf, &build, prRequest, nil); err != nil {
+			log.Errorf("Could not start build: %s", err.Error())
+		}
+	case strings.Contains(commentBody, commandStartClientPipeline):
 		buildOptions, err := parseBuildOptions(commentBody)
 		// get the list of builds
 		prRequest := &github.PullRequestEvent{
@@ -97,7 +129,7 @@ func processGitHubComment(
 				prRequest)
 			return err
 		}
-		builds := parsePullRequest(log, conf, "opened", prRequest)
+		builds := parseClientPullRequest(log, conf, "opened", prRequest)
 		log.Infof(
 			"%s:%d will trigger %d builds",
 			comment.GetRepo().GetName(),
@@ -112,7 +144,7 @@ func processGitHubComment(
 				log.Info("Skipping build targeting meta-mender:master-next")
 				continue
 			}
-			if err := triggerBuild(log, conf, &build, prRequest, buildOptions); err != nil {
+			if err := triggerClientBuild(log, conf, &build, prRequest, buildOptions); err != nil {
 				log.Errorf("Could not start build: %s", err.Error())
 			}
 		}
@@ -147,6 +179,48 @@ func processGitHubComment(
 	return nil
 }
 
+func protectBranch(conf *config, branchName string, pipelinePath string) error {
+	// https://docs.gitlab.com/ee/api/protected_branches.html#protect-repository-branches
+	allow_force_push := false
+	opt := &gitlab.ProtectRepositoryBranchesOptions{
+		Name:           &branchName,
+		AllowForcePush: &allow_force_push,
+	}
+
+	client, err := clientgitlab.NewGitLabClient(
+		conf.gitlabToken,
+		conf.gitlabBaseURL,
+		conf.dryRunMode,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = client.ProtectRepositoryBranches(pipelinePath, opt)
+	if err != nil {
+		return fmt.Errorf("%v returned error: %s", err, err.Error())
+	}
+	return nil
+}
+
+func syncProtectedBranch(
+	log *logrus.Entry,
+	pr *github.PullRequestEvent,
+	conf *config,
+	pipelinePath string,
+) (string, error) {
+	prBranchName := "pr_" + strconv.Itoa(pr.GetNumber()) + "_protected"
+	if err := syncBranch(prBranchName, log, pr, conf); err != nil {
+		mainErrMsg := "There was an error syncing branches"
+		return "", fmt.Errorf("%v returned error: %s: %s", err, mainErrMsg, err.Error())
+	}
+	if err := protectBranch(conf, prBranchName, pipelinePath); err != nil {
+		return "", fmt.Errorf("%v returned error: %s", err, err.Error())
+	}
+	return prBranchName, nil
+}
+
 func syncPRBranch(
 	ctx *gin.Context,
 	comment *github.IssueCommentEvent,
@@ -167,7 +241,7 @@ func syncPRBranch(
 	}
 }
 
-// parsing `start pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head
+// parsing `start client pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head
 // --pr mender/3.1.x --fast sugar pretty please`
 //
 //	BuildOptions {
@@ -204,8 +278,8 @@ func parseBuildOptions(commentBody string) (*BuildOptions, error) {
 					revision = strings.Join(userInputParts[1:], "/")
 				default:
 					err = errors.New(
-						"parse error near '" + userInput + "', I need, e.g.: start pipeline --pr" +
-							" somerepo/pull/12/head --pr somerepo/1.0.x ",
+						"parse error near '" + userInput + "', I need, e.g.: start client" +
+							" pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x ",
 					)
 				}
 				buildOptions.PullRequests[userInputParts[0]] = revision

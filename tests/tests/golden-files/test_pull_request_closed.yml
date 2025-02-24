@@ -7,7 +7,7 @@ output:
 - 'git.Run: /usr/bin/git push gitlab --delete pr_145'
 - 'info:Ignoring cherry-pick suggestions for action: closed, merged: false'
 - 'github.IsOrganizationMember: org=mendersoftware,user=lluiscampos'
-- 'debug:stopBuildsOfStalePRs: Find any running pipelines and kill mercilessly!'
+- 'debug:stopBuildsOfStaleClientPRs: Find any running pipelines and kill mercilessly!'
 - 'git.Run: /usr/bin/git pull --rebase origin'
 - 'info:mender-configure-module/master is being used in the following integration:
   [master]'

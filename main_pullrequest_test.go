@@ -368,7 +368,7 @@ func TestChangelogComments(t *testing.T) {
 					return nil
 				}
 				return []*github.IssueComment{
-					&github.IssueComment{
+					{
 						ID:   &tc.commentID,
 						Body: &text,
 						User: &github.User{

@@ -11,27 +11,27 @@ func TestStartPipeline(t *testing.T) {
 		branchName     string
 		expectedResult bool
 	}{
-		"start pipeline 1": {
+		"start client pipeline 1": {
 			branchName:     "master",
 			expectedResult: true,
 		},
-		"start pipeline 2": {
+		"start client pipeline 2": {
 			branchName:     "staging",
 			expectedResult: true,
 		},
-		"start pipeline 3": {
+		"start client pipeline 3": {
 			branchName:     "production",
 			expectedResult: true,
 		},
-		"start pipeline 5": {
+		"start client pipeline 5": {
 			branchName:     "3.1.x",
 			expectedResult: true,
 		},
-		"start pipeline 6": {
+		"start client pipeline 6": {
 			branchName:     "pr_1",
 			expectedResult: true,
 		},
-		"do not start pipeline 1": {
+		"do not start client pipeline 1": {
 			branchName:     "other-branch",
 			expectedResult: false,
 		},

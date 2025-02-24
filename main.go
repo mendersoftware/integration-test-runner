@@ -80,10 +80,11 @@ const (
 )
 
 const (
-	commandStartPipeline      = "start pipeline"
-	commandCherryPickBranch   = "cherry-pick to:"
-	commandConventionalCommit = "mark-pr as"
-	commandSyncRepos          = "sync"
+	commandStartIntegrationPipeline = "start integration pipeline"
+	commandStartClientPipeline      = "start client pipeline"
+	commandCherryPickBranch         = "cherry-pick to:"
+	commandConventionalCommit       = "mark-pr as"
+	commandSyncRepos                = "sync"
 )
 
 func getConfig() (*config, error) {

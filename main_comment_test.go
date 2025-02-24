@@ -70,7 +70,7 @@ func TestProcessGitHubWebhook(t *testing.T) {
 			webhookEvent: &github.IssueCommentEvent{
 				Action: github.String("created"),
 				Comment: &github.IssueComment{
-					Body: github.String("@friend start pipeline"),
+					Body: github.String("@friend start client pipeline"),
 				},
 				Sender: &github.User{
 					Login: github.String("not-member"),
@@ -112,7 +112,7 @@ func TestProcessGitHubWebhook(t *testing.T) {
 			webhookEvent: &github.IssueCommentEvent{
 				Action: github.String("created"),
 				Comment: &github.IssueComment{
-					Body: github.String("@" + githubBotName + " start pipeline"),
+					Body: github.String("@" + githubBotName + " start client pipeline"),
 				},
 				Sender: &github.User{
 					Login: github.String("member"),
@@ -133,7 +133,7 @@ func TestProcessGitHubWebhook(t *testing.T) {
 			webhookEvent: &github.IssueCommentEvent{
 				Action: github.String("created"),
 				Comment: &github.IssueComment{
-					Body: github.String("@" + githubBotName + " start pipeline"),
+					Body: github.String("@" + githubBotName + " start client pipeline"),
 				},
 				Issue: &github.Issue{
 					PullRequestLinks: &github.PullRequestLinks{
@@ -161,7 +161,7 @@ func TestProcessGitHubWebhook(t *testing.T) {
 			webhookEvent: &github.IssueCommentEvent{
 				Action: github.String("created"),
 				Comment: &github.IssueComment{
-					Body: github.String("@" + githubBotName + " start pipeline"),
+					Body: github.String("@" + githubBotName + " start client pipeline"),
 				},
 				Issue: &github.Issue{
 					PullRequestLinks: &github.PullRequestLinks{
@@ -194,7 +194,7 @@ func TestProcessGitHubWebhook(t *testing.T) {
 			webhookEvent: &github.IssueCommentEvent{
 				Action: github.String("created"),
 				Comment: &github.IssueComment{
-					Body: github.String("@" + githubBotName + " start pipeline"),
+					Body: github.String("@" + githubBotName + " start client pipeline"),
 				},
 				Issue: &github.Issue{
 					PullRequestLinks: &github.PullRequestLinks{
@@ -230,7 +230,7 @@ func TestProcessGitHubWebhook(t *testing.T) {
 			webhookEvent: &github.IssueCommentEvent{
 				Action: github.String("created"),
 				Comment: &github.IssueComment{
-					Body: github.String("@" + githubBotName + " start pipeline --pr mender/pull/16/head --pr deviceconnect/1.0.x"),
+					Body: github.String("@" + githubBotName + " start client pipeline --pr mender/pull/16/head --pr deviceconnect/1.0.x"),
 				},
 				Issue: &github.Issue{
 					PullRequestLinks: &github.PullRequestLinks{
@@ -266,7 +266,7 @@ func TestProcessGitHubWebhook(t *testing.T) {
 			webhookEvent: &github.IssueCommentEvent{
 				Action: github.String("created"),
 				Comment: &github.IssueComment{
-					Body: github.String("@" + githubBotName + " start pipeline --pr mender/pull/16/head --pr deviceconnect"),
+					Body: github.String("@" + githubBotName + " start client pipeline --pr mender/pull/16/head --pr deviceconnect"),
 				},
 				Issue: &github.Issue{
 					PullRequestLinks: &github.PullRequestLinks{
@@ -297,7 +297,7 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				},
 				Number: github.Int(78),
 			},
-			err:           errors.New("parse error near 'deviceconnect', I need, e.g.: start pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
+			err:           errors.New("parse error near 'deviceconnect', I need, e.g.: start client pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
 			createComment: true,
 		},
 		"comment created, feature disabled": {
@@ -455,8 +455,8 @@ func TestParseBuildOptions(t *testing.T) {
 		BuildOptions         *BuildOptions
 		ParseError           error
 	}{
-		"start pipeline with --pr flags": {
-			StartPipelineComment: "start pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head --pr mender/3.1.x",
+		"start client pipeline with --pr flags": {
+			StartPipelineComment: "start client pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head --pr mender/3.1.x",
 			BuildOptions: &BuildOptions{
 				PullRequests: map[string]string{
 					"mender-connect": "pull/88/head",
@@ -465,8 +465,8 @@ func TestParseBuildOptions(t *testing.T) {
 				},
 			},
 		},
-		"start pipeline with --pr and --fast flags": {
-			StartPipelineComment: "start pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head --pr mender/3.1.x --fast",
+		"start client pipeline with --pr and --fast flags": {
+			StartPipelineComment: "start client pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head --pr mender/3.1.x --fast",
 			BuildOptions: &BuildOptions{
 				PullRequests: map[string]string{
 					"mender-connect": "pull/88/head",
@@ -476,17 +476,17 @@ func TestParseBuildOptions(t *testing.T) {
 				Fast: true,
 			},
 		},
-		"start pipeline with parse error in --pr flags": {
-			StartPipelineComment: "start pipeline --pr mender-connect/pull/88/head --pr deviceconnect --pr mender/3.1.x",
+		"start client pipeline with parse error in --pr flags": {
+			StartPipelineComment: "start client pipeline --pr mender-connect/pull/88/head --pr deviceconnect --pr mender/3.1.x",
 			BuildOptions: &BuildOptions{
 				PullRequests: map[string]string{
 					"mender-connect": "pull/88/head",
 				},
 			},
-			ParseError: errors.New("parse error near 'deviceconnect', I need, e.g.: start pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
+			ParseError: errors.New("parse error near 'deviceconnect', I need, e.g.: start client pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
 		},
-		"start pipeline with --pr flags and some sugar": {
-			StartPipelineComment: "start pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head --pr mender/3.1.x sugar pretty please",
+		"start client pipeline with --pr flags and some sugar": {
+			StartPipelineComment: "start client pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head --pr mender/3.1.x sugar pretty please",
 			BuildOptions: &BuildOptions{
 				PullRequests: map[string]string{
 					"mender-connect": "pull/88/head",
@@ -495,8 +495,8 @@ func TestParseBuildOptions(t *testing.T) {
 				},
 			},
 		},
-		"start pipeline with --pr flags (new syntax)": {
-			StartPipelineComment: "start pipeline --pr mender-connect/pull/88 --pr deviceconnect/pull/12 --pr mender/3.1.x --pr deviceauth/feature-branch",
+		"start client pipeline with --pr flags (new syntax)": {
+			StartPipelineComment: "start client pipeline --pr mender-connect/pull/88 --pr deviceconnect/pull/12 --pr mender/3.1.x --pr deviceauth/feature-branch",
 			BuildOptions: &BuildOptions{
 				PullRequests: map[string]string{
 					"mender-connect": "pull/88/head",
@@ -506,8 +506,8 @@ func TestParseBuildOptions(t *testing.T) {
 				},
 			},
 		},
-		"start pipeline with --pr flags (syntax without 'pull' and 'head')": {
-			StartPipelineComment: "start pipeline --pr mender-connect/88 --pr deviceconnect/12 --pr mender/3.1.x",
+		"start client pipeline with --pr flags (syntax without 'pull' and 'head')": {
+			StartPipelineComment: "start client pipeline --pr mender-connect/88 --pr deviceconnect/12 --pr mender/3.1.x",
 			BuildOptions: &BuildOptions{
 				PullRequests: map[string]string{
 					"mender-connect": "pull/88/head",
@@ -516,8 +516,8 @@ func TestParseBuildOptions(t *testing.T) {
 				},
 			},
 		},
-		"start pipeline with --pr flags and some sugar with multiple spaces": {
-			StartPipelineComment: "start pipeline  --pr          mender-connect/pull/88/head          --pr          deviceconnect/pull/12/head --pr mender/3. 1.x     sugar pretty please",
+		"start client pipeline with --pr flags and some sugar with multiple spaces": {
+			StartPipelineComment: "start client pipeline  --pr          mender-connect/pull/88/head          --pr          deviceconnect/pull/12/head --pr mender/3. 1.x     sugar pretty please",
 			BuildOptions: &BuildOptions{
 				PullRequests: map[string]string{
 					"mender-connect": "pull/88/head",
@@ -526,39 +526,39 @@ func TestParseBuildOptions(t *testing.T) {
 				},
 			},
 		},
-		"start pipeline with one --pr flag": {
-			StartPipelineComment: "start pipeline --pr mender-connect/pull/88/head",
+		"start client pipeline with one --pr flag": {
+			StartPipelineComment: "start client pipeline --pr mender-connect/pull/88/head",
 			BuildOptions: &BuildOptions{
 				PullRequests: map[string]string{
 					"mender-connect": "pull/88/head",
 				},
 			},
 		},
-		"start pipeline without--pr flags": {
-			StartPipelineComment: "start pipeline",
+		"start client pipeline without--pr flags": {
+			StartPipelineComment: "start client pipeline",
 			BuildOptions: &BuildOptions{
 				PullRequests: map[string]string{},
 			},
 		},
-		"start pipeline incomplete --pr": {
-			StartPipelineComment: "start pipeline --pr",
+		"start client pipeline incomplete --pr": {
+			StartPipelineComment: "start client pipeline --pr",
 			BuildOptions: &BuildOptions{
 				PullRequests: map[string]string{},
 			},
 		},
-		"start pipeline incomplete --pr param": {
-			StartPipelineComment: "start pipeline --pr some",
+		"start client pipeline incomplete --pr param": {
+			StartPipelineComment: "start client pipeline --pr some",
 			BuildOptions: &BuildOptions{
 				PullRequests: map[string]string{},
 			},
-			ParseError: errors.New("parse error near 'some', I need, e.g.: start pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
+			ParseError: errors.New("parse error near 'some', I need, e.g.: start client pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
 		},
-		"start pipeline incomplete --pr params": {
-			StartPipelineComment: "start pipeline --pr --pr a --pr some",
+		"start client pipeline incomplete --pr params": {
+			StartPipelineComment: "start client pipeline --pr --pr a --pr some",
 			BuildOptions: &BuildOptions{
 				PullRequests: map[string]string{},
 			},
-			ParseError: errors.New("parse error near 'some', I need, e.g.: start pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
+			ParseError: errors.New("parse error near 'some', I need, e.g.: start client pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
 		},
 	}
 
