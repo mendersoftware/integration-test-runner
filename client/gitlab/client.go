@@ -14,6 +14,10 @@ type Client interface {
 	CancelPipelineBuild(path string, id int) error
 	CreatePipeline(path string, options *gitlab.CreatePipelineOptions) (*gitlab.Pipeline, error)
 	GetPipelineVariables(path string, id int) ([]*gitlab.PipelineVariable, error)
+	ProtectRepositoryBranches(
+		path string,
+		options *gitlab.ProtectRepositoryBranchesOptions,
+	) (*gitlab.ProtectedBranch, error)
 	ListProjectPipelines(
 		path string,
 		options *gitlab.ListProjectPipelinesOptions,
@@ -98,4 +102,24 @@ func (c *gitLabClient) ListProjectPipelines(
 	}
 	pipelines, _, err := c.client.Pipelines.ListProjectPipelines(path, options, nil)
 	return pipelines, err
+}
+
+// ProtectRepositoryBranches protects branches
+func (c *gitLabClient) ProtectRepositoryBranches(
+	path string,
+	options *gitlab.ProtectRepositoryBranchesOptions,
+) (*gitlab.ProtectedBranch, error) {
+	if c.dryRunMode {
+		optionsJSON, _ := json.Marshal(options)
+		msg := fmt.Sprintf("gitlab.ProtectedBranch: path=%s,options=%s",
+			path, string(optionsJSON),
+		)
+		logger.GetRequestLogger().Push(msg)
+		return &gitlab.ProtectedBranch{}, nil
+	}
+	protected_branch, _, err := c.client.ProtectedBranches.ProtectRepositoryBranches(
+		path,
+		options,
+		nil)
+	return protected_branch, err
 }

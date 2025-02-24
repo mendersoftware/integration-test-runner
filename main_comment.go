@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -10,7 +11,10 @@ import (
 	"github.com/google/go-github/v28/github"
 	"github.com/sirupsen/logrus"
 
+	gitlab "gitlab.com/gitlab-org/api/client-go"
+
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
+	clientgitlab "github.com/mendersoftware/integration-test-runner/client/gitlab"
 )
 
 func processGitHubComment(
@@ -145,6 +149,48 @@ func processGitHubComment(
 	}
 
 	return nil
+}
+
+func protectBranch(conf *config, branchName string, pipelinePath string) error {
+	// https://docs.gitlab.com/ee/api/protected_branches.html#protect-repository-branches
+	allow_force_push := false
+	opt := &gitlab.ProtectRepositoryBranchesOptions{
+		Name:           &branchName,
+		AllowForcePush: &allow_force_push,
+	}
+
+	client, err := clientgitlab.NewGitLabClient(
+		conf.gitlabToken,
+		conf.gitlabBaseURL,
+		conf.dryRunMode,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = client.ProtectRepositoryBranches(pipelinePath, opt)
+	if err != nil {
+		return fmt.Errorf("%v returned error: %s", err, err.Error())
+	}
+	return nil
+}
+
+func syncProtectedBranch(
+	log *logrus.Entry,
+	pr *github.PullRequestEvent,
+	conf *config,
+	pipelinePath string,
+) (string, error) {
+	prBranchName := "pr_" + strconv.Itoa(pr.GetNumber()) + "_protected"
+	if err := syncBranch(prBranchName, log, pr, conf); err != nil {
+		mainErrMsg := "There was an error syncing branches"
+		return "", fmt.Errorf("%v returned error: %s: %s", err, mainErrMsg, err.Error())
+	}
+	if err := protectBranch(conf, prBranchName, pipelinePath); err != nil {
+		return "", fmt.Errorf("%v returned error: %s", err, err.Error())
+	}
+	return prBranchName, nil
 }
 
 func syncPRBranch(
