@@ -213,9 +213,10 @@ func syncProtectedBranch(
 	prBranchName := "pr_" + strconv.Itoa(pr.GetNumber()) + "_protected"
 
 	// check if we have a protected branch and try to delete it
-	err := deletePRBranch(pr, conf, prBranchName, log)
-	if (err != nil) && !strings.Contains(err.Error(), "remote ref does not exist") {
-		return "", fmt.Errorf("failed to delete PR branch: %s", err.Error())
+	response, err := deletePRBranch(pr, conf, fmt.Sprintf("pr_%d_protected", pr.GetNumber()), log)
+	if err != nil {
+		return "", fmt.Errorf("Got response: %d. Failed to delete PR branch: %s",
+			response.StatusCode, err.Error())
 	}
 	if err := syncBranch(prBranchName, log, pr, conf); err != nil {
 		mainErrMsg := "There was an error syncing branches"

@@ -1,10 +1,7 @@
 input: pull_request_closed.json
 output:
 - debug:Processing pull request action closed
-- 'git.Run: /usr/bin/git init .'
-- 'git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/Mender/mender-configure-module'
-- 'git.Run: /usr/bin/git fetch gitlab'
-- 'git.Run: /usr/bin/git push gitlab --delete pr_145'
+- 'gitlab.DeleteBranch: path=git@gitlab.com:Northern.tech/Mender/mender-configure-module,branch=pr_145'
 - 'info:Ignoring cherry-pick suggestions for action: closed, merged: false'
 - 'github.IsOrganizationMember: org=mendersoftware,user=lluiscampos'
 - 'debug:stopBuildsOfStaleClientPRs: Find any running pipelines and kill mercilessly!'

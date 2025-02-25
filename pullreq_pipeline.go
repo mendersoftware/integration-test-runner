@@ -175,15 +175,23 @@ func deleteStaleGitlabPRBranch(log *logrus.Entry, pr *github.PullRequestEvent, c
 	}
 
 	// Call the DeletePRBranch function to delete the PR branch on GitLab
-	if err := deletePRBranch(pr, conf, fmt.Sprintf("pr_%d", pr.GetNumber()), log); err != nil {
-		return fmt.Errorf("failed to delete PR branch: %s", err.Error())
+	response, err := deletePRBranch(pr, conf, fmt.Sprintf("pr_%d", pr.GetNumber()), log)
+	if err != nil {
+		return fmt.Errorf("Got response: %d. Failed to delete PR branch: %s",
+			response.StatusCode,
+			err.Error(),
+		)
 	}
 
 	if pr.GetRepo().GetName() == "integration" {
 		// check if we have a protected branch and try to delete it
-		err := deletePRBranch(pr, conf, fmt.Sprintf("pr_%d_protected", pr.GetNumber()), log)
-		if (err != nil) && !strings.Contains(err.Error(), "remote ref does not exist") {
-			return fmt.Errorf("failed to delete PR branch: %s", err.Error())
+		response, err := deletePRBranch(pr, conf,
+			fmt.Sprintf("pr_%d_protected", pr.GetNumber()), log)
+		if err != nil {
+			return fmt.Errorf("Got response: %d. Failed to delete PR branch: %s",
+				response.StatusCode,
+				err.Error(),
+			)
 		}
 	}
 
@@ -192,54 +200,30 @@ func deleteStaleGitlabPRBranch(log *logrus.Entry, pr *github.PullRequestEvent, c
 
 func deletePRBranch(
 	pr *github.PullRequestEvent,
-	conf *config, prBranchName string,
+	conf *config,
+	prBranchName string,
 	log *logrus.Entry,
-) error {
+) (*gitlab.Response, error) {
+
 	repoName := pr.GetRepo().GetName()
 
-	// Create a temporary directory for git operations
-	tmpdir, err := os.MkdirTemp("", repoName)
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tmpdir)
-
-	// Initialize git repository in the temporary directory
-	gitcmd := git.Command("init", ".")
-	gitcmd.Dir = tmpdir
-	out, err := gitcmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
-	}
-
-	// Get GitLab remote URL
 	remoteURL, err := getRemoteURLGitLab(conf.githubOrganization, repoName)
 	if err != nil {
-		return fmt.Errorf("getRemoteURLGitLab returned error: %s", err.Error())
+		return nil, err
 	}
 
-	gitcmd = git.Command("remote", "add", "gitlab", remoteURL)
-	gitcmd.Dir = tmpdir
-	out, err = gitcmd.CombinedOutput()
+	client, err := clientgitlab.NewGitLabClient(
+		conf.gitlabToken,
+		conf.gitlabBaseURL,
+		conf.dryRunMode,
+	)
 	if err != nil {
-		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
+		return nil, err
 	}
 
-	gitcmd = git.Command("fetch", "gitlab")
-	gitcmd.Dir = tmpdir
-	out, err = gitcmd.CombinedOutput()
+	response, err := client.DeleteBranch(remoteURL, prBranchName, nil)
 	if err != nil {
-		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
+		return response, err
 	}
-
-	// Delete the PR branch on GitLab
-	gitcmd = git.Command("push", "gitlab", "--delete", prBranchName)
-	gitcmd.Dir = tmpdir
-	out, err = gitcmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
-	}
-
-	return nil
-
+	return response, nil
 }
