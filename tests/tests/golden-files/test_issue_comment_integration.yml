@@ -1,0 +1,27 @@
+input: issue_comment_integration.json
+output:
+- 'github.IsOrganizationMember: org=mendersoftware,user=lluiscampos'
+- 'git.Run: /usr/bin/git init .'
+- 'git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/Mender/integration'
+- 'git.Run: /usr/bin/git fetch gitlab'
+- 'git.Run: /usr/bin/git push gitlab --delete pr_2725_protected'
+- 'git.Run: /usr/bin/git init .'
+- 'git.Run: /usr/bin/git remote add github git@github.com:/mendersoftware/integration.git'
+- 'git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/Mender/integration'
+- 'git.Run: /usr/bin/git fetch github pull/2725/head:pr_2725_protected'
+- 'git.Run: /usr/bin/git push -f -o ci.skip --set-upstream gitlab pr_2725_protected'
+- 'info:Created branch: integration:pr_2725_protected'
+- 'gitlab.ProtectedBranch: path=Northern.tech/Mender/integration,options={"name":"pr_2725_protected","allow_force_push":false}'
+- 'gitlab.ListProjectPipelines: path=Northern.tech/Mender/mender-qa,options={"status":"pending","username":"mender-test-bot"}'
+- 'gitlab.ListProjectPipelines: path=Northern.tech/Mender/mender-qa,options={"status":"running","username":"mender-test-bot"}'
+- 'gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1'
+- 'gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1'
+- 'info:Creating pipeline in project Northern.tech/Mender/integration:pr_2725_protected
+  with variables: INTEGRATION_REV:pull/2725/head, RUN_TESTS_FULL_INTEGRATION:true, '
+- 'gitlab.CreatePipeline: path=Northern.tech/Mender/integration,options={"ref":"pr_2725_protected","variables":[{"key":"INTEGRATION_REV","value":"pull/2725/head"},{"key":"RUN_TESTS_FULL_INTEGRATION","value":"true"}]}'
+- 'info:Created pipeline: '
+- 'github.CreateComment: org=mendersoftware,repo=integration,number=2725,comment={"body":"\nHello
+  :smiley_cat: I created a pipeline for you here: [Pipeline-0]()\n\n\u003cdetails\u003e\n    \u003csummary\u003eBuild
+  Configuration Matrix\u003c/summary\u003e\u003cp\u003e\n\n| Key   | Value |\n| -----
+  | ----- |\n| INTEGRATION_REV | pull/2725/head |\n| RUN_TESTS_FULL_INTEGRATION |
+  true |\n\n\n \u003c/p\u003e\u003c/details\u003e\n"}'
