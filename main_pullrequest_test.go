@@ -23,7 +23,7 @@ func TestGetFirstMatchingBotCommentInPR(t *testing.T) {
 		issueComments []*github.IssueComment
 		error         error
 	}
-	commentString := github.String(", Let me know if you want to start the integration pipeline by mentioning me and the command \"")
+	commentString := github.String(", Let me know if you want to start the client pipeline by mentioning me and the command \"")
 	conf := &config{
 		githubOrganization: "mendersoftware",
 	}

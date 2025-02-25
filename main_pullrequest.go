@@ -173,7 +173,7 @@ func processGitHubPullRequest(
 	// do not start the builds, inform the user about the `start client pipeline` command instead
 	if len(builds) > 0 {
 		// Only comment, if not already commented on a PR
-		botCommentString := ", Let me know if you want to start the integration pipeline by " +
+		botCommentString := ", Let me know if you want to start the client pipeline by " +
 			"mentioning me and the command \""
 		if getFirstMatchingBotCommentInPR(log, githubClient, pr, botCommentString, conf) == nil {
 
@@ -193,6 +193,9 @@ func processGitHubPullRequest(
 
    You can start a fast pipeline, disabling full integration tests with:
    - mentioning me and ` + "`" + `start client pipeline --fast` + "`" + `
+
+   You can trigger a full integration test pipeline with:
+   - mentioning me and ` + "`" + `start integration pipeline` + "`" + `
 
    You can trigger GitHub->GitLab branch sync with:
    - mentioning me and ` + "`" + `sync` + "`" + `

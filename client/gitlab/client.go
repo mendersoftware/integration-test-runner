@@ -22,6 +22,10 @@ type Client interface {
 		path string,
 		options *gitlab.ListProjectPipelinesOptions,
 	) ([]*gitlab.PipelineInfo, error)
+	DeleteBranch(path string,
+		branch string,
+		options *gitlab.RequestOptionFunc,
+	) (*gitlab.Response, error)
 }
 
 type gitLabClient struct {
@@ -122,4 +126,24 @@ func (c *gitLabClient) ProtectRepositoryBranches(
 		options,
 		nil)
 	return protected_branch, err
+}
+
+// DeleteBranch deletes branches
+func (c *gitLabClient) DeleteBranch(
+	path string,
+	branch string,
+	options *gitlab.RequestOptionFunc,
+) (*gitlab.Response, error) {
+	if c.dryRunMode {
+		msg := fmt.Sprintf("gitlab.DeleteBranch: path=%s,branch=%s",
+			path, branch,
+		)
+		logger.GetRequestLogger().Push(msg)
+		return nil, nil
+	}
+	response, err := c.client.Branches.DeleteBranch(path,
+		branch,
+		nil)
+
+	return response, err
 }
