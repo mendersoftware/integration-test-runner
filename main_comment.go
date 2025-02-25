@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
@@ -222,6 +223,9 @@ func syncProtectedBranch(
 		mainErrMsg := "There was an error syncing branches"
 		return "", fmt.Errorf("%v returned error: %s: %s", err, mainErrMsg, err.Error())
 	}
+	// Arbitrary sleep to ensure the branch is
+	// created before we protect it
+	time.Sleep(time.Duration(5) * time.Second)
 	if err := protectBranch(conf, prBranchName, pipelinePath); err != nil {
 		return "", fmt.Errorf("%v returned error: %s", err, err.Error())
 	}
