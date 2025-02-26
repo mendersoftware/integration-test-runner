@@ -214,7 +214,7 @@ func syncProtectedBranch(
 	prBranchName := "pr_" + strconv.Itoa(pr.GetNumber()) + "_protected"
 
 	// check if we have a protected branch and try to delete it
-	response, err := deletePRBranch(pr, conf, fmt.Sprintf("pr_%d_protected", pr.GetNumber()), log)
+	response, err := deletePRBranch(pr, conf, prBranchName, log)
 	if err != nil {
 		// Don't return error if the branch doesn't exist
 		if response.StatusCode != 404 {
