@@ -18,6 +18,11 @@ type Client interface {
 		path string,
 		options *gitlab.ProtectRepositoryBranchesOptions,
 	) (*gitlab.ProtectedBranch, error)
+	UnprotectRepositoryBranches(
+		path string,
+		branch string,
+		options gitlab.RequestOptionFunc,
+	) (*gitlab.Response, error)
 	ListProjectPipelines(
 		path string,
 		options *gitlab.ListProjectPipelinesOptions,
@@ -126,6 +131,26 @@ func (c *gitLabClient) ProtectRepositoryBranches(
 		options,
 		nil)
 	return protected_branch, err
+}
+
+// UnprotectRepositoryBranches unprotects branches
+func (c *gitLabClient) UnprotectRepositoryBranches(
+	path string,
+	branch string,
+	options gitlab.RequestOptionFunc,
+) (*gitlab.Response, error) {
+	if c.dryRunMode {
+		msg := fmt.Sprintf("gitlab.UnprotectedBranch: path=%s,branch=%s",
+			path, branch,
+		)
+		logger.GetRequestLogger().Push(msg)
+		return nil, nil
+	}
+	response, err := c.client.ProtectedBranches.UnprotectRepositoryBranches(
+		path,
+		branch,
+		options)
+	return response, err
 }
 
 // DeleteBranch deletes branches

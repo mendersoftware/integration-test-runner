@@ -2,6 +2,7 @@ input: pull_request_closed.json
 output:
 - debug:Processing pull request action closed
 - 'gitlab.DeleteBranch: path=Northern.tech/Mender/mender-configure-module,branch=pr_145'
+- 'gitlab.UnprotectedBranch: path=Northern.tech/Mender/mender-configure-module,branch=pr_145'
 - 'info:Ignoring cherry-pick suggestions for action: closed, merged: false'
 - 'github.IsOrganizationMember: org=mendersoftware,user=lluiscampos'
 - 'debug:stopBuildsOfStaleClientPRs: Find any running pipelines and kill mercilessly!'
