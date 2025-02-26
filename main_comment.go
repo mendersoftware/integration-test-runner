@@ -222,6 +222,9 @@ func syncProtectedBranch(
 				response.StatusCode, err.Error())
 		}
 	}
+	// Arbitrary sleep to ensure the branch and protection
+	// is fully deleted before we sync
+	time.Sleep(time.Duration(5) * time.Second)
 	if err := syncBranch(prBranchName, log, pr, conf); err != nil {
 		mainErrMsg := "There was an error syncing branches"
 		return "", fmt.Errorf("%v returned error: %s: %s", err, mainErrMsg, err.Error())
