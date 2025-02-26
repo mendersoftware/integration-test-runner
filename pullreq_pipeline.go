@@ -229,5 +229,20 @@ func deletePRBranch(
 	if err != nil {
 		return response, err
 	}
+
+	// Deleting the branch does _not_ delete the protection
+	// Attempt to delete the branch protection as well
+	response, err = client.UnprotectRepositoryBranches(
+		path,
+		prBranchName,
+		nil,
+	)
+	if err != nil {
+		// Do not return error if the branch protection doesn't exist
+		if response.StatusCode != 404 {
+			return response, err
+		}
+	}
+
 	return response, nil
 }
