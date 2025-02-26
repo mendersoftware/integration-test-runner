@@ -210,10 +210,11 @@ func deletePRBranch(
 
 	repoName := pr.GetRepo().GetName()
 
-	remoteURL, err := getRemoteURLGitLab(conf.githubOrganization, repoName)
-	if err != nil {
-		return nil, err
+	group, ok := gitHubOrganizationToGitLabGroup[conf.githubOrganization]
+	if !ok {
+		return nil, fmt.Errorf("Unrecognized organization %q", conf.githubOrganization)
 	}
+	path := "Northern.tech/" + group + "/" + repoName
 
 	client, err := clientgitlab.NewGitLabClient(
 		conf.gitlabToken,
@@ -224,7 +225,7 @@ func deletePRBranch(
 		return nil, err
 	}
 
-	response, err := client.DeleteBranch(remoteURL, prBranchName, nil)
+	response, err := client.DeleteBranch(path, prBranchName, nil)
 	if err != nil {
 		return response, err
 	}
