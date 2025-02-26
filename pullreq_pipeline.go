@@ -188,10 +188,13 @@ func deleteStaleGitlabPRBranch(log *logrus.Entry, pr *github.PullRequestEvent, c
 		response, err := deletePRBranch(pr, conf,
 			fmt.Sprintf("pr_%d_protected", pr.GetNumber()), log)
 		if err != nil {
-			return fmt.Errorf("Got response: %d. Failed to delete PR branch: %s",
-				response.StatusCode,
-				err.Error(),
-			)
+			// Don't return error if the branch doesn't exist
+			if response.StatusCode != 404 {
+				return fmt.Errorf("Got response: %d. Failed to delete PR branch: %s",
+					response.StatusCode,
+					err.Error(),
+				)
+			}
 		}
 	}
 
