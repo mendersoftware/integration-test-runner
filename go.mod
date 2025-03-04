@@ -1,6 +1,8 @@
 module github.com/mendersoftware/integration-test-runner
 
-go 1.23
+go 1.23.0
+
+toolchain go1.23.4
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -9,8 +11,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
-	gitlab.com/gitlab-org/api/client-go v0.123.0
-	golang.org/x/oauth2 v0.26.0
+	gitlab.com/gitlab-org/api/client-go v0.124.0
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/sys v0.30.0
 )
 
