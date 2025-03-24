@@ -99,8 +99,8 @@ github.com/twitchyliquid64/golang-asm v0.15.1 h1:SU5vSMR7hnwNxj24w34ZyCi/FmDZTkS
 github.com/twitchyliquid64/golang-asm v0.15.1/go.mod h1:a1lVb/DtPvCB8fslRZhAngC2+aY1QWCk3Cedj/Gdt08=
 github.com/ugorji/go/codec v1.2.12 h1:9LC83zGrHhuUA9l16C9AHXAqEV/2wBQ4nkvumAE65EE=
 github.com/ugorji/go/codec v1.2.12/go.mod h1:UNopzCgEMSXjBc6AOMqYvWC1ktqTAfzJZUZgYf6w6lg=
-gitlab.com/gitlab-org/api/client-go v0.125.0 h1:T+L13tpjE1s3Hkqyq+ontvYVSwRyMlfOLDd75IiRY5g=
-gitlab.com/gitlab-org/api/client-go v0.125.0/go.mod h1:SEN5CKASOsKoA6rv6Y3cPiM5ikH2HxFaqCUwZOquttI=
+gitlab.com/gitlab-org/api/client-go v0.126.0 h1:VV5TdkF6pMbEdFGvbR2CwEgJwg6qdg1u3bj5eD2tiWk=
+gitlab.com/gitlab-org/api/client-go v0.126.0/go.mod h1:bYC6fPORKSmtuPRyD9Z2rtbAjE7UeNatu2VWHRf4/LE=
 golang.org/x/arch v0.0.0-20210923205945-b76863e36670/go.mod h1:5om86z9Hs0C8fWVUuoMHwpExlXzs5Tkyp9hOrfG7pp8=
 golang.org/x/arch v0.8.0 h1:3wRIsP3pM4yUptoR96otTUOXI367OS0+c9eeRi9doIc=
 golang.org/x/arch v0.8.0/go.mod h1:FEVrYAQjsQXMVJ1nsMoVVXPZg6p2JE2mx8psSWTDQys=
