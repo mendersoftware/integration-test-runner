@@ -15,7 +15,7 @@ import (
 )
 
 const clientPipelinePath = "Northern.tech/Mender/mender-qa"
-const LatestStableYoctoBranch = "kirkstone"
+const LatestStableYoctoBranch = "scarthgap"
 
 func parseClientPullRequest(
 	log *logrus.Entry,
