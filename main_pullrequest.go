@@ -47,6 +47,29 @@ func retryOnError(args retryParams) error {
 	return err
 }
 
+type TitleOptions struct {
+	SkipCI bool
+}
+
+const (
+	titleOptionSkipCI = "noci"
+)
+
+func getTitleOptions(title string) (titleOptions TitleOptions) {
+	start, end := strings.Index(title, "["), strings.Index(title, "]")
+	// First character must be '['
+	if start != 0 || end < start {
+		return
+	}
+	for _, option := range strings.Fields(title[start+1 : end]) {
+		switch strings.ToLower(option) {
+		case titleOptionSkipCI:
+			titleOptions.SkipCI = true
+		}
+	}
+	return
+}
+
 func processGitHubPullRequest(
 	ctx *gin.Context,
 	pr *github.PullRequestEvent,
@@ -73,6 +96,8 @@ func processGitHubPullRequest(
 		)
 		return nil
 	}
+	title := strings.TrimSpace(req.GetTitle())
+	options := getTitleOptions(title)
 
 	log.Debugf("Processing pull request action %s", action)
 	switch action {
@@ -94,25 +119,27 @@ func processGitHubPullRequest(
 					pr.Sender.GetLogin(),
 				)
 			}
-			err = retryOnError(retryParams{
-				retryFunc: func() error {
-					return startPRPipeline(log, prBranchName, pr, conf, isOrgMember)
-				},
-				compFunc: func(compareError error) bool {
-					re := regexp.MustCompile("Missing CI config file|" +
-						"No stages / jobs for this pipeline")
-					switch {
-					case compareError == nil:
-						return noRetry
-					case re.MatchString(compareError.Error()):
-						log.Infof("start client pipeline for PR '%d' is skipped", pr.Number)
-						return noRetry
-					default:
-						log.Errorf("failed to start client pipeline for PR: %s", compareError)
-						return doRetry
-					}
-				},
-			})
+			if !options.SkipCI {
+				err = retryOnError(retryParams{
+					retryFunc: func() error {
+						return startPRPipeline(log, prBranchName, pr, conf, isOrgMember)
+					},
+					compFunc: func(compareError error) bool {
+						re := regexp.MustCompile("Missing CI config file|" +
+							"No stages / jobs for this pipeline")
+						switch {
+						case compareError == nil:
+							return noRetry
+						case re.MatchString(compareError.Error()):
+							log.Infof("start client pipeline for PR '%d' is skipped", pr.Number)
+							return noRetry
+						default:
+							log.Errorf("failed to start client pipeline for PR: %s", compareError)
+							return doRetry
+						}
+					},
+				})
+			}
 			if err != nil {
 				msg := "There was an error running your pipeline, " + msgDetailsKubernetesLog
 				postGitHubMessage(ctx, pr, log, msg)
