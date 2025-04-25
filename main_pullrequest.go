@@ -215,6 +215,9 @@ func processGitHubPullRequest(
    <summary>my commands and options</summary>
    <br />
 
+   You can prevent me from automatically starting CI pipelines:
+   - if your pull request title starts with "[NoCI] ..."
+
    You can trigger a pipeline on multiple prs with:
    - mentioning me and ` + "`" + `start client pipeline --pr mender/127 --pr mender-connect/255` + "`" + `
 
