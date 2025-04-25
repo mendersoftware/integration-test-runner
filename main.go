@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -66,6 +67,11 @@ var qemuBuildRepositories = []string{
 	"mender-gateway",
 	"mender-snapshot",
 }
+
+const (
+	KiB = 1024
+	MiB = 1024 * KiB
+)
 
 const (
 	gitOperationTimeout = 30
@@ -282,6 +288,11 @@ func doMain() {
 	r.POST("/", func(context *gin.Context) {
 		payload, err := github.ValidatePayload(context.Request, conf.githubSecret)
 		if err != nil {
+			var mbErr *http.MaxBytesError
+			if errors.As(err, &mbErr) {
+				context.Status(http.StatusRequestEntityTooLarge)
+				return
+			}
 			logrus.Warnln("payload failed to validate, ignoring.")
 			context.Status(http.StatusForbidden)
 			return
@@ -314,7 +325,7 @@ func doMain() {
 
 	srv := &http.Server{
 		Addr:    "0.0.0.0:8080",
-		Handler: r,
+		Handler: http.MaxBytesHandler(r, 10*MiB),
 	}
 
 	go func() {

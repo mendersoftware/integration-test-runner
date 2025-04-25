@@ -431,3 +431,30 @@ func TestChangelogComments(t *testing.T) {
 		})
 	}
 }
+
+func TestGetTitleOptions(t *testing.T) {
+	testCases := map[string]struct {
+		InputTitle string
+		Output     TitleOptions
+	}{
+		"NoCI": {
+			InputTitle: "[NoCI] This is a title",
+			Output:     TitleOptions{SkipCI: true},
+		},
+		"No options": {
+			InputTitle: "This is a title",
+			Output:     TitleOptions{},
+		},
+		"Ignore unknown options": {
+			InputTitle: "[unknown options] This is a title",
+			Output:     TitleOptions{},
+		},
+	}
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			titleOptions := getTitleOptions(tc.InputTitle)
+			assert.Equal(t, tc.Output, titleOptions)
+		})
+	}
+}

@@ -26,12 +26,13 @@ output:
 - 'github.CreateComment: org=mendersoftware,repo=workflows,number=140,comment={"body":"@tranchitella,
   Let me know if you want to start the client pipeline by mentioning me and the command
   \"start client pipeline\".\n\n   ---\n\n   \u003cdetails\u003e\n   \u003csummary\u003emy
-  commands and options\u003c/summary\u003e\n   \u003cbr /\u003e\n\n   You can trigger
-  a pipeline on multiple prs with:\n   - mentioning me and `start client pipeline
-  --pr mender/127 --pr mender-connect/255`\n\n   You can start a fast pipeline, disabling
-  full integration tests with:\n   - mentioning me and `start client pipeline --fast`\n\n   You
-  can trigger a full integration test pipeline with:\n   - mentioning me and `start
-  integration pipeline`\n\n   You can trigger GitHub-\u003eGitLab branch sync with:\n   -
-  mentioning me and `sync`\n\n   You can cherry pick to a given branch or branches
-  with:\n   - mentioning me and:\n   ```\n    cherry-pick to:\n    * 1.0.x\n    *
-  2.0.x\n   ```\n   \u003c/details\u003e\n   "}'
+  commands and options\u003c/summary\u003e\n   \u003cbr /\u003e\n\n   You can prevent
+  me from automatically starting CI pipelines:\n   - if your pull request title starts
+  with \"[NoCI] ...\"\n\n   You can trigger a pipeline on multiple prs with:\n   -
+  mentioning me and `start client pipeline --pr mender/127 --pr mender-connect/255`\n\n   You
+  can start a fast pipeline, disabling full integration tests with:\n   - mentioning
+  me and `start client pipeline --fast`\n\n   You can trigger a full integration test
+  pipeline with:\n   - mentioning me and `start integration pipeline`\n\n   You can
+  trigger GitHub-\u003eGitLab branch sync with:\n   - mentioning me and `sync`\n\n   You
+  can cherry pick to a given branch or branches with:\n   - mentioning me and:\n   ```\n    cherry-pick
+  to:\n    * 1.0.x\n    * 2.0.x\n   ```\n   \u003c/details\u003e\n   "}'
