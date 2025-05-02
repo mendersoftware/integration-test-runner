@@ -199,9 +199,16 @@ func processGitHubPullRequest(
 
 	// do not start the builds, inform the user about the `start client pipeline` command instead
 	if len(builds) > 0 {
-		// Only comment, if not already commented on a PR
-		botCommentString := ", Let me know if you want to start the client pipeline by " +
-			"mentioning me and the command \""
+		// Two possible pipelines: client or integration
+		var botCommentString string
+		if pr.GetRepo().GetName() == "integration" {
+			botCommentString = `, start a full integration test pipeline with:
+   - mentioning me and ` + "`" + `start integration pipeline` + "`" + ``
+		} else {
+			botCommentString = `, start a full client pipeline with:
+   - mentioning me and ` + "`" + commandStartClientPipeline + `"`
+		}
+
 		if getFirstMatchingBotCommentInPR(log, githubClient, pr, botCommentString, conf) == nil {
 
 			msg := "@" + pr.GetSender().GetLogin() + botCommentString +
@@ -218,14 +225,8 @@ func processGitHubPullRequest(
    You can prevent me from automatically starting CI pipelines:
    - if your pull request title starts with "[NoCI] ..."
 
-   You can trigger a pipeline on multiple prs with:
+   You can trigger a client pipeline on multiple prs with:
    - mentioning me and ` + "`" + `start client pipeline --pr mender/127 --pr mender-connect/255` + "`" + `
-
-   You can start a fast pipeline, disabling full integration tests with:
-   - mentioning me and ` + "`" + `start client pipeline --fast` + "`" + `
-
-   You can trigger a full integration test pipeline with:
-   - mentioning me and ` + "`" + `start integration pipeline` + "`" + `
 
    You can trigger GitHub->GitLab branch sync with:
    - mentioning me and ` + "`" + `sync` + "`" + `

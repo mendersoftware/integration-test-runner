@@ -57,16 +57,37 @@ var gitHubRepoToGitLabProjectCustom = map[string]string{
 	"saas": "Northern.tech/MenderSaaS/saas",
 }
 
-var qemuBuildRepositories = []string{
-	"meta-mender",
+// Mender Client LTS components according to
+// https://docs.mender.io/release-information/supported-releases#mender-client-subcomponents
+var clientRepositories = []string{
 	"mender",
-	"mender-artifact",
 	"mender-connect",
+	"mender-configure-module",
 	"monitor-client",
-	"mender-auth-azure-iot",
-	"mender-gateway",
-	"mender-snapshot",
+	// TODO: QA-XXX: add when defining the new Mender Client release process
+	// "mender-binary-delta",
+	// TODO: QA-993: add when adding mender-flash to the bundle
+	// "mender-flash",
 }
+
+// Repositories for which to build the Client Pipeline
+var clientPipelineRepositories = append(clientRepositories,
+	// Yocto layer
+	"meta-mender",
+	// TODO: QA-985: remove independent tools
+	"mender-artifact",
+	"mender-snapshot",
+)
+
+// Repositories with opt-in pipelines
+var pipelineRepositories = append(clientPipelineRepositories,
+	"integration",
+)
+
+// LTS repositories for which to suggest cherry-picks.
+var ltsRepositories = append(clientRepositories,
+	"mender-gateway",
+)
 
 const (
 	KiB = 1024

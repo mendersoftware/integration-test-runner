@@ -459,7 +459,7 @@ func TestSuggestCherryPicks(t *testing.T) {
 				},
 			},
 		},
-		"cherry picks, changelogs": {
+		"no cherry picks, repo no lts": {
 			pr: &github.PullRequestEvent{
 				Action: github.String("closed"),
 				Number: github.Int(88),
@@ -473,14 +473,6 @@ func TestSuggestCherryPicks(t *testing.T) {
 				Repo: &github.Repository{
 					Name: github.String("workflows"),
 				},
-			},
-			comment: &github.IssueComment{
-				Body: github.String(`
-Hello :smiley_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
-2.3.x (release 3.4.x)
-2.2.x (release 3.3.x)
-2.0.x (release 3.0.x)
-`),
 			},
 		},
 		"cherry picks, changelogs, less than three release branches": {

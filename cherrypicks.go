@@ -19,6 +19,8 @@ import (
 	"github.com/google/go-github/v28/github"
 	"github.com/sirupsen/logrus"
 
+	"slices"
+
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 	"github.com/mendersoftware/integration-test-runner/git"
 )
@@ -74,6 +76,51 @@ func getLatestReleaseFromApi(url string) ([]string, error) {
 	return v.Lts, nil
 }
 
+func getReleaseBranchesForCherryPick(
+	log *logrus.Entry,
+	pr *github.PullRequestEvent,
+	conf *config,
+	state *git.State,
+) ([]string, error) {
+
+	releaseBranches := []string{}
+
+	// fetch all the branches
+	err := git.Command("fetch", "github").With(state).Run()
+	if err != nil {
+		return releaseBranches, err
+	}
+
+	// get list of release versions
+	versions, err := getLatestReleaseFromApi(versionsUrl)
+	if err != nil {
+		return releaseBranches, err
+	}
+
+	repo := pr.GetRepo().GetName()
+	for _, version := range versions {
+		releaseBranch, err := getServiceRevisionFromIntegration(repo, "origin/"+version, conf)
+		if err != nil {
+			return releaseBranches, err
+		} else if releaseBranch != "" {
+			if isCherryPickBottable(
+				pr.GetRepo().GetName(),
+				conf, pr.GetPullRequest(),
+				releaseBranch,
+			) {
+				releaseBranches = append(
+					releaseBranches,
+					releaseBranch+" (release "+version+")"+" - :robot: :cherries:",
+				)
+			} else {
+				releaseBranches = append(releaseBranches, releaseBranch+" (release "+version+")")
+			}
+		}
+	}
+
+	return releaseBranches, nil
+}
+
 // suggestCherryPicks suggests cherry-picks to release branches if the PR has been merged to master
 func suggestCherryPicks(
 	log *logrus.Entry,
@@ -96,8 +143,22 @@ func suggestCherryPicks(
 		return nil
 	}
 
-	// initialize the git work area
 	repo := pr.GetRepo().GetName()
+
+	var ltsRepo bool
+	for _, watchRepo := range ltsRepositories {
+		if watchRepo == repo {
+			ltsRepo = true
+			break
+		}
+	}
+
+	if !ltsRepo {
+		log.Infof("Ignoring non-LTS repository: %s", repo)
+		return nil
+	}
+
+	// initialize the git work area
 	repoURL := getRemoteURLGitHub(conf.githubProtocol, conf.githubOrganization, repo)
 	prNumber := strconv.Itoa(pr.GetNumber())
 	prBranchName := "pr_" + prNumber
@@ -132,66 +193,51 @@ func suggestCherryPicks(
 		return nil
 	}
 
-	// fetch all the branches
-	err = git.Command("fetch", "github").With(state).Run()
-	if err != nil {
-		return err
-	}
-
-	// get list of release versions
-	versions, err := getLatestReleaseFromApi(versionsUrl)
-	if err != nil {
-		return err
-	}
-	releaseBranches := []string{}
-	for _, version := range versions {
-		releaseBranch, err := getServiceRevisionFromIntegration(repo, "origin/"+version, conf)
+	var releaseBranches []string
+	if slices.Contains(clientRepositories, repo) {
+		releaseBranches, err = getReleaseBranchesForCherryPick(log, pr, conf, state)
 		if err != nil {
 			return err
-		} else if releaseBranch != "" {
-			if isCherryPickBottable(
-				pr.GetRepo().GetName(),
-				conf, pr.GetPullRequest(),
-				releaseBranch,
-			) {
-				releaseBranches = append(
-					releaseBranches,
-					releaseBranch+" (release "+version+")"+" - :robot: :cherries:",
-				)
-			} else {
-				releaseBranches = append(releaseBranches, releaseBranch+" (release "+version+")")
-			}
 		}
 	}
 
-	// no suggestions, stop here
+	var commentBody string
 	if len(releaseBranches) == 0 {
-		return nil
-	}
-	// nolint:lll
-	tmplString := `
+		// No suggestions for the client repo or not a client repo: drop a generic message
+		// nolint:lll
+		commentBody = `
+Hello :smiley_cat: This PR contains changelog entries. Please, verify the need of backporting it to the supported release branches.
+`
+	} else {
+		// nolint:lll
+		tmplString := `
 Hello :smiley_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
 {{.ReleaseBranches}}
 `
-	// suggest cherry-picking with a comment
-	tmpl, err := template.New("Main").Parse(tmplString)
-	if err != nil {
-		log.Errorf(
-			"Failed to parse the build matrix template. Should never happen! Error: %s\n",
-			err.Error(),
-		)
-	}
-	var buf bytes.Buffer
-	if err = tmpl.Execute(&buf, struct {
-		ReleaseBranches string
-	}{
-		ReleaseBranches: strings.Join(releaseBranches, "\n"),
-	}); err != nil {
-		log.Errorf("Failed to execute the build matrix template. Error: %s\n", err.Error())
+		// suggest cherry-picking with a comment
+		tmpl, err := template.New("Main").Parse(tmplString)
+		if err != nil {
+			log.Errorf(
+				"Failed to parse the build matrix template. Should never happen! Error: %s\n",
+				err.Error(),
+			)
+		}
+
+		var buf bytes.Buffer
+
+		if err = tmpl.Execute(&buf, struct {
+			ReleaseBranches string
+		}{
+			ReleaseBranches: strings.Join(releaseBranches, "\n"),
+		}); err != nil {
+			log.Errorf("Failed to execute the build matrix template. Error: %s\n", err.Error())
+		}
+
+		commentBody = buf.String()
+
 	}
 
 	// Comment with a pipeline-link on the PR
-	commentBody := buf.String()
 	comment := github.IssueComment{
 		Body: &commentBody,
 	}
