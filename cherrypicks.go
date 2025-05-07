@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -13,7 +12,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/google/go-github/v28/github"
@@ -121,6 +119,20 @@ func getReleaseBranchesForCherryPick(
 	return releaseBranches, nil
 }
 
+func generateCommentBody(releaseBranches []string) string {
+	// nolint:lll
+	commentBody := "Hello :smiley_cat: This PR contains changelog entries. Please, verify the need of backporting it to"
+	if len(releaseBranches) == 0 {
+		// No suggestions for the client repo or not a client repo: drop a generic message
+		commentBody += " the supported release branches."
+	} else {
+		commentBody += " the following release branches:\n"
+		commentBody += strings.Join(releaseBranches, "\n")
+	}
+
+	return commentBody
+}
+
 // suggestCherryPicks suggests cherry-picks to release branches if the PR has been merged to master
 func suggestCherryPicks(
 	log *logrus.Entry,
@@ -201,43 +213,8 @@ func suggestCherryPicks(
 		}
 	}
 
-	var commentBody string
-	if len(releaseBranches) == 0 {
-		// No suggestions for the client repo or not a client repo: drop a generic message
-		// nolint:lll
-		commentBody = `
-Hello :smiley_cat: This PR contains changelog entries. Please, verify the need of backporting it to the supported release branches.
-`
-	} else {
-		// nolint:lll
-		tmplString := `
-Hello :smiley_cat: This PR contains changelog entries. Please, verify the need of backporting it to the following release branches:
-{{.ReleaseBranches}}
-`
-		// suggest cherry-picking with a comment
-		tmpl, err := template.New("Main").Parse(tmplString)
-		if err != nil {
-			log.Errorf(
-				"Failed to parse the build matrix template. Should never happen! Error: %s\n",
-				err.Error(),
-			)
-		}
-
-		var buf bytes.Buffer
-
-		if err = tmpl.Execute(&buf, struct {
-			ReleaseBranches string
-		}{
-			ReleaseBranches: strings.Join(releaseBranches, "\n"),
-		}); err != nil {
-			log.Errorf("Failed to execute the build matrix template. Error: %s\n", err.Error())
-		}
-
-		commentBody = buf.String()
-
-	}
-
 	// Comment with a pipeline-link on the PR
+	commentBody := generateCommentBody(releaseBranches)
 	comment := github.IssueComment{
 		Body: &commentBody,
 	}
