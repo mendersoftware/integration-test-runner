@@ -42,25 +42,25 @@ clean:
 
 .PHONY: acceptance-testing-build
 acceptance-testing-build:
-	docker-compose $(COMPOSEFILES_ACCEPTANCE_TESTING) build
+	docker compose $(COMPOSEFILES_ACCEPTANCE_TESTING) build
 
 .PHONY: acceptance-testing-up
 acceptance-testing-up:
-	docker-compose $(COMPOSEFILES_ACCEPTANCE_TESTING) up -d
+	docker compose $(COMPOSEFILES_ACCEPTANCE_TESTING) up -d
 
 .PHONY: acceptance-testing-run
 acceptance-testing-run:
-	docker-compose $(COMPOSEFILES_ACCEPTANCE_TESTING) exec acceptance-testing /testing/run.sh
+	docker compose $(COMPOSEFILES_ACCEPTANCE_TESTING) exec acceptance-testing /testing/run.sh
 
 .PHONY: acceptance-testing-update-golden-files
 acceptance-testing-update-golden-files:
-	docker-compose $(COMPOSEFILES_ACCEPTANCE_TESTING) exec acceptance-testing /testing/run.sh --update-goldens
+	docker compose $(COMPOSEFILES_ACCEPTANCE_TESTING) exec acceptance-testing /testing/run.sh --update-goldens
 
 .PHONY: acceptance-testing-logs
 acceptance-testing-logs:
-	docker-compose $(COMPOSEFILES_ACCEPTANCE_TESTING) ps -a
-	docker-compose $(COMPOSEFILES_ACCEPTANCE_TESTING) logs
+	docker compose $(COMPOSEFILES_ACCEPTANCE_TESTING) ps -a
+	docker compose $(COMPOSEFILES_ACCEPTANCE_TESTING) logs
 
 .PHONY: acceptance-testing-down
 acceptance-testing-down:
-	docker-compose $(COMPOSEFILES_ACCEPTANCE_TESTING) down
+	docker compose $(COMPOSEFILES_ACCEPTANCE_TESTING) down
