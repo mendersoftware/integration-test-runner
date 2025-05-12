@@ -53,19 +53,14 @@ func getClientBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEven
 		log.Warn(err.Error())
 	}
 
-	allRepositories, err := getListOfAllRepositories(conf)
-	if err != nil {
-		log.Warn(err.Error())
-	}
-
-	for _, watchRepo := range allRepositories {
+	for _, watchRepo := range pipelineRepositories {
 		// make sure the repo that the pull request is performed against is
 		// one that we are watching.
 
 		if watchRepo == repo {
 
 			// check if we need to build/test yocto
-			for _, qemuRepo := range qemuBuildRepositories {
+			for _, qemuRepo := range clientPipelineRepositories {
 				if repo == qemuRepo {
 					makeQEMU = true
 				}
@@ -501,14 +496,8 @@ func getClientAcceptanceBuildParameters(
 		&gitlab.PipelineVariableOptions{Key: &buildBBBKey, Value: &qemuParam},
 	)
 
-	// Set BUILD_CLIENT = false, if target repo not in the qemuBuildRepositories list
 	buildClientKey := "BUILD_CLIENT"
-	buildClient := "false"
-	for _, prebuiltClientRepo := range qemuBuildRepositories {
-		if build.repo == prebuiltClientRepo {
-			buildClient = "true"
-		}
-	}
+	buildClient := "true"
 	buildParameters = append(
 		buildParameters,
 		&gitlab.PipelineVariableOptions{Key: &buildClientKey, Value: &buildClient},
