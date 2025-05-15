@@ -211,8 +211,7 @@ func processGitHubPullRequest(
 
 		if getFirstMatchingBotCommentInPR(log, githubClient, pr, botCommentString, conf) == nil {
 
-			msg := "@" + pr.GetSender().GetLogin() + botCommentString +
-				commandStartClientPipeline + "\"."
+			msg := "@" + pr.GetSender().GetLogin() + botCommentString
 			// nolint:lll
 			msg += `
 
