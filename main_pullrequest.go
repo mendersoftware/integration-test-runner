@@ -203,10 +203,10 @@ func processGitHubPullRequest(
 		var botCommentString string
 		if pr.GetRepo().GetName() == "integration" {
 			botCommentString = `, start a full integration test pipeline with:
-   - mentioning me and ` + "`" + `start integration pipeline` + "`" + ``
+   - mentioning me and ` + "`" + commandStartIntegrationPipeline + "`"
 		} else {
 			botCommentString = `, start a full client pipeline with:
-   - mentioning me and ` + "`" + commandStartClientPipeline + `"`
+   - mentioning me and ` + "`" + commandStartClientPipeline + "`"
 		}
 
 		if getFirstMatchingBotCommentInPR(log, githubClient, pr, botCommentString, conf) == nil {
