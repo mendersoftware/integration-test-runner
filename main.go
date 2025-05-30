@@ -64,10 +64,9 @@ var clientRepositories = []string{
 	"mender-connect",
 	"mender-configure-module",
 	"monitor-client",
+	"mender-flash",
 	// TODO: QA-XXX: add when defining the new Mender Client release process
 	// "mender-binary-delta",
-	// TODO: QA-993: add when adding mender-flash to the bundle
-	// "mender-flash",
 }
 
 // Repositories for which to build the Client Pipeline
