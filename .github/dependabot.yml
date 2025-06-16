@@ -10,13 +10,9 @@ updates:
       golang-dependencies:
         patterns:
           - "*"
-    reviewers:
-      - "mendersoftware/qa-dependabot-reviewers"
   - commit-message:
       prefix: "chore"
     directory: /
     package-ecosystem: docker
     schedule:
       interval: weekly
-    reviewers:
-      - "mendersoftware/qa-dependabot-reviewers"
