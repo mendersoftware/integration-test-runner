@@ -188,11 +188,6 @@ func processGitHubPullRequest(
 		)
 	}
 
-	// Keep the OS and Enterprise repos in sync
-	if err := syncIfOSHasEnterpriseRepo(log, conf, pr); err != nil {
-		log.Errorf("Failed to sync the OS and Enterprise repos: %s", err.Error())
-	}
-
 	// get the list of builds
 	builds := parseClientPullRequest(log, conf, action, pr)
 	log.Infof("%s:%d would trigger %d builds", pr.GetRepo().GetName(), pr.GetNumber(), len(builds))

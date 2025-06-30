@@ -25,7 +25,5 @@ output:
 - 'gitlab.ListProjectPipelines: path=Northern.tech/Mender/mender-qa,options={"status":"running","username":"mender-test-bot"}'
 - 'gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1'
 - 'gitlab.GetPipelineVariables: path=Northern.tech/Mender/mender-qa,id=1'
-- 'debug:syncIfOSHasEnterpriseRepo: Repository without Enterprise fork detected: (mender-configure-module).
-  Not syncing'
 - 'info:Pull request event with action: closed'
 - info:mender-configure-module:145 would trigger 0 builds

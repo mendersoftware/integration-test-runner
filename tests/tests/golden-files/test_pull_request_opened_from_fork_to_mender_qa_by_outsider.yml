@@ -19,8 +19,6 @@ output:
 - info:Changelog is empty, and there is no previous changelog comment. Stay silent.
 - 'github.IsOrganizationMember: org=mendersoftware,user=Junglebobo'
 - "debug:stopBuildsOfStaleClientPRs: PR not closed, therefore not stopping it's pipeline"
-- 'debug:syncIfOSHasEnterpriseRepo: Repository without Enterprise fork detected: (mender-qa).
-  Not syncing'
 - 'info:Pull request event with action: opened'
 - 'git.Run: /usr/bin/git pull --rebase origin'
 - info:mender-qa:550 would trigger 0 builds
