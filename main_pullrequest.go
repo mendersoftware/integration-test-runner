@@ -82,9 +82,9 @@ func processGitHubPullRequest(
 		err    error
 		action = pr.GetAction()
 	)
-	log := getCustomLoggerFromContext(ctx).
-		WithField("pull", pr.GetNumber()).
-		WithField("action", action)
+	ctx.Set("pull", pr.GetNumber())
+	ctx.Set("action", pr.GetAction())
+	log := getCustomLoggerFromContext(ctx)
 	req := pr.GetPullRequest()
 
 	// Do not run if the PR is a draft
