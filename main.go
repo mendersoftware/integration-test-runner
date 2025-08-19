@@ -190,11 +190,7 @@ func getConfig() (*config, error) {
 }
 
 func getCustomLoggerFromContext(ctx *gin.Context) *logrus.Entry {
-	deliveryID, ok := ctx.Get("delivery")
-	if !ok || !isStringType(deliveryID) {
-		return logrus.WithField("delivery", "nil")
-	}
-	return logrus.WithField("delivery", deliveryID)
+	return logrus.WithFields(ctx.Keys)
 }
 
 func isStringType(i interface{}) bool {
@@ -212,10 +208,19 @@ func processGitHubWebhookRequest(
 	githubClient clientgithub.Client,
 	conf *config,
 ) {
+	start := time.Now()
 	webhookType := github.WebHookType(ctx.Request)
 	ctx.Set("webhook_type", webhookType)
 	webhookEvent, _ := github.ParseWebHook(webhookType, payload)
-	_ = processGitHubWebhook(ctx, webhookType, webhookEvent, githubClient, conf)
+	err := processGitHubWebhook(ctx, webhookType, webhookEvent, githubClient, conf)
+	ctx.Set("latency", time.Since(start).String())
+	entry := getCustomLoggerFromContext(ctx)
+	if err != nil {
+		entry = entry.WithError(err)
+		entry.Error("failed to process event")
+	} else {
+		entry.Info("successfully processed event")
+	}
 }
 
 func processGitHubWebhook(
@@ -226,10 +231,13 @@ func processGitHubWebhook(
 	conf *config,
 ) error {
 	githubOrganization, err := getGitHubOrganization(webhookType, webhookEvent)
+	log := getCustomLoggerFromContext(ctx)
 	if err != nil {
-		logrus.Warnln("ignoring event: ", err.Error())
+		log.Warn("ignoring event: ", err.Error())
 		return nil
 	}
+	ctx.Set("org", githubOrganization)
+	log = log.WithField("org", githubOrganization)
 	conf.githubOrganization = githubOrganization
 	switch webhookType {
 	case "pull_request":
@@ -237,21 +245,21 @@ func processGitHubWebhook(
 			pr := webhookEvent.(*github.PullRequestEvent)
 			return processGitHubPullRequest(ctx, pr, githubClient, conf)
 		} else {
-			logrus.Infof("Webhook event %s processing is skipped", webhookType)
+			log.Infof("Webhook event %s processing is skipped", webhookType)
 		}
 	case "push":
 		if conf.isProcessPushEvents {
 			push := webhookEvent.(*github.PushEvent)
 			return processGitHubPush(ctx, push, githubClient, conf)
 		} else {
-			logrus.Infof("Webhook event %s processing is skipped", webhookType)
+			log.Infof("Webhook event %s processing is skipped", webhookType)
 		}
 	case "issue_comment":
 		if conf.isProcessCommentEvents {
 			comment := webhookEvent.(*github.IssueCommentEvent)
 			return processGitHubComment(ctx, comment, githubClient, conf)
 		} else {
-			logrus.Infof("Webhook event %s processing is skipped", webhookType)
+			log.Infof("Webhook event %s processing is skipped", webhookType)
 		}
 	}
 	return nil
@@ -311,7 +319,6 @@ func accessLogger(c *gin.Context) {
 }
 
 func doMain() {
-	logrus.SetOutput(os.Stdout)
 	conf, err := getConfig()
 	if err != nil {
 		logrus.Fatalf("failed to load config: %s", err.Error())
