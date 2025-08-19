@@ -296,12 +296,22 @@ func doMain() {
 
 	githubClient = clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
 
-	r := gin.Default()
-	filter := "/_health"
-	if logrus.GetLevel() == logrus.DebugLevel || logrus.GetLevel() == logrus.TraceLevel {
-		filter = ""
-	}
-	r.Use(gin.LoggerWithWriter(gin.DefaultWriter, filter))
+	r := gin.New()
+	r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
+		Skip: func(c *gin.Context) bool {
+			if logrus.GetLevel() >= logrus.DebugLevel {
+				return false
+			}
+			if c.Request.Method == http.MethodGet {
+				switch c.Request.URL.Path {
+				case "/", "/_health":
+					return true
+				}
+			}
+			return false
+		},
+		Output: gin.DefaultWriter,
+	}))
 	r.Use(gin.Recovery())
 
 	// webhook for GitHub
