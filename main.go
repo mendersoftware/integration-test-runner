@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"os"
 	"os/signal"
@@ -212,6 +213,7 @@ func processGitHubWebhookRequest(
 	conf *config,
 ) {
 	webhookType := github.WebHookType(ctx.Request)
+	ctx.Set("webhook_type", webhookType)
 	webhookEvent, _ := github.ParseWebHook(webhookType, payload)
 	_ = processGitHubWebhook(ctx, webhookType, webhookEvent, githubClient, conf)
 }
@@ -280,7 +282,36 @@ func main() {
 
 var githubClient clientgithub.Client
 
+func accessLogger(c *gin.Context) {
+	start := time.Now()
+	defer func() {
+		status := c.Writer.Status()
+		fields := logrus.Fields{
+			"latency": time.Since(start),
+			"status":  status,
+			"ip":      c.ClientIP(),
+			"method":  c.Request.Method,
+			"path":    c.Request.URL.Path,
+		}
+		maps.Copy(fields, c.Keys)
+		entry := logrus.WithFields(fields)
+		level := logrus.InfoLevel
+		switch {
+		case status >= 500:
+			level = logrus.ErrorLevel
+		case status >= 400:
+			level = logrus.WarnLevel
+		}
+		if c.Errors != nil {
+			entry = logrus.WithError(c.Errors.Last())
+		}
+		entry.Log(level)
+	}()
+	c.Next()
+}
+
 func doMain() {
+	logrus.SetOutput(os.Stdout)
 	conf, err := getConfig()
 	if err != nil {
 		logrus.Fatalf("failed to load config: %s", err.Error())
@@ -297,25 +328,16 @@ func doMain() {
 	githubClient = clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
 
 	r := gin.New()
-	r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
-		Skip: func(c *gin.Context) bool {
-			if logrus.GetLevel() >= logrus.DebugLevel {
-				return false
-			}
-			if c.Request.Method == http.MethodGet {
-				switch c.Request.URL.Path {
-				case "/", "/_health":
-					return true
-				}
-			}
-			return false
-		},
-		Output: gin.DefaultWriter,
-	}))
 	r.Use(gin.Recovery())
 
+	defaultRoutes := r.Group("/", accessLogger)
+	healthzRoutes := r.Group("/")
+	if logrus.GetLevel() >= logrus.DebugLevel {
+		healthzRoutes.Use(accessLogger)
+	}
+
 	// webhook for GitHub
-	r.POST("/", func(context *gin.Context) {
+	defaultRoutes.POST("/", func(context *gin.Context) {
 		payload, err := github.ValidatePayload(context.Request, conf.githubSecret)
 		if err != nil {
 			var mbErr *http.MaxBytesError
@@ -337,8 +359,8 @@ func doMain() {
 	})
 
 	// 200 replay for the loadbalancer
-	r.GET("/_health", func(_ *gin.Context) {})
-	r.GET("/", func(_ *gin.Context) {})
+	healthzRoutes.GET("/_health", func(_ *gin.Context) {})
+	healthzRoutes.GET("/", func(_ *gin.Context) {})
 
 	// dry-run mode, end-point to retrieve and clear logs
 	if conf.dryRunMode {
