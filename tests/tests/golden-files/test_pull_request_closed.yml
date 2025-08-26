@@ -17,7 +17,6 @@ output:
 - info:mender-connect version master is being used in master
 - info:mender-convert version master is being used in master
 - info:mender-flash version master is being used in master
-- info:mender-gateway version master is being used in master
 - info:mender-setup version master is being used in master
 - info:mender-snapshot version master is being used in master
 - info:monitor-client version master is being used in master
