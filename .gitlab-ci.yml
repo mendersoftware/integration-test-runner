@@ -12,7 +12,7 @@ include:
   - project: 'Northern.tech/Mender/mendertesting'
     file: '.gitlab-ci-check-golang-lint.yml'
   - project: 'Northern.tech/Mender/mendertesting'
-    file: '.gitlab-ci-check-golang-unittests.yml'
+    file: '.gitlab-ci-check-golang-unittests-v2.yml'
   - project: 'Northern.tech/Mender/mendertesting'
     file: '.gitlab-ci-check-docker-build.yml'
   - project: 'Northern.tech/Mender/mendertesting'
@@ -22,7 +22,8 @@ include:
 
 
 test:unit:
-  script:
+  before_script:
+    - apt update && apt install -yq $(cat deb-requirements.txt)
     - pip install PyGithub --break-system-packages
 
     - git config --global user.email test@example.com
@@ -32,9 +33,6 @@ test:unit:
     - git clone --depth 1 https://github.com/mendersoftware/integration
     - export INTEGRATION_DIRECTORY="$(realpath integration)"
 
-    - go list ./... | grep -v vendor | xargs -n1 -I {} go test -v -covermode=atomic -coverprofile=../../../{}/coverage.txt {} 2>&1 | tee /dev/stderr | go-junit-report > ${CI_PROJECT_DIR}/test-results.xml || exit $?
-    - mkdir -p tests/unit-coverage && find . -name 'coverage.txt' -exec cp --parents {} ./tests/unit-coverage \;
-    - tar -cvf ${CI_PROJECT_DIR}/unit-coverage.tar tests/unit-coverage
 
 test:acceptance_tests:
   stage: test
