@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"os"
 	"os/signal"
@@ -189,11 +190,7 @@ func getConfig() (*config, error) {
 }
 
 func getCustomLoggerFromContext(ctx *gin.Context) *logrus.Entry {
-	deliveryID, ok := ctx.Get("delivery")
-	if !ok || !isStringType(deliveryID) {
-		return logrus.WithField("delivery", "nil")
-	}
-	return logrus.WithField("delivery", deliveryID)
+	return logrus.WithFields(ctx.Keys)
 }
 
 func isStringType(i interface{}) bool {
@@ -211,9 +208,19 @@ func processGitHubWebhookRequest(
 	githubClient clientgithub.Client,
 	conf *config,
 ) {
+	start := time.Now()
 	webhookType := github.WebHookType(ctx.Request)
+	ctx.Set("webhook_type", webhookType)
 	webhookEvent, _ := github.ParseWebHook(webhookType, payload)
-	_ = processGitHubWebhook(ctx, webhookType, webhookEvent, githubClient, conf)
+	err := processGitHubWebhook(ctx, webhookType, webhookEvent, githubClient, conf)
+	ctx.Set("latency", time.Since(start).String())
+	entry := getCustomLoggerFromContext(ctx)
+	if err != nil {
+		entry = entry.WithError(err)
+		entry.Error("failed to process event")
+	} else {
+		entry.Info("successfully processed event")
+	}
 }
 
 func processGitHubWebhook(
@@ -224,10 +231,13 @@ func processGitHubWebhook(
 	conf *config,
 ) error {
 	githubOrganization, err := getGitHubOrganization(webhookType, webhookEvent)
+	log := getCustomLoggerFromContext(ctx)
 	if err != nil {
-		logrus.Warnln("ignoring event: ", err.Error())
+		log.Warn("ignoring event: ", err.Error())
 		return nil
 	}
+	ctx.Set("org", githubOrganization)
+	log = log.WithField("org", githubOrganization)
 	conf.githubOrganization = githubOrganization
 	switch webhookType {
 	case "pull_request":
@@ -235,21 +245,21 @@ func processGitHubWebhook(
 			pr := webhookEvent.(*github.PullRequestEvent)
 			return processGitHubPullRequest(ctx, pr, githubClient, conf)
 		} else {
-			logrus.Infof("Webhook event %s processing is skipped", webhookType)
+			log.Infof("Webhook event %s processing is skipped", webhookType)
 		}
 	case "push":
 		if conf.isProcessPushEvents {
 			push := webhookEvent.(*github.PushEvent)
 			return processGitHubPush(ctx, push, githubClient, conf)
 		} else {
-			logrus.Infof("Webhook event %s processing is skipped", webhookType)
+			log.Infof("Webhook event %s processing is skipped", webhookType)
 		}
 	case "issue_comment":
 		if conf.isProcessCommentEvents {
 			comment := webhookEvent.(*github.IssueCommentEvent)
 			return processGitHubComment(ctx, comment, githubClient, conf)
 		} else {
-			logrus.Infof("Webhook event %s processing is skipped", webhookType)
+			log.Infof("Webhook event %s processing is skipped", webhookType)
 		}
 	}
 	return nil
@@ -280,6 +290,34 @@ func main() {
 
 var githubClient clientgithub.Client
 
+func accessLogger(c *gin.Context) {
+	start := time.Now()
+	defer func() {
+		status := c.Writer.Status()
+		fields := logrus.Fields{
+			"latency": time.Since(start),
+			"status":  status,
+			"ip":      c.ClientIP(),
+			"method":  c.Request.Method,
+			"path":    c.Request.URL.Path,
+		}
+		maps.Copy(fields, c.Keys)
+		entry := logrus.WithFields(fields)
+		level := logrus.InfoLevel
+		switch {
+		case status >= 500:
+			level = logrus.ErrorLevel
+		case status >= 400:
+			level = logrus.WarnLevel
+		}
+		if c.Errors != nil {
+			entry = logrus.WithError(c.Errors.Last())
+		}
+		entry.Log(level)
+	}()
+	c.Next()
+}
+
 func doMain() {
 	conf, err := getConfig()
 	if err != nil {
@@ -296,16 +334,17 @@ func doMain() {
 
 	githubClient = clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
 
-	r := gin.Default()
-	filter := "/_health"
-	if logrus.GetLevel() == logrus.DebugLevel || logrus.GetLevel() == logrus.TraceLevel {
-		filter = ""
-	}
-	r.Use(gin.LoggerWithWriter(gin.DefaultWriter, filter))
+	r := gin.New()
 	r.Use(gin.Recovery())
 
+	defaultRoutes := r.Group("/", accessLogger)
+	healthzRoutes := r.Group("/")
+	if logrus.GetLevel() >= logrus.DebugLevel {
+		healthzRoutes.Use(accessLogger)
+	}
+
 	// webhook for GitHub
-	r.POST("/", func(context *gin.Context) {
+	defaultRoutes.POST("/", func(context *gin.Context) {
 		payload, err := github.ValidatePayload(context.Request, conf.githubSecret)
 		if err != nil {
 			var mbErr *http.MaxBytesError
@@ -327,8 +366,8 @@ func doMain() {
 	})
 
 	// 200 replay for the loadbalancer
-	r.GET("/_health", func(_ *gin.Context) {})
-	r.GET("/", func(_ *gin.Context) {})
+	healthzRoutes.GET("/_health", func(_ *gin.Context) {})
+	healthzRoutes.GET("/", func(_ *gin.Context) {})
 
 	// dry-run mode, end-point to retrieve and clear logs
 	if conf.dryRunMode {
