@@ -15,6 +15,7 @@ output:
 - info:mender-binary-delta version master is being used in master
 - info:mender-cli version master is being used in master
 - info:mender-connect version master is being used in master
+- info:mender-container-modules version main is being used in master
 - info:mender-convert version master is being used in master
 - info:mender-flash version master is being used in master
 - info:mender-setup version master is being used in master
