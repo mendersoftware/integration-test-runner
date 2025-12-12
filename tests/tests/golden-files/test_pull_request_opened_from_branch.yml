@@ -15,7 +15,8 @@ output:
   debug:Prepared changelog text: ### Changelogs
 
 - 'debug:Got warning text: '
-- info:Changelog is empty, and there is no previous changelog comment. Stay silent.
+- info:Changelog is empty, and there is no previous changelog comment. Stay 
+  silent.
 - 'github.IsOrganizationMember: org=mendersoftware,user=lluiscampos'
 - "debug:stopBuildsOfStaleClientPRs: PR not closed, therefore not stopping it's pipeline"
 - 'info:Pull request event with action: opened'
