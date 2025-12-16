@@ -17,15 +17,11 @@ output:
   }
 
 - info:mender version master is being used in master
-- info:mender-artifact version master is being used in master
 - info:mender-binary-delta version master is being used in master
-- info:mender-cli version master is being used in master
+- info:mender-client-subcomponents version main is being used in master
 - info:mender-connect version master is being used in master
 - info:mender-container-modules version main is being used in master
-- info:mender-convert version master is being used in master
 - info:mender-flash version master is being used in master
-- info:mender-setup version master is being used in master
-- info:mender-snapshot version master is being used in master
 - info:monitor-client version master is being used in master
 - 'gitlab.ListProjectPipelines: path=Northern.tech/Mender/mender-qa,options={"status":"pending","username":"mender-test-bot"}'
 - 'gitlab.ListProjectPipelines: path=Northern.tech/Mender/mender-qa,options={"status":"running","username":"mender-test-bot"}'
@@ -35,13 +31,12 @@ output:
   BUILD_BEAGLEBONEBLACK:true, BUILD_CLIENT:true, BUILD_QEMUX86_64_BIOS_GRUB:true,
   BUILD_QEMUX86_64_BIOS_GRUB_GPT:true, BUILD_QEMUX86_64_UEFI_GRUB:true, BUILD_VEXPRESS_QEMU:true,
   BUILD_VEXPRESS_QEMU_FLASH:true, BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:true, INTEGRATION_REV:master,
-  MENDER_ARTIFACT_REV:master, MENDER_BINARY_DELTA_REV:master, MENDER_CLI_REV:master,
-  MENDER_CONFIGURE_MODULE_REV:pull/145/head, MENDER_CONNECT_REV:master, MENDER_CONTAINER_MODULES_REV:main,
-  MENDER_CONVERT_REV:master, MENDER_FLASH_REV:master, MENDER_REV:master, MENDER_SETUP_REV:master,
-  MENDER_SNAPSHOT_REV:master, MONITOR_CLIENT_REV:master, RUN_INTEGRATION_TESTS:true,
-  TEST_QEMUX86_64_BIOS_GRUB:true, TEST_QEMUX86_64_BIOS_GRUB_GPT:true, TEST_QEMUX86_64_UEFI_GRUB:true,
-  TEST_VEXPRESS_QEMU:true, TEST_VEXPRESS_QEMU_FLASH:true, TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:true, '
-- 'gitlab.CreatePipeline: path=Northern.tech/Mender/mender-qa,options={"ref":"master","variables":[{"key":"BUILD_BEAGLEBONEBLACK","value":"true"},{"key":"BUILD_CLIENT","value":"true"},{"key":"BUILD_QEMUX86_64_BIOS_GRUB","value":"true"},{"key":"BUILD_QEMUX86_64_BIOS_GRUB_GPT","value":"true"},{"key":"BUILD_QEMUX86_64_UEFI_GRUB","value":"true"},{"key":"BUILD_VEXPRESS_QEMU","value":"true"},{"key":"BUILD_VEXPRESS_QEMU_FLASH","value":"true"},{"key":"BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":"true"},{"key":"INTEGRATION_REV","value":"master"},{"key":"MENDER_ARTIFACT_REV","value":"master"},{"key":"MENDER_BINARY_DELTA_REV","value":"master"},{"key":"MENDER_CLI_REV","value":"master"},{"key":"MENDER_CONFIGURE_MODULE_REV","value":"pull/145/head"},{"key":"MENDER_CONNECT_REV","value":"master"},{"key":"MENDER_CONTAINER_MODULES_REV","value":"main"},{"key":"MENDER_CONVERT_REV","value":"master"},{"key":"MENDER_FLASH_REV","value":"master"},{"key":"MENDER_REV","value":"master"},{"key":"MENDER_SETUP_REV","value":"master"},{"key":"MENDER_SNAPSHOT_REV","value":"master"},{"key":"MONITOR_CLIENT_REV","value":"master"},{"key":"RUN_INTEGRATION_TESTS","value":"true"},{"key":"TEST_QEMUX86_64_BIOS_GRUB","value":"true"},{"key":"TEST_QEMUX86_64_BIOS_GRUB_GPT","value":"true"},{"key":"TEST_QEMUX86_64_UEFI_GRUB","value":"true"},{"key":"TEST_VEXPRESS_QEMU","value":"true"},{"key":"TEST_VEXPRESS_QEMU_FLASH","value":"true"},{"key":"TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":"true"}]}'
+  MENDER_BINARY_DELTA_REV:master, MENDER_CLIENT_SUBCOMPONENTS_REV:main, MENDER_CONFIGURE_MODULE_REV:pull/145/head,
+  MENDER_CONNECT_REV:master, MENDER_CONTAINER_MODULES_REV:main, MENDER_FLASH_REV:master,
+  MENDER_REV:master, MONITOR_CLIENT_REV:master, RUN_INTEGRATION_TESTS:true, TEST_QEMUX86_64_BIOS_GRUB:true,
+  TEST_QEMUX86_64_BIOS_GRUB_GPT:true, TEST_QEMUX86_64_UEFI_GRUB:true, TEST_VEXPRESS_QEMU:true,
+  TEST_VEXPRESS_QEMU_FLASH:true, TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:true, '
+- 'gitlab.CreatePipeline: path=Northern.tech/Mender/mender-qa,options={"ref":"master","variables":[{"key":"BUILD_BEAGLEBONEBLACK","value":"true"},{"key":"BUILD_CLIENT","value":"true"},{"key":"BUILD_QEMUX86_64_BIOS_GRUB","value":"true"},{"key":"BUILD_QEMUX86_64_BIOS_GRUB_GPT","value":"true"},{"key":"BUILD_QEMUX86_64_UEFI_GRUB","value":"true"},{"key":"BUILD_VEXPRESS_QEMU","value":"true"},{"key":"BUILD_VEXPRESS_QEMU_FLASH","value":"true"},{"key":"BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":"true"},{"key":"INTEGRATION_REV","value":"master"},{"key":"MENDER_BINARY_DELTA_REV","value":"master"},{"key":"MENDER_CLIENT_SUBCOMPONENTS_REV","value":"main"},{"key":"MENDER_CONFIGURE_MODULE_REV","value":"pull/145/head"},{"key":"MENDER_CONNECT_REV","value":"master"},{"key":"MENDER_CONTAINER_MODULES_REV","value":"main"},{"key":"MENDER_FLASH_REV","value":"master"},{"key":"MENDER_REV","value":"master"},{"key":"MONITOR_CLIENT_REV","value":"master"},{"key":"RUN_INTEGRATION_TESTS","value":"true"},{"key":"TEST_QEMUX86_64_BIOS_GRUB","value":"true"},{"key":"TEST_QEMUX86_64_BIOS_GRUB_GPT","value":"true"},{"key":"TEST_QEMUX86_64_UEFI_GRUB","value":"true"},{"key":"TEST_VEXPRESS_QEMU","value":"true"},{"key":"TEST_VEXPRESS_QEMU_FLASH","value":"true"},{"key":"TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB","value":"true"}]}'
 - 'info:Created pipeline: '
 - 'github.CreateComment: org=mendersoftware,repo=mender-configure-module,number=145,comment={"body":"\nHello
   :smiley_cat: I created a pipeline for you here: [Pipeline-0]()\n\n\u003cdetails\u003e\n    \u003csummary\u003eBuild
@@ -49,12 +44,11 @@ output:
   | ----- |\n| BUILD_BEAGLEBONEBLACK | true |\n| BUILD_CLIENT | true |\n| BUILD_QEMUX86_64_BIOS_GRUB
   | true |\n| BUILD_QEMUX86_64_BIOS_GRUB_GPT | true |\n| BUILD_QEMUX86_64_UEFI_GRUB
   | true |\n| BUILD_VEXPRESS_QEMU | true |\n| BUILD_VEXPRESS_QEMU_FLASH | true |\n|
-  BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB | true |\n| INTEGRATION_REV | master |\n| MENDER_ARTIFACT_REV
-  | master |\n| MENDER_BINARY_DELTA_REV | master |\n| MENDER_CLI_REV | master |\n|
-  MENDER_CONFIGURE_MODULE_REV | pull/145/head |\n| MENDER_CONNECT_REV | master |\n|
-  MENDER_CONTAINER_MODULES_REV | main |\n| MENDER_CONVERT_REV | master |\n| MENDER_FLASH_REV
-  | master |\n| MENDER_REV | master |\n| MENDER_SETUP_REV | master |\n| MENDER_SNAPSHOT_REV
-  | master |\n| MONITOR_CLIENT_REV | master |\n| RUN_INTEGRATION_TESTS | true |\n|
-  TEST_QEMUX86_64_BIOS_GRUB | true |\n| TEST_QEMUX86_64_BIOS_GRUB_GPT | true |\n|
-  TEST_QEMUX86_64_UEFI_GRUB | true |\n| TEST_VEXPRESS_QEMU | true |\n| TEST_VEXPRESS_QEMU_FLASH
-  | true |\n| TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB | true |\n\n\n \u003c/p\u003e\u003c/details\u003e\n"}'
+  BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB | true |\n| INTEGRATION_REV | master |\n| MENDER_BINARY_DELTA_REV
+  | master |\n| MENDER_CLIENT_SUBCOMPONENTS_REV | main |\n| MENDER_CONFIGURE_MODULE_REV
+  | pull/145/head |\n| MENDER_CONNECT_REV | master |\n| MENDER_CONTAINER_MODULES_REV
+  | main |\n| MENDER_FLASH_REV | master |\n| MENDER_REV | master |\n| MONITOR_CLIENT_REV
+  | master |\n| RUN_INTEGRATION_TESTS | true |\n| TEST_QEMUX86_64_BIOS_GRUB | true
+  |\n| TEST_QEMUX86_64_BIOS_GRUB_GPT | true |\n| TEST_QEMUX86_64_UEFI_GRUB | true
+  |\n| TEST_VEXPRESS_QEMU | true |\n| TEST_VEXPRESS_QEMU_FLASH | true |\n| TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB
+  | true |\n\n\n \u003c/p\u003e\u003c/details\u003e\n"}'
