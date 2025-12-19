@@ -65,6 +65,7 @@ var clientRepositories = []string{
 	"mender-configure-module",
 	"monitor-client",
 	"mender-flash",
+	"mender-container-modules",
 	// TODO: QA-XXX: add when defining the new Mender Client release process
 	// "mender-binary-delta",
 }
