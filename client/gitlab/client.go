@@ -11,9 +11,9 @@ import (
 
 // Client represents a GitLab client
 type Client interface {
-	CancelPipelineBuild(path string, id int) error
+	CancelPipelineBuild(path string, id int64) error
 	CreatePipeline(path string, options *gitlab.CreatePipelineOptions) (*gitlab.Pipeline, error)
-	GetPipelineVariables(path string, id int) ([]*gitlab.PipelineVariable, error)
+	GetPipelineVariables(path string, id int64) ([]*gitlab.PipelineVariable, error)
 	ProtectRepositoryBranches(
 		path string,
 		options *gitlab.ProtectRepositoryBranchesOptions,
@@ -51,7 +51,7 @@ func NewGitLabClient(accessToken string, baseURL string, dryRunMode bool) (Clien
 }
 
 // CancelPipelineBuild cancel a pipeline
-func (c *gitLabClient) CancelPipelineBuild(path string, id int) error {
+func (c *gitLabClient) CancelPipelineBuild(path string, id int64) error {
 	if c.dryRunMode {
 		msg := fmt.Sprintf("gitlab.CancelPipelineBuild: path=%s,id=%d",
 			path, id,
@@ -83,7 +83,7 @@ func (c *gitLabClient) CreatePipeline(
 // GetPipelineVariables get the pipeline variables
 func (c *gitLabClient) GetPipelineVariables(
 	path string,
-	id int,
+	id int64,
 ) ([]*gitlab.PipelineVariable, error) {
 	if c.dryRunMode {
 		msg := fmt.Sprintf("gitlab.GetPipelineVariables: path=%s,id=%d",
