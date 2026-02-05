@@ -2,7 +2,7 @@ FROM golang:1.25.5-alpine3.21 AS builder
 RUN mkdir -p /go/src/github.com/mendersoftware/integration-test-runner
 WORKDIR /go/src/github.com/mendersoftware/integration-test-runner
 ADD ./ .
-RUN CGO_ENABLED=0 go build
+RUN CGO_ENABLED=0 go build -p 1
 
 FROM golang:1.25.5-alpine3.21
 EXPOSE 8080
