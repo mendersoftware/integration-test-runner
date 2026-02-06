@@ -58,7 +58,7 @@ var gitHubRepoToGitLabProjectCustom = map[string]string{
 }
 
 // Mender Client LTS components according to
-// https://docs.mender.io/release-information/supported-releases#mender-client-subcomponents
+// https://docs.mender.io/release-information/supported-releases#subcomponents
 var clientRepositories = []string{
 	"mender",
 	"mender-connect",
@@ -74,7 +74,9 @@ var clientRepositories = []string{
 var clientPipelineRepositories = append(clientRepositories,
 	// Yocto layer
 	"meta-mender",
-	// TODO: QA-985: remove independent tools
+	// Independent tools that are still (partially) tested in the Client pipeline
+	// In the future we should move the yocto recipes testing to the individual
+	// pipeline of each tool and remove them from here.
 	"mender-artifact",
 	"mender-snapshot",
 )

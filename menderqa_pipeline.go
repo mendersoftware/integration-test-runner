@@ -66,8 +66,15 @@ func getClientBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEven
 				}
 			}
 
-			switch repo {
-			case "meta-mender", "integration":
+			// check if is part of the Mender Client release
+			clientReleaseRepo := false
+			for _, clientRepo := range clientRepositories {
+				if repo == clientRepo {
+					clientReleaseRepo = true
+				}
+			}
+
+			if !clientReleaseRepo {
 				build := buildOptions{
 					pr:         strconv.Itoa(pr.GetNumber()),
 					repo:       repo,
@@ -76,8 +83,7 @@ func getClientBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEven
 					makeQEMU:   makeQEMU,
 				}
 				builds = append(builds, build)
-
-			default:
+			} else {
 				var err error
 				var integrationsToTest []string
 
