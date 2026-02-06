@@ -58,7 +58,7 @@ var gitHubRepoToGitLabProjectCustom = map[string]string{
 }
 
 // Mender Client LTS components according to
-// https://docs.mender.io/release-information/supported-releases#mender-client-subcomponents
+// https://docs.mender.io/release-information/supported-releases#subcomponents
 var clientRepositories = []string{
 	"mender",
 	"mender-connect",
