@@ -370,7 +370,7 @@ func generatePRStatsReport(opts PRStatsOptions, processedPRs []PRData, allOpenPR
 		}
 		report.WriteString(fmt.Sprintf("\n### Activity Counts\n| Metric | Count |\n|---|---|\n| PRs currently open (True Total) | **%d** |\n| PRs closed (Last 30d) | **%d** |\n| PRs created (Last 30d) | **%d** |\n", len(allOpenPRs), closedCount, len(processedPRs)))
 	}
-	report.WriteString("\n### Team Activity\n| User | Opened (30d) | Closed (30d) | Reviews (30d) | Median TTC | Median TTRv | **Open Now** | **Assigned/Reviewing** |\n|---|---|---|---|---|---|---|---|\n")
+	report.WriteString("\n### Team Activity\n| User | Opened (30d) | Closed (30d) | Reviews (30d) | Median Close Time | Median Review Time | **Open Now** | **Assigned/Reviewing** |\n|---|---|---|---|---|---|---|---|\n")
 	users := make([]*UserStats, 0, len(userStatsMap))
 	for _, s := range userStatsMap {
 		users = append(users, s)
@@ -401,7 +401,7 @@ func generatePRStatsReport(opts PRStatsOptions, processedPRs []PRData, allOpenPR
 			report.WriteString("_None!_\n")
 		}
 		if len(processedPRs) > 0 {
-			report.WriteString("\n<details>\n<summary><b>View All Processed PRs (30d)</b></summary>\n\n| Title | PR | Author | Involved | TTR | TTC | Status |\n|---|---|---|---|---|---|---|---|\n")
+			report.WriteString("\n<details>\n<summary><b>View All Processed PRs (30d)</b></summary>\n\n| Title | PR | Author | Involved | Review Time | Close Time | Status |\n|---|---|---|---|---|---|---|---|\n")
 			for _, pr := range processedPRs {
 				title := pr.Title
 				if len(title) > 40 {

@@ -10,17 +10,17 @@
       "name": "Client",
       "repositories": [
         "mender", "meta-mender", "mender-convert", "mender-qa", "mender-configure-module", "mender-dist-packages", "mender-snapshot", "mender-setup",
-        "mender-artifact", "mender-gateway", "mender-connect", "mender-flash", "mender-orchestrator", "mender-mcu", "mender-docs", "integration",
+        "mender-artifact", "mender-gateway", "mender-connect", "mender-flash", "mender-orchestrator", "mender-mcu", "integration",
         "mender-client-subcomponents", "mender-container-modules", "monitor-client", "mendertesting"
       ],
-      "fast_repositories": ["mender", "meta-mender", "mender-convert", "mender-qa"]
+      "fast_repositories": ["mender", "meta-mender", "mender-mcu", "mender-orchestrator"]
     },
     {
       "name": "Server",
       "repositories": [
-        "mender-server", "mender-server-enterprise", "inventory", "deployments", "deviceauth", "useradm", "tenantadm", "workflows", "gui"
+        "mender-server", "mender-server-enterprise", "mender-helm", "mender-cli", "mender-gateway", "mender-api-docs"
       ],
-      "fast_repositories": ["mender-server", "mender-server-enterprise", "inventory", "deployments", "deviceauth"]
+      "fast_repositories": ["mender-server", "mender-server-enterprise"]
     }
   ]
 }
