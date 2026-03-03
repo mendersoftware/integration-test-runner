@@ -7,10 +7,12 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/go-github/v28/github"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 
 	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 )
@@ -239,53 +241,131 @@ func getStats(durations []time.Duration) (string, string, string) {
 	return formatDuration(avg), formatDuration(median), formatDuration(sorted[p90Idx])
 }
 
+type repoResult struct {
+	openPRs      []PRData
+	processedPRs []PRData
+	userStats    map[string]*UserStats
+}
+
+func mergeUserStats(dst, src map[string]*UserStats) {
+	for login, s := range src {
+		d := ensureUser(dst, login)
+		d.Opened += s.Opened
+		d.Reviewed += s.Reviewed
+		d.Closed += s.Closed
+		d.CurrentOpen += s.CurrentOpen
+		d.CurrentAssigned += s.CurrentAssigned
+		d.ReviewTimes = append(d.ReviewTimes, s.ReviewTimes...)
+		d.CloseTimes = append(d.CloseTimes, s.CloseTimes...)
+	}
+}
+
 func getPRStats(
 	ctx context.Context,
 	githubClient clientgithub.Client,
 	org string,
 	opts PRStatsOptions,
 ) (string, error) {
-	userStatsMap := make(map[string]*UserStats)
-	var processedPRs []PRData
-	var allOpenPRs []PRData
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
 	needReviews := opts.Mode == prStatsModeFull
 
-	for _, repo := range opts.Repos {
-		logrus.Infof("Processing repo: %s", repo)
+	results := make([]repoResult, len(opts.Repos))
 
-		repoOpenPRs, err := fetchRepoOpenPRs(ctx, githubClient, org, repo, opts, userStatsMap, thirtyDaysAgo)
-		if err != nil {
-			return "", err
-		}
-		allOpenPRs = append(allOpenPRs, repoOpenPRs...)
+	g, gctx := errgroup.WithContext(ctx)
+	for i, repo := range opts.Repos {
+		g.Go(func() error {
+			logrus.Infof("Processing repo: %s", repo)
 
-		repoRecentlyClosed, err := fetchRepoClosedPRs(
-			ctx, githubClient, org, repo, opts, userStatsMap, thirtyDaysAgo,
-		)
-		if err != nil {
-			return "", err
-		}
+			openStats := make(map[string]*UserStats)
+			closedStats := make(map[string]*UserStats)
+			var repoOpenPRs, repoClosedPRs []PRData
 
-		for i := range repoOpenPRs {
-			if repoOpenPRs[i].CreatedAt.After(thirtyDaysAgo) {
-				if needReviews {
-					fetchReviewsAndTTRv(
-						ctx, githubClient, org, repo, &repoOpenPRs[i], userStatsMap, opts.ExcludedUsers,
-					)
-				}
-				processedPRs = append(processedPRs, repoOpenPRs[i])
-			}
-		}
-		for i := range repoRecentlyClosed {
-			if needReviews {
-				fetchReviewsAndTTRv(
-					ctx, githubClient, org, repo, &repoRecentlyClosed[i], userStatsMap, opts.ExcludedUsers,
+			// Fetch open and closed PRs in parallel
+			fg, fctx := errgroup.WithContext(gctx)
+			fg.Go(func() error {
+				var err error
+				repoOpenPRs, err = fetchRepoOpenPRs(
+					fctx, githubClient, org, repo, opts, openStats, thirtyDaysAgo,
 				)
+				return err
+			})
+			fg.Go(func() error {
+				var err error
+				repoClosedPRs, err = fetchRepoClosedPRs(
+					fctx, githubClient, org, repo, opts, closedStats, thirtyDaysAgo,
+				)
+				return err
+			})
+			if err := fg.Wait(); err != nil {
+				return err
 			}
-			processedPRs = append(processedPRs, repoRecentlyClosed[i])
-		}
+
+			// Merge open and closed stats into a single repo map
+			repoStats := make(map[string]*UserStats)
+			mergeUserStats(repoStats, openStats)
+			mergeUserStats(repoStats, closedStats)
+
+			// Collect PRs that need processing
+			var toReview []*PRData
+			for j := range repoOpenPRs {
+				if repoOpenPRs[j].CreatedAt.After(thirtyDaysAgo) {
+					toReview = append(toReview, &repoOpenPRs[j])
+				}
+			}
+			for j := range repoClosedPRs {
+				toReview = append(toReview, &repoClosedPRs[j])
+			}
+
+			// Fetch reviews concurrently with bounded parallelism
+			if needReviews && len(toReview) > 0 {
+				var mu sync.Mutex
+				rg, rgctx := errgroup.WithContext(gctx)
+				rg.SetLimit(10)
+				for _, pr := range toReview {
+					rg.Go(func() error {
+						localStats := make(map[string]*UserStats)
+						fetchReviewsAndTTRv(
+							rgctx, githubClient, org, repo,
+							pr, localStats, opts.ExcludedUsers,
+						)
+						mu.Lock()
+						mergeUserStats(repoStats, localStats)
+						mu.Unlock()
+						return nil
+					})
+				}
+				rg.Wait()
+			}
+
+			// Build processed slice from reviewed PRs
+			processed := make([]PRData, 0, len(toReview))
+			for _, pr := range toReview {
+				processed = append(processed, *pr)
+			}
+
+			results[i] = repoResult{
+				openPRs:      repoOpenPRs,
+				processedPRs: processed,
+				userStats:    repoStats,
+			}
+			return nil
+		})
 	}
+
+	if err := g.Wait(); err != nil {
+		return "", err
+	}
+
+	// Merge all per-repo results
+	userStatsMap := make(map[string]*UserStats)
+	var processedPRs []PRData
+	var allOpenPRs []PRData
+	for _, r := range results {
+		allOpenPRs = append(allOpenPRs, r.openPRs...)
+		processedPRs = append(processedPRs, r.processedPRs...)
+		mergeUserStats(userStatsMap, r.userStats)
+	}
+
 	return generatePRStatsReport(opts, processedPRs, allOpenPRs, userStatsMap, thirtyDaysAgo), nil
 }
 
@@ -500,7 +580,7 @@ func generatePRStatsReport(
 		writeReportSummary(&report, processedPRs, allOpenPRs, thirtyDaysAgo)
 	}
 
-	writeReportTeamActivity(&report, userStatsMap)
+	writeReportTeamActivity(&report, userStatsMap, opts.Mode)
 
 	if opts.Mode == prStatsModeFull {
 		writeReportAttention(&report, allOpenPRs, opts.SLAHours)
@@ -557,11 +637,17 @@ func writeReportSummary(
 	report.WriteString(fmt.Sprintf("| PRs created (Last 30d) | **%d** |\n", createdCount))
 }
 
-func writeReportTeamActivity(report *strings.Builder, userStatsMap map[string]*UserStats) {
+func writeReportTeamActivity(report *strings.Builder, userStatsMap map[string]*UserStats, mode string) {
 	report.WriteString("\n### Team Activity\n")
-	report.WriteString("| User | Opened (30d) | Closed (30d) | Reviews (30d) | ")
-	report.WriteString("Median TTC | Median TTRv | **Open Now** | **Assigned/Reviewing** |\n")
-	report.WriteString("|---|---|---|---|---|---|---|---|\n")
+	if mode == prStatsModeTeam {
+		report.WriteString("| User | Opened (30d) | Closed (30d) | ")
+		report.WriteString("Median TTC | **Open Now** | **Assigned/Reviewing** |\n")
+		report.WriteString("|---|---|---|---|---|---|\n")
+	} else {
+		report.WriteString("| User | Opened (30d) | Closed (30d) | Reviews (30d) | ")
+		report.WriteString("Median TTC | Median TTRv | **Open Now** | **Assigned/Reviewing** |\n")
+		report.WriteString("|---|---|---|---|---|---|---|---|\n")
+	}
 
 	users := make([]*UserStats, 0, len(userStatsMap))
 	for _, s := range userStatsMap {
@@ -575,12 +661,20 @@ func writeReportTeamActivity(report *strings.Builder, userStatsMap map[string]*U
 
 	for _, s := range users {
 		_, ttcMed, _ := getStats(s.CloseTimes)
-		_, ttrvMed, _ := getStats(s.ReviewTimes)
-		report.WriteString(fmt.Sprintf(
-			"| %s | %d | %d | %d | %s | %s | **%d** | **%d** |\n",
-			s.Login, s.Opened, s.Closed, s.Reviewed, ttcMed, ttrvMed,
-			s.CurrentOpen, s.CurrentAssigned,
-		))
+		if mode == prStatsModeTeam {
+			report.WriteString(fmt.Sprintf(
+				"| %s | %d | %d | %s | **%d** | **%d** |\n",
+				s.Login, s.Opened, s.Closed, ttcMed,
+				s.CurrentOpen, s.CurrentAssigned,
+			))
+		} else {
+			_, ttrvMed, _ := getStats(s.ReviewTimes)
+			report.WriteString(fmt.Sprintf(
+				"| %s | %d | %d | %d | %s | %s | **%d** | **%d** |\n",
+				s.Login, s.Opened, s.Closed, s.Reviewed, ttcMed, ttrvMed,
+				s.CurrentOpen, s.CurrentAssigned,
+			))
+		}
 	}
 }
 

@@ -23,7 +23,7 @@ func TestGetPRStatsFull(t *testing.T) {
 	threeDaysAgo := now.AddDate(0, 0, -3)
 
 	// Mock ListPullRequests for open PRs
-	mclient.On("ListPullRequests", ctx, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
+	mclient.On("ListPullRequests", mock.Anything, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
 		return opts.State == "open"
 	})).Return([]*github.PullRequest{
 		{
@@ -37,7 +37,7 @@ func TestGetPRStatsFull(t *testing.T) {
 	}, nil)
 
 	// Mock ListPullRequests for closed PRs
-	mclient.On("ListPullRequests", ctx, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
+	mclient.On("ListPullRequests", mock.Anything, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
 		return opts.State == "closed"
 	})).Return([]*github.PullRequest{
 		{
@@ -52,14 +52,14 @@ func TestGetPRStatsFull(t *testing.T) {
 	}, nil)
 
 	// Mock ListReviews for open PR #1
-	mclient.On("ListReviews", ctx, org, repo, 1, mock.Anything).Return([]*github.PullRequestReview{
+	mclient.On("ListReviews", mock.Anything, org, repo, 1, mock.Anything).Return([]*github.PullRequestReview{
 		{
 			User:        &github.User{Login: github.String("reviewer1")},
 			SubmittedAt: &now,
 		},
 	}, nil)
 	// Mock ListReviews for closed PR #2
-	mclient.On("ListReviews", ctx, org, repo, 2, mock.Anything).Return([]*github.PullRequestReview{}, nil)
+	mclient.On("ListReviews", mock.Anything, org, repo, 2, mock.Anything).Return([]*github.PullRequestReview{}, nil)
 
 	opts := PRStatsOptions{
 		Repos: []string{repo},
@@ -74,6 +74,9 @@ func TestGetPRStatsFull(t *testing.T) {
 	assert.Contains(t, report, "author2")
 	assert.Contains(t, report, "Metrics Summary")
 	assert.Contains(t, report, "PRs Needing Attention")
+	// Full mode should show review columns
+	assert.Contains(t, report, "Reviews (30d)")
+	assert.Contains(t, report, "Median TTRv")
 
 	mclient.AssertExpectations(t)
 }
@@ -87,7 +90,7 @@ func TestGetPRStatsTeamModeSkipsReviews(t *testing.T) {
 	now := time.Now()
 	twoDaysAgo := now.AddDate(0, 0, -2)
 
-	mclient.On("ListPullRequests", ctx, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
+	mclient.On("ListPullRequests", mock.Anything, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
 		return opts.State == "open"
 	})).Return([]*github.PullRequest{
 		{
@@ -100,7 +103,7 @@ func TestGetPRStatsTeamModeSkipsReviews(t *testing.T) {
 		},
 	}, nil)
 
-	mclient.On("ListPullRequests", ctx, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
+	mclient.On("ListPullRequests", mock.Anything, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
 		return opts.State == "closed"
 	})).Return([]*github.PullRequest{}, nil)
 
@@ -115,6 +118,9 @@ func TestGetPRStatsTeamModeSkipsReviews(t *testing.T) {
 	assert.Contains(t, report, "Team Activity")
 	assert.NotContains(t, report, "Metrics Summary")
 	assert.NotContains(t, report, "PRs Needing Attention")
+	// Team mode should not show review columns
+	assert.NotContains(t, report, "Reviews (30d)")
+	assert.NotContains(t, report, "Median TTRv")
 
 	mclient.AssertExpectations(t)
 	mclient.AssertNotCalled(t, "ListReviews", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
@@ -129,7 +135,7 @@ func TestGetPRStatsExcludesUsers(t *testing.T) {
 	now := time.Now()
 	twoDaysAgo := now.AddDate(0, 0, -2)
 
-	mclient.On("ListPullRequests", ctx, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
+	mclient.On("ListPullRequests", mock.Anything, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
 		return opts.State == "open"
 	})).Return([]*github.PullRequest{
 		{
@@ -150,7 +156,7 @@ func TestGetPRStatsExcludesUsers(t *testing.T) {
 		},
 	}, nil)
 
-	mclient.On("ListPullRequests", ctx, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
+	mclient.On("ListPullRequests", mock.Anything, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
 		return opts.State == "closed"
 	})).Return([]*github.PullRequest{}, nil)
 
@@ -177,7 +183,7 @@ func TestGetPRStatsExcludesDrafts(t *testing.T) {
 	now := time.Now()
 	twoDaysAgo := now.AddDate(0, 0, -2)
 
-	mclient.On("ListPullRequests", ctx, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
+	mclient.On("ListPullRequests", mock.Anything, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
 		return opts.State == "open"
 	})).Return([]*github.PullRequest{
 		{
@@ -198,7 +204,7 @@ func TestGetPRStatsExcludesDrafts(t *testing.T) {
 		},
 	}, nil)
 
-	mclient.On("ListPullRequests", ctx, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
+	mclient.On("ListPullRequests", mock.Anything, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
 		return opts.State == "closed"
 	})).Return([]*github.PullRequest{}, nil)
 
@@ -226,7 +232,7 @@ func TestGetPRStatsMultiRepo(t *testing.T) {
 	twoDaysAgo := now.AddDate(0, 0, -2)
 
 	for _, repo := range []string{"mender", "mender-connect"} {
-		mclient.On("ListPullRequests", ctx, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
+		mclient.On("ListPullRequests", mock.Anything, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
 			return opts.State == "open"
 		})).Return([]*github.PullRequest{
 			{
@@ -239,7 +245,7 @@ func TestGetPRStatsMultiRepo(t *testing.T) {
 			},
 		}, nil)
 
-		mclient.On("ListPullRequests", ctx, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
+		mclient.On("ListPullRequests", mock.Anything, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
 			return opts.State == "closed"
 		})).Return([]*github.PullRequest{}, nil)
 	}
