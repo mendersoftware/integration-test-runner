@@ -225,6 +225,12 @@ func processGitHubPullRequest(
    You can trigger GitHub->GitLab branch sync with:
    - mentioning me and ` + "`" + `sync` + "`" + `
 
+   You can print PR statistics for a repository (default mender-server-enterprise) with:
+   - mentioning me and ` + "`" + commandPrintPRStats + "`" + ` (Team stats only)
+   - mentioning me and ` + "`" + commandPrintFullPRStats + "`" + ` (Detailed report)
+   - options: ` + "`" + `--repo <repo>` + "`" + `, ` + "`" + `--team <name>` + "`" + `, ` + "`" + `--all-repos` + "`" + `, ` + "`" + `--exclude-drafts` + "`" + `, ` + "`" + `--exclude-user <user>` + "`" + `
+   - mentioning me and ` + "`" + commandPrintFullPRStats + ` --repo mender --all-repos --exclude-drafts` + "`" + `
+
    You can cherry pick to a given branch or branches with:
    - mentioning me and:
    ` + "```" + `
