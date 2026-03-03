@@ -174,113 +174,7 @@ func processGitHubComment(
 		syncPRBranch(ctx, comment, pr, log, conf)
 	case strings.Contains(commentBody, commandPrintFullPRStats) ||
 		strings.Contains(commentBody, commandPrintPRStats):
-		isFull := strings.Contains(commentBody, commandPrintFullPRStats)
-		mode := "team"
-		if isFull {
-			mode = "full"
-		}
-
-		// Default team aggregation logic:
-		// print pr stats -> defaults to FAST (Team repositories only)
-		// print full pr stats -> defaults to SLOW (Everything)
-		slow := isFull
-
-		repos := []string{comment.GetRepo().GetName()}
-		statsConfig, err := loadPRStatsConfig("")
-		if err != nil {
-			log.Errorf("failed to load pr stats config: %s", err.Error())
-		}
-		excludedUsers := make(map[string]bool)
-		excludedLabels := make(map[string]bool)
-		slaHours := 48
-		excludeDrafts := false
-		allRepos := false
-		repoLabel := ""
-
-		if statsConfig != nil {
-			for _, u := range statsConfig.Global.ExcludedUsers {
-				excludedUsers[u] = true
-			}
-			for _, l := range statsConfig.Global.ExcludedLabels {
-				excludedLabels[l] = true
-			}
-			slaHours = statsConfig.Global.SLAHours
-			excludeDrafts = statsConfig.Global.ExcludeDrafts
-		}
-
-		words := strings.Fields(commentBody)
-		for i, word := range words {
-			switch word {
-			case "--repo":
-				if i+1 < len(words) {
-					repos = []string{words[i+1]}
-				}
-			case "--all-repos":
-				allRepos = true
-			case "--mode":
-				if i+1 < len(words) {
-					mode = words[i+1]
-				}
-			case "--exclude-drafts":
-				excludeDrafts = true
-			case "--exclude-user":
-				if i+1 < len(words) {
-					excludedUsers[words[i+1]] = true
-				}
-			case "--fast":
-				slow = false
-			case "--slow":
-				slow = true
-			case "--team":
-				if i+1 < len(words) && statsConfig != nil {
-					target := words[i+1]
-					for _, t := range statsConfig.Teams {
-						if strings.EqualFold(t.Name, target) {
-							repos = t.Repositories
-							repoLabel = t.Name + " Team"
-							allRepos = false
-							if !slow {
-								repos = t.FastRepositories
-								repoLabel = t.Name + " Team (Fast Mode)"
-							}
-							break
-						}
-					}
-				}
-			}
-		}
-
-		if allRepos && statsConfig != nil {
-			repos, repoLabel = getTeamRepos(repos[0], statsConfig, slow)
-		}
-
-		opts := PRStatsOptions{
-			Repos:          repos,
-			RepoLabel:      repoLabel,
-			Mode:           mode,
-			SLAHours:       slaHours,
-			ExcludedUsers:  excludedUsers,
-			ExcludedLabels: excludedLabels,
-			ExcludeDrafts:  excludeDrafts,
-		}
-
-		report, err := getPRStats(ctx, githubClient, conf.githubOrganization, opts)
-		if err != nil {
-			report = "Failed to generate PR stats: " + err.Error()
-		}
-
-		err = githubClient.CreateComment(
-			ctx,
-			conf.githubOrganization,
-			comment.GetRepo().GetName(),
-			pr.GetNumber(),
-			&github.IssueComment{
-				Body: github.String(report),
-			},
-		)
-		if err != nil {
-			log.Errorf("Failed to comment on the pr: %v, Error: %s", pr, err.Error())
-		}
+		handlePRStatsCommand(ctx, comment, pr, githubClient, conf, log, commentBody)
 	default:
 		log.Warnf("no command found: %s", commentBody)
 		return nil
@@ -364,6 +258,124 @@ func syncPRBranch(
 		log.Errorf(mainErrMsg+": %s", err.Error())
 		msg := mainErrMsg + ", " + msgDetailsKubernetesLog
 		postGitHubMessage(ctx, prEvent, log, msg)
+	}
+}
+
+func handlePRStatsCommand(
+	ctx *gin.Context,
+	comment *github.IssueCommentEvent,
+	pr *github.PullRequest,
+	githubClient clientgithub.Client,
+	conf *config,
+	log *logrus.Entry,
+	commentBody string,
+) {
+	isFull := strings.Contains(commentBody, commandPrintFullPRStats)
+	mode := prStatsModeTeam
+	if isFull {
+		mode = prStatsModeFull
+	}
+
+	// Default team aggregation logic:
+	// print pr stats -> defaults to FAST (fast team repositories only)
+	// print full pr stats -> defaults to SLOW (all team repositories)
+	slow := isFull
+
+	repos := []string{comment.GetRepo().GetName()}
+	statsConfig, err := loadPRStatsConfig("")
+	if err != nil {
+		log.Errorf("failed to load pr stats config: %s", err.Error())
+	}
+	excludedUsers := make(map[string]bool)
+	excludedLabels := make(map[string]bool)
+	slaHours := 48
+	excludeDrafts := false
+	allRepos := false
+	repoLabel := ""
+
+	if statsConfig != nil {
+		for _, u := range statsConfig.Global.ExcludedUsers {
+			excludedUsers[u] = true
+		}
+		for _, l := range statsConfig.Global.ExcludedLabels {
+			excludedLabels[l] = true
+		}
+		slaHours = statsConfig.Global.SLAHours
+		excludeDrafts = statsConfig.Global.ExcludeDrafts
+	}
+
+	words := strings.Fields(commentBody)
+	for i, word := range words {
+		switch word {
+		case "--repo":
+			if i+1 < len(words) {
+				repos = []string{words[i+1]}
+			}
+		case "--all-repos":
+			allRepos = true
+		case "--mode":
+			if i+1 < len(words) {
+				mode = words[i+1]
+			}
+		case "--exclude-drafts":
+			excludeDrafts = true
+		case "--exclude-user":
+			if i+1 < len(words) {
+				excludedUsers[words[i+1]] = true
+			}
+		case "--fast":
+			slow = false
+		case "--slow":
+			slow = true
+		case "--team":
+			if i+1 < len(words) && statsConfig != nil {
+				target := words[i+1]
+				for _, t := range statsConfig.Teams {
+					if strings.EqualFold(t.Name, target) {
+						repos = t.Repositories
+						repoLabel = t.Name + " Team"
+						allRepos = false
+						if !slow {
+							repos = t.FastRepositories
+							repoLabel = t.Name + " Team (Fast Mode)"
+						}
+						break
+					}
+				}
+			}
+		}
+	}
+
+	if allRepos && statsConfig != nil {
+		repos, repoLabel = getTeamRepos(repos[0], statsConfig, slow)
+	}
+
+	opts := PRStatsOptions{
+		Repos:          repos,
+		RepoLabel:      repoLabel,
+		Mode:           mode,
+		SLAHours:       slaHours,
+		ExcludedUsers:  excludedUsers,
+		ExcludedLabels: excludedLabels,
+		ExcludeDrafts:  excludeDrafts,
+	}
+
+	report, err := getPRStats(ctx, githubClient, conf.githubOrganization, opts)
+	if err != nil {
+		report = "Failed to generate PR stats: " + err.Error()
+	}
+
+	err = githubClient.CreateComment(
+		ctx,
+		conf.githubOrganization,
+		comment.GetRepo().GetName(),
+		pr.GetNumber(),
+		&github.IssueComment{
+			Body: github.String(report),
+		},
+	)
+	if err != nil {
+		log.Errorf("Failed to comment on the pr: %v, Error: %s", pr, err.Error())
 	}
 }
 

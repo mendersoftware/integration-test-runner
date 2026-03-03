@@ -186,29 +186,6 @@ func (_m *Client) ListReviews(ctx context.Context, owner string, repo string, nu
 	return r0, r1
 }
 
-// ListIssueEvents provides a mock function with given fields: ctx, owner, repo, number, opts
-func (_m *Client) ListIssueEvents(ctx context.Context, owner string, repo string, number int, opts *v28github.ListOptions) ([]*v28github.IssueEvent, error) {
-	ret := _m.Called(ctx, owner, repo, number, opts)
-
-	var r0 []*v28github.IssueEvent
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, int, *v28github.ListOptions) []*v28github.IssueEvent); ok {
-		r0 = rf(ctx, owner, repo, number, opts)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*v28github.IssueEvent)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, int, *v28github.ListOptions) error); ok {
-		r1 = rf(ctx, owner, repo, number, opts)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // ListTimeline provides a mock function with given fields: ctx, owner, repo, number, opts
 func (_m *Client) ListTimeline(ctx context.Context, owner string, repo string, number int, opts *v28github.ListOptions) ([]*v28github.Timeline, error) {
 	ret := _m.Called(ctx, owner, repo, number, opts)

@@ -467,17 +467,13 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				).Return(nil)
 			}
 
-			// Mock ListPullRequests, ListReviews, ListTimeline for PR stats command
+			// Mock ListPullRequests for PR stats command
 			if tc.webhookType == "issue_comment" {
 				event := tc.webhookEvent.(*github.IssueCommentEvent)
 				if event.Comment != nil && (strings.Contains(event.Comment.GetBody(), commandPrintPRStats) ||
 					strings.Contains(event.Comment.GetBody(), commandPrintFullPRStats)) {
 					mclient.On("ListPullRequests", mock.Anything, gitHubOrg, mock.Anything, mock.Anything).
 						Return([]*github.PullRequest{}, nil).Maybe()
-					mclient.On("ListReviews", mock.Anything, gitHubOrg, mock.Anything, mock.Anything, mock.Anything).
-						Return([]*github.PullRequestReview{}, nil).Maybe()
-					mclient.On("ListTimeline", mock.Anything, gitHubOrg, mock.Anything, mock.Anything, mock.Anything).
-						Return([]*github.Timeline{}, nil).Maybe()
 				}
 			}
 

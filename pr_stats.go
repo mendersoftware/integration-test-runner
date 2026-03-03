@@ -40,6 +40,11 @@ type UserStats struct {
 	CurrentAssigned int
 }
 
+const (
+	prStatsModeFull = "full"
+	prStatsModeTeam = "team"
+)
+
 type PRStatsOptions struct {
 	Repos          []string
 	RepoLabel      string
@@ -132,27 +137,59 @@ func ensureUser(m map[string]*UserStats, login string) *UserStats {
 }
 
 func calculateWorkingTime(start, end time.Time) time.Duration {
-	if start.After(end) {
+	if !start.Before(end) {
 		return 0
 	}
-	duration := time.Duration(0)
-	current := start
-	for current.Before(end) {
-		if current.Weekday() != time.Saturday && current.Weekday() != time.Sunday {
-			nextDay := time.Date(
-				current.Year(), current.Month(), current.Day()+1, 0, 0, 0, 0, current.Location(),
-			)
-			chunkEnd := nextDay
-			if chunkEnd.After(end) {
-				chunkEnd = end
-			}
-			duration += chunkEnd.Sub(current)
-			current = chunkEnd
-		} else {
-			current = time.Date(
-				current.Year(), current.Month(), current.Day()+1, 0, 0, 0, 0, current.Location(),
-			)
+
+	// Normalize to start-of-day boundaries to count whole weekdays,
+	// then add back the partial day contributions.
+	startDay := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
+	endDay := time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0, end.Location())
+
+	totalDays := int(endDay.Sub(startDay).Hours() / 24)
+	completeWeeks := totalDays / 7
+	remainderDays := totalDays % 7
+
+	// Count weekend days in the remainder
+	weekendDays := 0
+	for i := 0; i < remainderDays; i++ {
+		d := startDay.AddDate(0, 0, completeWeeks*7+i)
+		if d.Weekday() == time.Saturday || d.Weekday() == time.Sunday {
+			weekendDays++
 		}
+	}
+
+	businessDays := totalDays - completeWeeks*2 - weekendDays
+
+	// Full business days worth of time
+	duration := time.Duration(businessDays) * 24 * time.Hour
+
+	// Add partial time from the start day (midnight to end-of-day or end time)
+	isStartWeekday := start.Weekday() != time.Saturday && start.Weekday() != time.Sunday
+	isEndWeekday := end.Weekday() != time.Saturday && end.Weekday() != time.Sunday
+
+	if start.Day() == end.Day() && start.Month() == end.Month() && start.Year() == end.Year() {
+		// Same day: just the difference if it's a weekday
+		if isStartWeekday {
+			return end.Sub(start)
+		}
+		return 0
+	}
+
+	// Subtract the full start day (we counted it as 24h) and add only the working portion
+	if isStartWeekday {
+		startOfNextDay := startDay.AddDate(0, 0, 1)
+		duration -= 24 * time.Hour                // remove the full day we counted
+		duration += startOfNextDay.Sub(start)      // add partial: start -> midnight
+	}
+
+	// Add the partial end day
+	if isEndWeekday {
+		duration += end.Sub(endDay) // add partial: midnight -> end
+	}
+
+	if duration < 0 {
+		return 0
 	}
 	return duration
 }
@@ -179,25 +216,27 @@ func getStats(durations []time.Duration) (string, string, string) {
 	if n == 0 {
 		return "None", "None", "None"
 	}
-	sort.Slice(durations, func(i, j int) bool { return durations[i] < durations[j] })
+	sorted := make([]time.Duration, n)
+	copy(sorted, durations)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i] < sorted[j] })
 	total := time.Duration(0)
-	for _, d := range durations {
+	for _, d := range sorted {
 		total += d
 	}
 	avg := time.Duration(int64(total) / int64(n))
 
 	var median time.Duration
 	if n%2 == 1 {
-		median = durations[n/2]
+		median = sorted[n/2]
 	} else {
-		median = (durations[n/2-1] + durations[n/2]) / 2
+		median = (sorted[n/2-1] + sorted[n/2]) / 2
 	}
 
 	p90Idx := int(float64(n) * 0.9)
 	if p90Idx >= n {
 		p90Idx = n - 1
 	}
-	return formatDuration(avg), formatDuration(median), formatDuration(durations[p90Idx])
+	return formatDuration(avg), formatDuration(median), formatDuration(sorted[p90Idx])
 }
 
 func getPRStats(
@@ -207,9 +246,10 @@ func getPRStats(
 	opts PRStatsOptions,
 ) (string, error) {
 	userStatsMap := make(map[string]*UserStats)
-	processedPRs := []PRData{}
-	allOpenPRs := []PRData{}
+	var processedPRs []PRData
+	var allOpenPRs []PRData
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
+	needReviews := opts.Mode == prStatsModeFull
 
 	for _, repo := range opts.Repos {
 		logrus.Infof("Processing repo: %s", repo)
@@ -229,20 +269,24 @@ func getPRStats(
 
 		for i := range repoOpenPRs {
 			if repoOpenPRs[i].CreatedAt.After(thirtyDaysAgo) {
-				fetchReviewsAndTTRv(
-					ctx, githubClient, org, repo, &repoOpenPRs[i], userStatsMap, opts.ExcludedUsers,
-				)
+				if needReviews {
+					fetchReviewsAndTTRv(
+						ctx, githubClient, org, repo, &repoOpenPRs[i], userStatsMap, opts.ExcludedUsers,
+					)
+				}
 				processedPRs = append(processedPRs, repoOpenPRs[i])
 			}
 		}
 		for i := range repoRecentlyClosed {
-			fetchReviewsAndTTRv(
-				ctx, githubClient, org, repo, &repoRecentlyClosed[i], userStatsMap, opts.ExcludedUsers,
-			)
+			if needReviews {
+				fetchReviewsAndTTRv(
+					ctx, githubClient, org, repo, &repoRecentlyClosed[i], userStatsMap, opts.ExcludedUsers,
+				)
+			}
 			processedPRs = append(processedPRs, repoRecentlyClosed[i])
 		}
 	}
-	return generatePRStatsReport(opts, processedPRs, allOpenPRs, userStatsMap), nil
+	return generatePRStatsReport(opts, processedPRs, allOpenPRs, userStatsMap, thirtyDaysAgo), nil
 }
 
 func fetchRepoOpenPRs(
@@ -253,7 +297,7 @@ func fetchRepoOpenPRs(
 	userStatsMap map[string]*UserStats,
 	thirtyDaysAgo time.Time,
 ) ([]PRData, error) {
-	allOpenPRs := []PRData{}
+	var allOpenPRs []PRData
 	openOpts := &github.PullRequestListOptions{
 		State: "open",
 		ListOptions: github.ListOptions{
@@ -324,7 +368,7 @@ func fetchRepoClosedPRs(
 	userStatsMap map[string]*UserStats,
 	thirtyDaysAgo time.Time,
 ) ([]PRData, error) {
-	recentlyClosed := []PRData{}
+	var recentlyClosed []PRData
 	closedOpts := &github.PullRequestListOptions{
 		State:     "closed",
 		Sort:      "updated",
@@ -397,31 +441,33 @@ func fetchReviewsAndTTRv(
 	stats map[string]*UserStats,
 	excluded map[string]bool,
 ) {
-	reviews, _ := client.ListReviews(ctx, org, repo, pr.Number, nil)
-	if len(reviews) == 0 {
+	var allReviews []*github.PullRequestReview
+	reviewOpts := &github.ListOptions{PerPage: 100, Page: 1}
+	for {
+		reviews, err := client.ListReviews(ctx, org, repo, pr.Number, reviewOpts)
+		if err != nil {
+			logrus.Warnf("Failed to list reviews for %s/%s#%d: %s", org, repo, pr.Number, err)
+			return
+		}
+		allReviews = append(allReviews, reviews...)
+		if len(reviews) < 100 {
+			break
+		}
+		reviewOpts.Page++
+	}
+	if len(allReviews) == 0 {
 		return
 	}
-	timeline, _ := client.ListTimeline(ctx, org, repo, pr.Number, nil)
-	requestTimes := make(map[string]time.Time)
-	for _, e := range timeline {
-		if e.GetEvent() == "review_requested" {
-			login := ""
-			if e.Actor != nil {
-				login = e.Actor.GetLogin()
-			}
-			if login != "" {
-				if _, ok := requestTimes[login]; !ok {
-					requestTimes[login] = e.GetCreatedAt()
-				}
-			}
-		}
-	}
-	sort.Slice(reviews, func(i, j int) bool {
-		return reviews[i].GetSubmittedAt().Before(reviews[j].GetSubmittedAt())
+
+	sort.Slice(allReviews, func(i, j int) bool {
+		return allReviews[i].GetSubmittedAt().Before(allReviews[j].GetSubmittedAt())
 	})
-	pr.TimeToFirstReview = calculateWorkingTime(pr.CreatedAt, reviews[0].GetSubmittedAt())
+	pr.TimeToFirstReview = calculateWorkingTime(pr.CreatedAt, allReviews[0].GetSubmittedAt())
+
+	// NOTE: go-github v28's Timeline struct does not expose RequestedReviewer,
+	// so we use pr.CreatedAt as the baseline for per-reviewer review times.
 	proc := make(map[string]bool)
-	for _, r := range reviews {
+	for _, r := range allReviews {
 		login := r.GetUser().GetLogin()
 		if login == pr.Author || excluded[login] || proc[login] {
 			continue
@@ -429,11 +475,7 @@ func fetchReviewsAndTTRv(
 		u := ensureUser(stats, login)
 		u.Reviewed++
 		proc[login] = true
-		reqTime, ok := requestTimes[login]
-		if !ok {
-			reqTime = pr.CreatedAt
-		}
-		u.ReviewTimes = append(u.ReviewTimes, calculateWorkingTime(reqTime, r.GetSubmittedAt()))
+		u.ReviewTimes = append(u.ReviewTimes, calculateWorkingTime(pr.CreatedAt, r.GetSubmittedAt()))
 	}
 }
 
@@ -442,6 +484,7 @@ func generatePRStatsReport(
 	processedPRs []PRData,
 	allOpenPRs []PRData,
 	userStatsMap map[string]*UserStats,
+	thirtyDaysAgo time.Time,
 ) string {
 	var report strings.Builder
 	repoLabel := opts.RepoLabel
@@ -453,13 +496,13 @@ func generatePRStatsReport(
 	}
 	report.WriteString(fmt.Sprintf("# PR Metrics for `%s` (Last 30 Days)\n", repoLabel))
 
-	if opts.Mode == "full" {
-		writeReportSummary(&report, processedPRs, allOpenPRs)
+	if opts.Mode == prStatsModeFull {
+		writeReportSummary(&report, processedPRs, allOpenPRs, thirtyDaysAgo)
 	}
 
 	writeReportTeamActivity(&report, userStatsMap)
 
-	if opts.Mode == "full" {
+	if opts.Mode == prStatsModeFull {
 		writeReportAttention(&report, allOpenPRs, opts.SLAHours)
 		writeReportFullDetails(&report, processedPRs)
 	}
@@ -471,13 +514,19 @@ func generatePRStatsReport(
 	return report.String()
 }
 
-func writeReportSummary(report *strings.Builder, processedPRs []PRData, allOpenPRs []PRData) {
+func writeReportSummary(
+	report *strings.Builder,
+	processedPRs []PRData,
+	allOpenPRs []PRData,
+	thirtyDaysAgo time.Time,
+) {
 	report.WriteString("\n### Metrics Summary (Last 30 Days)\n")
 	report.WriteString("| Metric | Average | Median | 90th percentile |\n")
 	report.WriteString("|---|---|---|---|\n")
 
-	ttrList, ttcList := []time.Duration{}, []time.Duration{}
+	var ttrList, ttcList []time.Duration
 	closedCount := 0
+	createdCount := 0
 	for _, pr := range processedPRs {
 		if pr.TimeToFirstReview > 0 {
 			ttrList = append(ttrList, pr.TimeToFirstReview)
@@ -487,6 +536,9 @@ func writeReportSummary(report *strings.Builder, processedPRs []PRData, allOpenP
 		}
 		if pr.State == "closed" {
 			closedCount++
+		}
+		if pr.CreatedAt.After(thirtyDaysAgo) {
+			createdCount++
 		}
 	}
 	ttrAvg, ttrMed, ttrP90 := getStats(ttrList)
@@ -502,7 +554,7 @@ func writeReportSummary(report *strings.Builder, processedPRs []PRData, allOpenP
 	report.WriteString("\n### Activity Counts\n| Metric | Count |\n|---|---|\n")
 	report.WriteString(fmt.Sprintf("| PRs currently open (filtered) | **%d** |\n", len(allOpenPRs)))
 	report.WriteString(fmt.Sprintf("| PRs closed (Last 30d) | **%d** |\n", closedCount))
-	report.WriteString(fmt.Sprintf("| PRs created (Last 30d) | **%d** |\n", len(processedPRs)))
+	report.WriteString(fmt.Sprintf("| PRs created (Last 30d) | **%d** |\n", createdCount))
 }
 
 func writeReportTeamActivity(report *strings.Builder, userStatsMap map[string]*UserStats) {
@@ -532,12 +584,18 @@ func writeReportTeamActivity(report *strings.Builder, userStatsMap map[string]*U
 	}
 }
 
+type slowPR struct {
+	PRData
+	Age time.Duration
+}
+
 func writeReportAttention(report *strings.Builder, allOpenPRs []PRData, slaHours int) {
 	sla, now := time.Duration(slaHours)*time.Hour, time.Now()
-	slowPRs := []PRData{}
+	var slowPRs []slowPR
 	for _, pr := range allOpenPRs {
-		if calculateWorkingTime(pr.CreatedAt, now) > sla {
-			slowPRs = append(slowPRs, pr)
+		age := calculateWorkingTime(pr.CreatedAt, now)
+		if age > sla {
+			slowPRs = append(slowPRs, slowPR{PRData: pr, Age: age})
 		}
 	}
 	report.WriteString(fmt.Sprintf("\n### PRs Needing Attention (>%d business hours)\n", slaHours))
@@ -547,7 +605,7 @@ func writeReportAttention(report *strings.Builder, allOpenPRs []PRData, slaHours
 			report.WriteString(fmt.Sprintf(
 				"| [#%d (%s)](%s) | %s | Open for %s |\n",
 				pr.Number, pr.Repo, pr.URL, pr.Author,
-				formatDuration(calculateWorkingTime(pr.CreatedAt, now)),
+				formatDuration(pr.Age),
 			))
 		}
 	} else {
@@ -564,8 +622,9 @@ func writeReportFullDetails(report *strings.Builder, processedPRs []PRData) {
 	report.WriteString("|---|---|---|---|---|---|---|\n")
 	for _, pr := range processedPRs {
 		title := pr.Title
-		if len(title) > 40 {
-			title = title[:37] + "..."
+		titleRunes := []rune(title)
+		if len(titleRunes) > 40 {
+			title = string(titleRunes[:37]) + "..."
 		}
 		involved := strings.Join(pr.Assignees, ", ")
 		if involved == "" {

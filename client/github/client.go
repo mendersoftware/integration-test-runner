@@ -64,12 +64,6 @@ type Client interface {
 		number int,
 		opts *github.ListOptions,
 	) ([]*github.PullRequestReview, error)
-	ListIssueEvents(
-		ctx context.Context,
-		owner, repo string,
-		number int,
-		opts *github.ListOptions,
-	) ([]*github.IssueEvent, error)
 	ListTimeline(
 		ctx context.Context,
 		owner, repo string,
@@ -219,16 +213,6 @@ func (c *gitHubClient) ListReviews(
 ) ([]*github.PullRequestReview, error) {
 	reviews, _, err := c.client.PullRequests.ListReviews(ctx, owner, repo, number, opts)
 	return reviews, err
-}
-
-func (c *gitHubClient) ListIssueEvents(
-	ctx context.Context,
-	owner, repo string,
-	number int,
-	opts *github.ListOptions,
-) ([]*github.IssueEvent, error) {
-	events, _, err := c.client.Issues.ListIssueEvents(ctx, owner, repo, number, opts)
-	return events, err
 }
 
 func (c *gitHubClient) ListTimeline(
