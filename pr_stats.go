@@ -181,8 +181,8 @@ func calculateWorkingTime(start, end time.Time) time.Duration {
 	// Subtract the full start day (we counted it as 24h) and add only the working portion
 	if isStartWeekday {
 		startOfNextDay := startDay.AddDate(0, 0, 1)
-		duration -= 24 * time.Hour                // remove the full day we counted
-		duration += startOfNextDay.Sub(start)      // add partial: start -> midnight
+		duration -= 24 * time.Hour
+		duration += startOfNextDay.Sub(start)
 	}
 
 	// Add the partial end day
@@ -334,7 +334,7 @@ func getPRStats(
 						return nil
 					})
 				}
-				rg.Wait()
+				_ = rg.Wait()
 			}
 
 			// Build processed slice from reviewed PRs
@@ -388,7 +388,9 @@ func fetchRepoOpenPRs(
 	for {
 		prs, err := githubClient.ListPullRequests(ctx, org, repo, openOpts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to list open pull requests for %s/%s: %w", org, repo, err)
+			return nil, fmt.Errorf(
+				"failed to list open pull requests for %s/%s: %w", org, repo, err,
+			)
 		}
 		if len(prs) == 0 {
 			break
@@ -461,7 +463,9 @@ func fetchRepoClosedPRs(
 	for {
 		prs, err := githubClient.ListPullRequests(ctx, org, repo, closedOpts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to list closed pull requests for %s/%s: %w", org, repo, err)
+			return nil, fmt.Errorf(
+				"failed to list closed pull requests for %s/%s: %w", org, repo, err,
+			)
 		}
 		if len(prs) == 0 {
 			break
@@ -555,7 +559,9 @@ func fetchReviewsAndTTRv(
 		u := ensureUser(stats, login)
 		u.Reviewed++
 		proc[login] = true
-		u.ReviewTimes = append(u.ReviewTimes, calculateWorkingTime(pr.CreatedAt, r.GetSubmittedAt()))
+		u.ReviewTimes = append(
+			u.ReviewTimes, calculateWorkingTime(pr.CreatedAt, r.GetSubmittedAt()),
+		)
 	}
 }
 
@@ -637,7 +643,9 @@ func writeReportSummary(
 	report.WriteString(fmt.Sprintf("| PRs created (Last 30d) | **%d** |\n", createdCount))
 }
 
-func writeReportTeamActivity(report *strings.Builder, userStatsMap map[string]*UserStats, mode string) {
+func writeReportTeamActivity(
+	report *strings.Builder, userStatsMap map[string]*UserStats, mode string,
+) {
 	report.WriteString("\n### Team Activity\n")
 	if mode == prStatsModeTeam {
 		report.WriteString("| User | Opened (30d) | Closed (30d) | ")
