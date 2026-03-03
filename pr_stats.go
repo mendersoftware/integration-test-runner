@@ -4,15 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math"
 	"os"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/google/go-github/v28/github"
-	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 	"github.com/sirupsen/logrus"
+
+	clientgithub "github.com/mendersoftware/integration-test-runner/client/github"
 )
 
 type PRData struct {
@@ -70,9 +70,12 @@ type PRStatsConfig struct {
 
 func loadPRStatsConfig(path string) (*PRStatsConfig, error) {
 	if path == "" {
-		path = "pr_stats_config.json"
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			path = "/pr_stats_config.json"
+		path = os.Getenv("PR_STATS_CONFIG_PATH")
+		if path == "" {
+			path = "pr_stats_config.json"
+			if _, err := os.Stat(path); os.IsNotExist(err) {
+				path = "/pr_stats_config.json"
+			}
 		}
 	}
 	data, err := os.ReadFile(path)
@@ -136,7 +139,9 @@ func calculateWorkingTime(start, end time.Time) time.Duration {
 	current := start
 	for current.Before(end) {
 		if current.Weekday() != time.Saturday && current.Weekday() != time.Sunday {
-			nextDay := time.Date(current.Year(), current.Month(), current.Day()+1, 0, 0, 0, 0, current.Location())
+			nextDay := time.Date(
+				current.Year(), current.Month(), current.Day()+1, 0, 0, 0, 0, current.Location(),
+			)
 			chunkEnd := nextDay
 			if chunkEnd.After(end) {
 				chunkEnd = end
@@ -144,7 +149,9 @@ func calculateWorkingTime(start, end time.Time) time.Duration {
 			duration += chunkEnd.Sub(current)
 			current = chunkEnd
 		} else {
-			current = time.Date(current.Year(), current.Month(), current.Day()+1, 0, 0, 0, 0, current.Location())
+			current = time.Date(
+				current.Year(), current.Month(), current.Day()+1, 0, 0, 0, 0, current.Location(),
+			)
 		}
 	}
 	return duration
@@ -168,7 +175,8 @@ func formatDuration(d time.Duration) string {
 }
 
 func getStats(durations []time.Duration) (string, string, string) {
-	if len(durations) == 0 {
+	n := len(durations)
+	if n == 0 {
 		return "None", "None", "None"
 	}
 	sort.Slice(durations, func(i, j int) bool { return durations[i] < durations[j] })
@@ -176,118 +184,200 @@ func getStats(durations []time.Duration) (string, string, string) {
 	for _, d := range durations {
 		total += d
 	}
-	avg := time.Duration(int64(total) / int64(len(durations)))
-	median := durations[len(durations)/2]
-	p90Idx := int(math.Floor(float64(len(durations)) * 0.9))
-	if p90Idx >= len(durations) {
-		p90Idx = len(durations) - 1
+	avg := time.Duration(int64(total) / int64(n))
+
+	var median time.Duration
+	if n%2 == 1 {
+		median = durations[n/2]
+	} else {
+		median = (durations[n/2-1] + durations[n/2]) / 2
+	}
+
+	p90Idx := int(float64(n) * 0.9)
+	if p90Idx >= n {
+		p90Idx = n - 1
 	}
 	return formatDuration(avg), formatDuration(median), formatDuration(durations[p90Idx])
 }
 
-func getPRStats(ctx context.Context, githubClient clientgithub.Client, org string, opts PRStatsOptions) (string, error) {
-	userStatsMap, processedPRs, allOpenPRs := make(map[string]*UserStats), []PRData{}, []PRData{}
+func getPRStats(
+	ctx context.Context,
+	githubClient clientgithub.Client,
+	org string,
+	opts PRStatsOptions,
+) (string, error) {
+	userStatsMap := make(map[string]*UserStats)
+	processedPRs := []PRData{}
+	allOpenPRs := []PRData{}
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
+
 	for _, repo := range opts.Repos {
 		logrus.Infof("Processing repo: %s", repo)
-		openOpts := &github.PullRequestListOptions{State: "open", ListOptions: github.ListOptions{PerPage: 100, Page: 1}}
-		for {
-			prs, err := githubClient.ListPullRequests(ctx, org, repo, openOpts)
-			if err != nil {
-				break
-			}
-			if len(prs) == 0 {
-				break
-			}
-			for _, pr := range prs {
-				if opts.ExcludeDrafts && pr.GetDraft() {
-					continue
-				}
-				if hasExcludedLabel(pr, opts.ExcludedLabels) {
-					continue
-				}
-				author := pr.GetUser().GetLogin()
-				involvedNow := make(map[string]bool)
-				for _, a := range pr.Assignees {
-					involvedNow[a.GetLogin()] = true
-				}
-				for _, r := range pr.RequestedReviewers {
-					involvedNow[r.GetLogin()] = true
-				}
-				if !opts.ExcludedUsers[author] {
-					ensureUser(userStatsMap, author).CurrentOpen++
-					prData := PRData{Number: pr.GetNumber(), Title: pr.GetTitle(), URL: pr.GetHTMLURL(), Author: author, State: "open", Draft: pr.GetDraft(), CreatedAt: pr.GetCreatedAt(), Repo: repo}
-					for l := range involvedNow {
-						prData.Assignees = append(prData.Assignees, l)
-					}
-					sort.Strings(prData.Assignees)
-					allOpenPRs = append(allOpenPRs, prData)
-				}
-				for login := range involvedNow {
-					if !opts.ExcludedUsers[login] {
-						ensureUser(userStatsMap, login).CurrentAssigned++
-					}
-				}
-				if pr.GetCreatedAt().After(thirtyDaysAgo) && !opts.ExcludedUsers[author] {
-					ensureUser(userStatsMap, author).Opened++
-				}
-			}
-			if len(prs) < 100 {
-				break
-			} else {
-				openOpts.Page++
+
+		repoOpenPRs, err := fetchRepoOpenPRs(ctx, githubClient, org, repo, opts, userStatsMap, thirtyDaysAgo)
+		if err != nil {
+			return "", err
+		}
+		allOpenPRs = append(allOpenPRs, repoOpenPRs...)
+
+		repoRecentlyClosed, err := fetchRepoClosedPRs(
+			ctx, githubClient, org, repo, opts, userStatsMap, thirtyDaysAgo,
+		)
+		if err != nil {
+			return "", err
+		}
+
+		for i := range repoOpenPRs {
+			if repoOpenPRs[i].CreatedAt.After(thirtyDaysAgo) {
+				fetchReviewsAndTTRv(
+					ctx, githubClient, org, repo, &repoOpenPRs[i], userStatsMap, opts.ExcludedUsers,
+				)
+				processedPRs = append(processedPRs, repoOpenPRs[i])
 			}
 		}
-		closedOpts := &github.PullRequestListOptions{State: "closed", Sort: "created", Direction: "desc", ListOptions: github.ListOptions{PerPage: 100, Page: 1}}
-		recentlyClosed := []PRData{}
-		for {
-			prs, err := githubClient.ListPullRequests(ctx, org, repo, closedOpts)
-			if err != nil {
-				break
-			}
-			if len(prs) == 0 {
-				break
-			}
-			for _, pr := range prs {
-				if pr.GetCreatedAt().Before(thirtyDaysAgo) {
-					goto doneClosedRepo
-				}
-				if opts.ExcludeDrafts && pr.GetDraft() {
-					continue
-				}
-				if hasExcludedLabel(pr, opts.ExcludedLabels) {
-					continue
-				}
-				author := pr.GetUser().GetLogin()
-				if opts.ExcludedUsers[author] {
-					continue
-				}
-				u := ensureUser(userStatsMap, author)
-				u.Opened++
-				u.Closed++
-				ttc := calculateWorkingTime(pr.GetCreatedAt(), pr.GetClosedAt())
-				recentlyClosed = append(recentlyClosed, PRData{Number: pr.GetNumber(), Title: pr.GetTitle(), URL: pr.GetHTMLURL(), Author: author, State: "closed", Draft: pr.GetDraft(), CreatedAt: pr.GetCreatedAt(), TimeToClose: ttc, Repo: repo})
-				u.CloseTimes = append(u.CloseTimes, ttc)
-			}
-			if len(prs) < 100 {
-				break
-			} else {
-				closedOpts.Page++
-			}
-		}
-	doneClosedRepo:
-		for i := range allOpenPRs {
-			if allOpenPRs[i].Repo == repo && allOpenPRs[i].CreatedAt.After(thirtyDaysAgo) {
-				fetchReviewsAndTTRv(ctx, githubClient, org, repo, &allOpenPRs[i], userStatsMap, opts.ExcludedUsers)
-				processedPRs = append(processedPRs, allOpenPRs[i])
-			}
-		}
-		for i := range recentlyClosed {
-			fetchReviewsAndTTRv(ctx, githubClient, org, repo, &recentlyClosed[i], userStatsMap, opts.ExcludedUsers)
-			processedPRs = append(processedPRs, recentlyClosed[i])
+		for i := range repoRecentlyClosed {
+			fetchReviewsAndTTRv(
+				ctx, githubClient, org, repo, &repoRecentlyClosed[i], userStatsMap, opts.ExcludedUsers,
+			)
+			processedPRs = append(processedPRs, repoRecentlyClosed[i])
 		}
 	}
 	return generatePRStatsReport(opts, processedPRs, allOpenPRs, userStatsMap), nil
+}
+
+func fetchRepoOpenPRs(
+	ctx context.Context,
+	githubClient clientgithub.Client,
+	org, repo string,
+	opts PRStatsOptions,
+	userStatsMap map[string]*UserStats,
+	thirtyDaysAgo time.Time,
+) ([]PRData, error) {
+	allOpenPRs := []PRData{}
+	openOpts := &github.PullRequestListOptions{
+		State: "open",
+		ListOptions: github.ListOptions{
+			PerPage: 100,
+			Page:    1,
+		},
+	}
+	for {
+		prs, err := githubClient.ListPullRequests(ctx, org, repo, openOpts)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list open pull requests for %s/%s: %w", org, repo, err)
+		}
+		if len(prs) == 0 {
+			break
+		}
+		for _, pr := range prs {
+			if (opts.ExcludeDrafts && pr.GetDraft()) || hasExcludedLabel(pr, opts.ExcludedLabels) {
+				continue
+			}
+			author := pr.GetUser().GetLogin()
+			involvedNow := make(map[string]bool)
+			for _, a := range pr.Assignees {
+				involvedNow[a.GetLogin()] = true
+			}
+			for _, r := range pr.RequestedReviewers {
+				involvedNow[r.GetLogin()] = true
+			}
+			if !opts.ExcludedUsers[author] {
+				ensureUser(userStatsMap, author).CurrentOpen++
+				prData := PRData{
+					Number:    pr.GetNumber(),
+					Title:     pr.GetTitle(),
+					URL:       pr.GetHTMLURL(),
+					Author:    author,
+					State:     "open",
+					Draft:     pr.GetDraft(),
+					CreatedAt: pr.GetCreatedAt(),
+					Repo:      repo,
+				}
+				for l := range involvedNow {
+					prData.Assignees = append(prData.Assignees, l)
+				}
+				sort.Strings(prData.Assignees)
+				allOpenPRs = append(allOpenPRs, prData)
+			}
+			for login := range involvedNow {
+				if !opts.ExcludedUsers[login] {
+					ensureUser(userStatsMap, login).CurrentAssigned++
+				}
+			}
+			if pr.GetCreatedAt().After(thirtyDaysAgo) && !opts.ExcludedUsers[author] {
+				ensureUser(userStatsMap, author).Opened++
+			}
+		}
+		if len(prs) < 100 {
+			break
+		}
+		openOpts.Page++
+	}
+	return allOpenPRs, nil
+}
+
+func fetchRepoClosedPRs(
+	ctx context.Context,
+	githubClient clientgithub.Client,
+	org, repo string,
+	opts PRStatsOptions,
+	userStatsMap map[string]*UserStats,
+	thirtyDaysAgo time.Time,
+) ([]PRData, error) {
+	recentlyClosed := []PRData{}
+	closedOpts := &github.PullRequestListOptions{
+		State:     "closed",
+		Sort:      "updated",
+		Direction: "desc",
+		ListOptions: github.ListOptions{
+			PerPage: 100,
+			Page:    1,
+		},
+	}
+	for {
+		prs, err := githubClient.ListPullRequests(ctx, org, repo, closedOpts)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list closed pull requests for %s/%s: %w", org, repo, err)
+		}
+		if len(prs) == 0 {
+			break
+		}
+		for _, pr := range prs {
+			if pr.GetClosedAt().Before(thirtyDaysAgo) {
+				return recentlyClosed, nil
+			}
+			if (opts.ExcludeDrafts && pr.GetDraft()) || hasExcludedLabel(pr, opts.ExcludedLabels) {
+				continue
+			}
+			author := pr.GetUser().GetLogin()
+			if opts.ExcludedUsers[author] {
+				continue
+			}
+			u := ensureUser(userStatsMap, author)
+			if pr.GetCreatedAt().After(thirtyDaysAgo) {
+				u.Opened++
+			}
+			u.Closed++
+			ttc := calculateWorkingTime(pr.GetCreatedAt(), pr.GetClosedAt())
+			recentlyClosed = append(recentlyClosed, PRData{
+				Number:      pr.GetNumber(),
+				Title:       pr.GetTitle(),
+				URL:         pr.GetHTMLURL(),
+				Author:      author,
+				State:       "closed",
+				Draft:       pr.GetDraft(),
+				CreatedAt:   pr.GetCreatedAt(),
+				TimeToClose: ttc,
+				Repo:        repo,
+			})
+			u.CloseTimes = append(u.CloseTimes, ttc)
+		}
+		if len(prs) < 100 {
+			break
+		}
+		closedOpts.Page++
+	}
+	return recentlyClosed, nil
 }
 
 func hasExcludedLabel(pr *github.PullRequest, excluded map[string]bool) bool {
@@ -299,7 +389,14 @@ func hasExcludedLabel(pr *github.PullRequest, excluded map[string]bool) bool {
 	return false
 }
 
-func fetchReviewsAndTTRv(ctx context.Context, client clientgithub.Client, org, repo string, pr *PRData, stats map[string]*UserStats, excluded map[string]bool) {
+func fetchReviewsAndTTRv(
+	ctx context.Context,
+	client clientgithub.Client,
+	org, repo string,
+	pr *PRData,
+	stats map[string]*UserStats,
+	excluded map[string]bool,
+) {
 	reviews, _ := client.ListReviews(ctx, org, repo, pr.Number, nil)
 	if len(reviews) == 0 {
 		return
@@ -319,7 +416,9 @@ func fetchReviewsAndTTRv(ctx context.Context, client clientgithub.Client, org, r
 			}
 		}
 	}
-	sort.Slice(reviews, func(i, j int) bool { return reviews[i].GetSubmittedAt().Before(reviews[j].GetSubmittedAt()) })
+	sort.Slice(reviews, func(i, j int) bool {
+		return reviews[i].GetSubmittedAt().Before(reviews[j].GetSubmittedAt())
+	})
 	pr.TimeToFirstReview = calculateWorkingTime(pr.CreatedAt, reviews[0].GetSubmittedAt())
 	proc := make(map[string]bool)
 	for _, r := range reviews {
@@ -338,7 +437,12 @@ func fetchReviewsAndTTRv(ctx context.Context, client clientgithub.Client, org, r
 	}
 }
 
-func generatePRStatsReport(opts PRStatsOptions, processedPRs []PRData, allOpenPRs []PRData, userStatsMap map[string]*UserStats) string {
+func generatePRStatsReport(
+	opts PRStatsOptions,
+	processedPRs []PRData,
+	allOpenPRs []PRData,
+	userStatsMap map[string]*UserStats,
+) string {
 	var report strings.Builder
 	repoLabel := opts.RepoLabel
 	if repoLabel == "" {
@@ -348,78 +452,134 @@ func generatePRStatsReport(opts PRStatsOptions, processedPRs []PRData, allOpenPR
 		}
 	}
 	report.WriteString(fmt.Sprintf("# PR Metrics for `%s` (Last 30 Days)\n", repoLabel))
+
 	if opts.Mode == "full" {
-		report.WriteString("\n### Metrics Summary (Last 30 Days)\n| Metric | Average | Median | 90th percentile |\n|---|---|---|---|\n")
-		ttrList, ttcList := []time.Duration{}, []time.Duration{}
-		for _, pr := range processedPRs {
-			if pr.TimeToFirstReview > 0 {
-				ttrList = append(ttrList, pr.TimeToFirstReview)
-			}
-			if pr.TimeToClose > 0 {
-				ttcList = append(ttcList, pr.TimeToClose)
-			}
-		}
-		ttrAvg, ttrMed, ttrP90 := getStats(ttrList)
-		ttcAvg, ttcMed, ttcP90 := getStats(ttcList)
-		report.WriteString(fmt.Sprintf("| **Time to first response** | %s | %s | %s |\n| **Time to close** | %s | %s | %s |\n", ttrAvg, ttrMed, ttrP90, ttcAvg, ttcMed, ttcP90))
-		closedCount := 0
-		for _, pr := range processedPRs {
-			if pr.State == "closed" {
-				closedCount++
-			}
-		}
-		report.WriteString(fmt.Sprintf("\n### Activity Counts\n| Metric | Count |\n|---|---|\n| PRs currently open (True Total) | **%d** |\n| PRs closed (Last 30d) | **%d** |\n| PRs created (Last 30d) | **%d** |\n", len(allOpenPRs), closedCount, len(processedPRs)))
+		writeReportSummary(&report, processedPRs, allOpenPRs)
 	}
-	report.WriteString("\n### Team Activity\n| User | Opened (30d) | Closed (30d) | Reviews (30d) | Median Close Time | Median Review Time | **Open Now** | **Assigned/Reviewing** |\n|---|---|---|---|---|---|---|---|\n")
+
+	writeReportTeamActivity(&report, userStatsMap)
+
+	if opts.Mode == "full" {
+		writeReportAttention(&report, allOpenPRs, opts.SLAHours)
+		writeReportFullDetails(&report, processedPRs)
+	}
+
+	report.WriteString(fmt.Sprintf(
+		"\n---\n_Report generated on %s_",
+		time.Now().UTC().Format("2006-01-02 15:04:05 UTC"),
+	))
+	return report.String()
+}
+
+func writeReportSummary(report *strings.Builder, processedPRs []PRData, allOpenPRs []PRData) {
+	report.WriteString("\n### Metrics Summary (Last 30 Days)\n")
+	report.WriteString("| Metric | Average | Median | 90th percentile |\n")
+	report.WriteString("|---|---|---|---|\n")
+
+	ttrList, ttcList := []time.Duration{}, []time.Duration{}
+	closedCount := 0
+	for _, pr := range processedPRs {
+		if pr.TimeToFirstReview > 0 {
+			ttrList = append(ttrList, pr.TimeToFirstReview)
+		}
+		if pr.TimeToClose > 0 {
+			ttcList = append(ttcList, pr.TimeToClose)
+		}
+		if pr.State == "closed" {
+			closedCount++
+		}
+	}
+	ttrAvg, ttrMed, ttrP90 := getStats(ttrList)
+	ttcAvg, ttcMed, ttcP90 := getStats(ttcList)
+
+	report.WriteString(fmt.Sprintf(
+		"| **Time to first response** | %s | %s | %s |\n", ttrAvg, ttrMed, ttrP90,
+	))
+	report.WriteString(fmt.Sprintf(
+		"| **Time to close** | %s | %s | %s |\n", ttcAvg, ttcMed, ttcP90,
+	))
+
+	report.WriteString("\n### Activity Counts\n| Metric | Count |\n|---|---|\n")
+	report.WriteString(fmt.Sprintf("| PRs currently open (filtered) | **%d** |\n", len(allOpenPRs)))
+	report.WriteString(fmt.Sprintf("| PRs closed (Last 30d) | **%d** |\n", closedCount))
+	report.WriteString(fmt.Sprintf("| PRs created (Last 30d) | **%d** |\n", len(processedPRs)))
+}
+
+func writeReportTeamActivity(report *strings.Builder, userStatsMap map[string]*UserStats) {
+	report.WriteString("\n### Team Activity\n")
+	report.WriteString("| User | Opened (30d) | Closed (30d) | Reviews (30d) | ")
+	report.WriteString("Median TTC | Median TTRv | **Open Now** | **Assigned/Reviewing** |\n")
+	report.WriteString("|---|---|---|---|---|---|---|---|\n")
+
 	users := make([]*UserStats, 0, len(userStatsMap))
 	for _, s := range userStatsMap {
 		users = append(users, s)
 	}
 	sort.Slice(users, func(i, j int) bool {
-		return (users[i].Opened + users[i].Reviewed + users[i].CurrentAssigned) > (users[j].Opened + users[j].Reviewed + users[j].CurrentAssigned)
+		activityI := users[i].Opened + users[i].Reviewed + users[i].CurrentAssigned
+		activityJ := users[j].Opened + users[j].Reviewed + users[j].CurrentAssigned
+		return activityI > activityJ
 	})
+
 	for _, s := range users {
 		_, ttcMed, _ := getStats(s.CloseTimes)
 		_, ttrvMed, _ := getStats(s.ReviewTimes)
-		report.WriteString(fmt.Sprintf("| %s | %d | %d | %d | %s | %s | **%d** | **%d** |\n", s.Login, s.Opened, s.Closed, s.Reviewed, ttcMed, ttrvMed, s.CurrentOpen, s.CurrentAssigned))
+		report.WriteString(fmt.Sprintf(
+			"| %s | %d | %d | %d | %s | %s | **%d** | **%d** |\n",
+			s.Login, s.Opened, s.Closed, s.Reviewed, ttcMed, ttrvMed,
+			s.CurrentOpen, s.CurrentAssigned,
+		))
 	}
-	if opts.Mode == "full" {
-		sla, now := time.Duration(opts.SLAHours)*time.Hour, time.Now()
-		slowPRs := []PRData{}
-		for _, pr := range allOpenPRs {
-			if calculateWorkingTime(pr.CreatedAt, now) > sla {
-				slowPRs = append(slowPRs, pr)
-			}
-		}
-		report.WriteString(fmt.Sprintf("\n### PRs Needing Attention (>%d business hours)\n", opts.SLAHours))
-		if len(slowPRs) > 0 {
-			report.WriteString("| PR | Author | Issue |\n|---|---|---|\n")
-			for _, pr := range slowPRs {
-				report.WriteString(fmt.Sprintf("| [#%d (%s)](%s) | %s | Open for %s |\n", pr.Number, pr.Repo, pr.URL, pr.Author, formatDuration(calculateWorkingTime(pr.CreatedAt, now))))
-			}
-		} else {
-			report.WriteString("_None!_\n")
-		}
-		if len(processedPRs) > 0 {
-			report.WriteString("\n<details>\n<summary><b>View All Processed PRs (30d)</b></summary>\n\n| Title | PR | Author | Involved | Review Time | Close Time | Status |\n|---|---|---|---|---|---|---|---|\n")
-			for _, pr := range processedPRs {
-				title := pr.Title
-				if len(title) > 40 {
-					title = title[:37] + "..."
-				}
-				involved := strings.Join(pr.Assignees, ", ")
-				if involved == "" {
-					involved = "None"
-				}
-				status := pr.State
-				if pr.Draft {
-					status += " (draft)"
-				}
-				report.WriteString(fmt.Sprintf("| %s | [#%d (%s)](%s) | %s | %s | %s | %s | %s |\n", title, pr.Number, pr.Repo, pr.URL, pr.Author, involved, formatDuration(pr.TimeToFirstReview), formatDuration(pr.TimeToClose), status))
-			}
-			report.WriteString("\n</details>\n")
+}
+
+func writeReportAttention(report *strings.Builder, allOpenPRs []PRData, slaHours int) {
+	sla, now := time.Duration(slaHours)*time.Hour, time.Now()
+	slowPRs := []PRData{}
+	for _, pr := range allOpenPRs {
+		if calculateWorkingTime(pr.CreatedAt, now) > sla {
+			slowPRs = append(slowPRs, pr)
 		}
 	}
-	report.WriteString(fmt.Sprintf("\n---\n_Report generated on %s_", time.Now().UTC().Format("2006-01-02 15:04:05 UTC")))
-	return report.String()
+	report.WriteString(fmt.Sprintf("\n### PRs Needing Attention (>%d business hours)\n", slaHours))
+	if len(slowPRs) > 0 {
+		report.WriteString("| PR | Author | Issue |\n|---|---|---|\n")
+		for _, pr := range slowPRs {
+			report.WriteString(fmt.Sprintf(
+				"| [#%d (%s)](%s) | %s | Open for %s |\n",
+				pr.Number, pr.Repo, pr.URL, pr.Author,
+				formatDuration(calculateWorkingTime(pr.CreatedAt, now)),
+			))
+		}
+	} else {
+		report.WriteString("_None!_\n")
+	}
+}
+
+func writeReportFullDetails(report *strings.Builder, processedPRs []PRData) {
+	if len(processedPRs) == 0 {
+		return
+	}
+	report.WriteString("\n<details>\n<summary><b>View All Processed PRs (30d)</b></summary>\n\n")
+	report.WriteString("| Title | PR | Author | Involved | Review Time | Close Time | Status |\n")
+	report.WriteString("|---|---|---|---|---|---|---|\n")
+	for _, pr := range processedPRs {
+		title := pr.Title
+		if len(title) > 40 {
+			title = title[:37] + "..."
+		}
+		involved := strings.Join(pr.Assignees, ", ")
+		if involved == "" {
+			involved = "None"
+		}
+		status := pr.State
+		if pr.Draft {
+			status += " (draft)"
+		}
+		report.WriteString(fmt.Sprintf(
+			"| %s | [#%d (%s)](%s) | %s | %s | %s | %s | %s |\n",
+			title, pr.Number, pr.Repo, pr.URL, pr.Author, involved,
+			formatDuration(pr.TimeToFirstReview), formatDuration(pr.TimeToClose), status,
+		))
+	}
+	report.WriteString("\n</details>\n")
 }
