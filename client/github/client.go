@@ -52,6 +52,30 @@ type Client interface {
 		number int,
 		opts *github.IssueListCommentsOptions,
 	) ([]*github.IssueComment, error)
+
+	ListPullRequests(
+		ctx context.Context,
+		owner, repo string,
+		opts *github.PullRequestListOptions,
+	) ([]*github.PullRequest, error)
+	ListReviews(
+		ctx context.Context,
+		owner, repo string,
+		number int,
+		opts *github.ListOptions,
+	) ([]*github.PullRequestReview, error)
+	ListIssueEvents(
+		ctx context.Context,
+		owner, repo string,
+		number int,
+		opts *github.ListOptions,
+	) ([]*github.IssueEvent, error)
+	ListTimeline(
+		ctx context.Context,
+		owner, repo string,
+		number int,
+		opts *github.ListOptions,
+	) ([]*github.Timeline, error)
 }
 
 type gitHubClient struct {
@@ -176,4 +200,43 @@ func (c *gitHubClient) ListComments(
 ) ([]*github.IssueComment, error) {
 	comments, _, err := c.client.Issues.ListComments(ctx, owner, repo, number, opts)
 	return comments, err
+}
+
+func (c *gitHubClient) ListPullRequests(
+	ctx context.Context,
+	owner, repo string,
+	opts *github.PullRequestListOptions,
+) ([]*github.PullRequest, error) {
+	prs, _, err := c.client.PullRequests.List(ctx, owner, repo, opts)
+	return prs, err
+}
+
+func (c *gitHubClient) ListReviews(
+	ctx context.Context,
+	owner, repo string,
+	number int,
+	opts *github.ListOptions,
+) ([]*github.PullRequestReview, error) {
+	reviews, _, err := c.client.PullRequests.ListReviews(ctx, owner, repo, number, opts)
+	return reviews, err
+}
+
+func (c *gitHubClient) ListIssueEvents(
+	ctx context.Context,
+	owner, repo string,
+	number int,
+	opts *github.ListOptions,
+) ([]*github.IssueEvent, error) {
+	events, _, err := c.client.Issues.ListIssueEvents(ctx, owner, repo, number, opts)
+	return events, err
+}
+
+func (c *gitHubClient) ListTimeline(
+	ctx context.Context,
+	owner, repo string,
+	number int,
+	opts *github.ListOptions,
+) ([]*github.Timeline, error) {
+	timeline, _, err := c.client.Issues.ListIssueTimeline(ctx, owner, repo, number, opts)
+	return timeline, err
 }
