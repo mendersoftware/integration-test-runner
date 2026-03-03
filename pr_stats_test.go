@@ -51,8 +51,13 @@ func TestGetPRStatsFull(t *testing.T) {
 		},
 	}, nil)
 
-	// Mock ListReviews for open PR #1
+	// Mock ListReviews for open PR #1: includes a self-review that should be filtered
+	selfReviewTime := now.Add(-1 * time.Hour)
 	mclient.On("ListReviews", mock.Anything, org, repo, 1, mock.Anything).Return([]*github.PullRequestReview{
+		{
+			User:        &github.User{Login: github.String("author1")},
+			SubmittedAt: &selfReviewTime,
+		},
 		{
 			User:        &github.User{Login: github.String("reviewer1")},
 			SubmittedAt: &now,
@@ -217,8 +222,9 @@ func TestGetPRStatsExcludesDrafts(t *testing.T) {
 	report, err := getPRStats(ctx, mclient, org, opts)
 	assert.NoError(t, err)
 	assert.Contains(t, report, "author2")
-	// author1 should still show up in team activity (they have 0 counts but get tracked)
-	// but the draft PR itself should not be in the open PRs list
+	// author1's draft PR is excluded entirely (skipped before ensureUser),
+	// so author1 should not appear in team activity at all
+	assert.NotContains(t, report, "author1")
 
 	mclient.AssertExpectations(t)
 }

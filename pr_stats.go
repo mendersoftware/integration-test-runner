@@ -546,14 +546,22 @@ func fetchReviewsAndTTRv(
 	sort.Slice(allReviews, func(i, j int) bool {
 		return allReviews[i].GetSubmittedAt().Before(allReviews[j].GetSubmittedAt())
 	})
-	pr.TimeToFirstReview = calculateWorkingTime(pr.CreatedAt, allReviews[0].GetSubmittedAt())
 
 	// NOTE: go-github v28's Timeline struct does not expose RequestedReviewer,
 	// so we use pr.CreatedAt as the baseline for per-reviewer review times.
 	proc := make(map[string]bool)
 	for _, r := range allReviews {
 		login := r.GetUser().GetLogin()
-		if login == pr.Author || excluded[login] || proc[login] {
+		if login == pr.Author || excluded[login] {
+			continue
+		}
+		// Use the first qualifying review for TimeToFirstReview
+		if pr.TimeToFirstReview == 0 {
+			pr.TimeToFirstReview = calculateWorkingTime(
+				pr.CreatedAt, r.GetSubmittedAt(),
+			)
+		}
+		if proc[login] {
 			continue
 		}
 		u := ensureUser(stats, login)
