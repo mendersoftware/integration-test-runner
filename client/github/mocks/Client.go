@@ -140,6 +140,75 @@ func (_m *Client) ListComments(ctx context.Context, owner string, repo string, n
 	return r0, r1
 }
 
+// ListPullRequests provides a mock function with given fields: ctx, owner, repo, opts
+func (_m *Client) ListPullRequests(ctx context.Context, owner string, repo string, opts *v28github.PullRequestListOptions) ([]*v28github.PullRequest, error) {
+	ret := _m.Called(ctx, owner, repo, opts)
+
+	var r0 []*v28github.PullRequest
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, *v28github.PullRequestListOptions) []*v28github.PullRequest); ok {
+		r0 = rf(ctx, owner, repo, opts)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*v28github.PullRequest)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, *v28github.PullRequestListOptions) error); ok {
+		r1 = rf(ctx, owner, repo, opts)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListReviews provides a mock function with given fields: ctx, owner, repo, number, opts
+func (_m *Client) ListReviews(ctx context.Context, owner string, repo string, number int, opts *v28github.ListOptions) ([]*v28github.PullRequestReview, error) {
+	ret := _m.Called(ctx, owner, repo, number, opts)
+
+	var r0 []*v28github.PullRequestReview
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, int, *v28github.ListOptions) []*v28github.PullRequestReview); ok {
+		r0 = rf(ctx, owner, repo, number, opts)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*v28github.PullRequestReview)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, int, *v28github.ListOptions) error); ok {
+		r1 = rf(ctx, owner, repo, number, opts)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListTimeline provides a mock function with given fields: ctx, owner, repo, number, opts
+func (_m *Client) ListTimeline(ctx context.Context, owner string, repo string, number int, opts *v28github.ListOptions) ([]*v28github.Timeline, error) {
+	ret := _m.Called(ctx, owner, repo, number, opts)
+
+	var r0 []*v28github.Timeline
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, int, *v28github.ListOptions) []*v28github.Timeline); ok {
+		r0 = rf(ctx, owner, repo, number, opts)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*v28github.Timeline)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, int, *v28github.ListOptions) error); ok {
+		r1 = rf(ctx, owner, repo, number, opts)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewClient interface {
 	mock.TestingT
 	Cleanup(func())
