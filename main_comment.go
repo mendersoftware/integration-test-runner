@@ -304,8 +304,9 @@ func parsePRStatsOptions(
 	}
 
 	// Default team aggregation logic:
-	// print pr stats -> defaults to FAST (fast team repositories only)
-	// print full pr stats -> defaults to SLOW (all team repositories)
+	// print pr stats      -> fast mode, team repos auto-detected from the current repo
+	// print full pr stats -> slow mode, team repos auto-detected from the current repo
+	// --repo / --team     -> opt out of auto-detection and use the explicit selection
 	slow := isFull
 
 	repos := []string{defaultRepo}
@@ -316,7 +317,7 @@ func parsePRStatsOptions(
 
 	opts := defaultStatsOptions(statsConfig)
 	repoLabel := ""
-	allRepos := false
+	repoOverridden := false
 
 	words := strings.Fields(commentBody)
 	for i, word := range words {
@@ -324,9 +325,10 @@ func parsePRStatsOptions(
 		case "--repo":
 			if i+1 < len(words) {
 				repos = []string{words[i+1]}
+				repoOverridden = true
 			}
 		case "--all-repos":
-			allRepos = true
+			// no-op: team expansion is now the default
 		case "--mode":
 			if i+1 < len(words) {
 				mode = words[i+1]
@@ -343,12 +345,13 @@ func parsePRStatsOptions(
 			slow = true
 		case "--team":
 			if r, l, ok := applyTeamFlag(words, i, statsConfig, slow); ok {
-				repos, repoLabel, allRepos = r, l, false
+				repos, repoLabel = r, l
+				repoOverridden = true
 			}
 		}
 	}
 
-	if allRepos && statsConfig != nil {
+	if !repoOverridden && statsConfig != nil {
 		repos, repoLabel = getTeamRepos(repos[0], statsConfig, slow)
 	}
 
