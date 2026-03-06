@@ -123,6 +123,8 @@ func getTeamRepos(currentRepo string, config *PRStatsConfig, slow bool) ([]strin
 				}
 			}
 			if !found {
+				// We make sure that the current repository is always included
+				// regardless of the config and the mode selected.
 				repos = append([]string{currentRepo}, repos...)
 			}
 			return repos, team.Name + " Team (Fast Mode)"

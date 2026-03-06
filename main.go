@@ -114,7 +114,7 @@ const (
 	commandCherryPickBranch         = "cherry-pick to:"
 	commandConventionalCommit       = "mark-pr as"
 	commandSyncRepos                = "sync"
-	commandPrintPRStats             = "print pr stats"
+	commandPrintPRStats             = "print fast pr stats"
 	commandPrintFullPRStats         = "print full pr stats"
 )
 
