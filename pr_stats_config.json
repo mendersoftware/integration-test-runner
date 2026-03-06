@@ -1,0 +1,26 @@
+{
+  "global": {
+    "excluded_users": ["mender-test-bot", "dependabot[bot]"],
+    "excluded_labels": ["dependencies", "onhold", "question", "autorelease: pending", "external contribution"],
+    "exclude_drafts": true,
+    "sla_hours": 48
+  },
+  "teams": [
+    {
+      "name": "Client",
+      "repositories": [
+        "mender", "meta-mender", "mender-convert", "mender-qa", "mender-configure-module", "mender-dist-packages", "mender-snapshot", "mender-setup",
+        "mender-artifact", "mender-gateway", "mender-connect", "mender-flash", "mender-orchestrator", "mender-mcu", "integration",
+        "mender-client-subcomponents", "mender-container-modules", "monitor-client", "mendertesting"
+      ],
+      "fast_repositories": ["mender", "meta-mender", "mender-mcu", "mender-orchestrator"]
+    },
+    {
+      "name": "Server",
+      "repositories": [
+        "mender-server", "mender-server-enterprise", "mender-helm", "mender-cli", "mender-gateway", "mender-api-docs"
+      ],
+      "fast_repositories": ["mender-server", "mender-server-enterprise"]
+    }
+  ]
+}

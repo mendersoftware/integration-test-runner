@@ -114,6 +114,8 @@ const (
 	commandCherryPickBranch         = "cherry-pick to:"
 	commandConventionalCommit       = "mark-pr as"
 	commandSyncRepos                = "sync"
+	commandPrintPRStats             = "print fast pr stats"
+	commandPrintFullPRStats         = "print full pr stats"
 )
 
 func getConfig() (*config, error) {

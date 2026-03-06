@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -371,6 +372,44 @@ func TestProcessGitHubWebhook(t *testing.T) {
 
 			isCommentEventsProcessingEnabled: false,
 		},
+		"comment from organization user, print fast pr stats": {
+			webhookType: "issue_comment",
+			webhookEvent: &github.IssueCommentEvent{
+				Action: github.String("created"),
+				Comment: &github.IssueComment{
+					Body: github.String("@" + githubBotName + " print fast pr stats"),
+				},
+				Issue: &github.Issue{
+					PullRequestLinks: &github.PullRequestLinks{
+						URL: github.String("https://api.github.com/repos/mendersoftware/integration-test-runner/pulls/78"),
+					},
+				},
+				Repo: &github.Repository{
+					Name: github.String("integration-test-runner"),
+					Owner: &github.User{
+						Login: github.String(gitHubOrg),
+					},
+				},
+				Sender: &github.User{
+					Login: github.String("member"),
+				},
+			},
+
+			isCommentEventProcessingEnabled: true,
+
+			isOrganizationMember: github.Bool(true),
+
+			repo:     "integration-test-runner",
+			prNumber: 78,
+
+			pullRequest: &github.PullRequest{
+				Number: github.Int(78),
+				Base: &github.PullRequestBranch{
+					Label: github.String("user:branch"),
+				},
+			},
+			createComment: true,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -426,6 +465,16 @@ func TestProcessGitHubWebhook(t *testing.T) {
 					tc.prNumber,
 					mock.AnythingOfType("*github.IssueComment"),
 				).Return(nil)
+			}
+
+			// Mock ListPullRequests for PR stats command
+			if tc.webhookType == "issue_comment" {
+				event := tc.webhookEvent.(*github.IssueCommentEvent)
+				if event.Comment != nil && (strings.Contains(event.Comment.GetBody(), commandPrintPRStats) ||
+					strings.Contains(event.Comment.GetBody(), commandPrintFullPRStats)) {
+					mclient.On("ListPullRequests", mock.Anything, gitHubOrg, mock.Anything, mock.Anything).
+						Return([]*github.PullRequest{}, nil).Maybe()
+				}
 			}
 
 			conf := &config{
