@@ -297,17 +297,11 @@ func handlePRStatsCommand(
 func parsePRStatsOptions(
 	commentBody, defaultRepo string, log *logrus.Entry,
 ) PRStatsOptions {
+	// isFull is the single source of truth:
+	//   print fast pr stats -> team mode, fast (only fast team repos)
+	//   print full pr stats -> full mode, slow (all team repos)
+	// --repo / --team opt out of auto team detection and use an explicit selection.
 	isFull := strings.Contains(commentBody, commandPrintFullPRStats)
-	mode := prStatsModeTeam
-	if isFull {
-		mode = prStatsModeFull
-	}
-
-	// Default team aggregation logic:
-	// print pr stats      -> fast mode, team repos auto-detected from the current repo
-	// print full pr stats -> slow mode, team repos auto-detected from the current repo
-	// --repo / --team     -> opt out of auto-detection and use the explicit selection
-	slow := isFull
 
 	repos := []string{defaultRepo}
 	statsConfig, err := loadPRStatsConfig("")
@@ -329,22 +323,14 @@ func parsePRStatsOptions(
 			}
 		case "--all-repos":
 			// no-op: team expansion is now the default
-		case "--mode":
-			if i+1 < len(words) {
-				mode = words[i+1]
-			}
 		case "--exclude-drafts":
 			opts.ExcludeDrafts = true
 		case "--exclude-user":
 			if i+1 < len(words) {
 				opts.ExcludedUsers[words[i+1]] = true
 			}
-		case "--fast":
-			slow = false
-		case "--slow":
-			slow = true
 		case "--team":
-			if r, l, ok := applyTeamFlag(words, i, statsConfig, slow); ok {
+			if r, l, ok := applyTeamFlag(words, i, statsConfig, isFull); ok {
 				repos, repoLabel = r, l
 				repoOverridden = true
 			}
@@ -352,12 +338,16 @@ func parsePRStatsOptions(
 	}
 
 	if !repoOverridden && statsConfig != nil {
-		repos, repoLabel = getTeamRepos(repos[0], statsConfig, slow)
+		repos, repoLabel = getTeamRepos(repos[0], statsConfig, isFull)
 	}
 
 	opts.Repos = repos
 	opts.RepoLabel = repoLabel
-	opts.Mode = mode
+	if isFull {
+		opts.Mode = prStatsModeFull
+	} else {
+		opts.Mode = prStatsModeTeam
+	}
 	return opts
 }
 

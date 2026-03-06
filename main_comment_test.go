@@ -372,12 +372,12 @@ func TestProcessGitHubWebhook(t *testing.T) {
 
 			isCommentEventsProcessingEnabled: false,
 		},
-		"comment from organization user, print pr stats": {
+		"comment from organization user, print fast pr stats": {
 			webhookType: "issue_comment",
 			webhookEvent: &github.IssueCommentEvent{
 				Action: github.String("created"),
 				Comment: &github.IssueComment{
-					Body: github.String("@" + githubBotName + " print pr stats"),
+					Body: github.String("@" + githubBotName + " print fast pr stats"),
 				},
 				Issue: &github.Issue{
 					PullRequestLinks: &github.PullRequestLinks{
