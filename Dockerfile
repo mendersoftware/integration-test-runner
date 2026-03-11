@@ -13,5 +13,6 @@ RUN git clone https://github.com/mendersoftware/integration.git /integration
 ENV PATH="/integration/extra:${PATH}"
 ENV GIN_RELEASE=release
 COPY --from=builder /go/src/github.com/mendersoftware/integration-test-runner/integration-test-runner /
+ADD ./pr_stats_config.json /
 ADD ./entrypoint /
 ENTRYPOINT ["/entrypoint"]
