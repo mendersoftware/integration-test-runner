@@ -172,6 +172,9 @@ func processGitHubComment(
 		}
 	case strings.Contains(commentBody, commandSyncRepos):
 		syncPRBranch(ctx, comment, pr, log, conf)
+	case strings.Contains(commentBody, commandPrintFullPRStats) ||
+		strings.Contains(commentBody, commandPrintPRStats):
+		handlePRStatsCommand(ctx, comment, pr, githubClient, conf, log, commentBody)
 	default:
 		log.Warnf("no command found: %s", commentBody)
 		return nil
@@ -256,6 +259,136 @@ func syncPRBranch(
 		msg := mainErrMsg + ", " + msgDetailsKubernetesLog
 		postGitHubMessage(ctx, prEvent, log, msg)
 	}
+}
+
+func handlePRStatsCommand(
+	ctx *gin.Context,
+	comment *github.IssueCommentEvent,
+	pr *github.PullRequest,
+	githubClient clientgithub.Client,
+	conf *config,
+	log *logrus.Entry,
+	commentBody string,
+) {
+	opts := parsePRStatsOptions(commentBody, comment.GetRepo().GetName(), log)
+
+	report, err := getPRStats(ctx, githubClient, conf.githubOrganization, opts)
+	if err != nil {
+		report = "Failed to generate PR stats: " + err.Error()
+	}
+
+	err = githubClient.CreateComment(
+		ctx,
+		conf.githubOrganization,
+		comment.GetRepo().GetName(),
+		pr.GetNumber(),
+		&github.IssueComment{
+			Body: github.String(report),
+		},
+	)
+	if err != nil {
+		log.Errorf(
+			"Failed to comment on the pr: %v, Error: %s",
+			pr, err.Error(),
+		)
+	}
+}
+
+func parsePRStatsOptions(
+	commentBody, defaultRepo string, log *logrus.Entry,
+) PRStatsOptions {
+	// isFull is the single source of truth:
+	//   print fast pr stats -> team mode, fast (only fast team repos)
+	//   print full pr stats -> full mode, slow (all team repos)
+	// --repo / --team opt out of auto team detection and use an explicit selection.
+	isFull := strings.Contains(commentBody, commandPrintFullPRStats)
+
+	repos := []string{defaultRepo}
+	statsConfig, err := loadPRStatsConfig("")
+	if err != nil {
+		log.Errorf("failed to load pr stats config: %s", err.Error())
+	}
+
+	opts := defaultStatsOptions(statsConfig)
+	repoLabel := ""
+	repoOverridden := false
+
+	words := strings.Fields(commentBody)
+	for i, word := range words {
+		switch word {
+		case "--repo":
+			if i+1 < len(words) {
+				repos = []string{words[i+1]}
+				repoOverridden = true
+			}
+		case "--all-repos":
+			// no-op: team expansion is now the default
+		case "--exclude-drafts":
+			opts.ExcludeDrafts = true
+		case "--exclude-user":
+			if i+1 < len(words) {
+				opts.ExcludedUsers[words[i+1]] = true
+			}
+		case "--team":
+			if r, l, ok := applyTeamFlag(words, i, statsConfig, isFull); ok {
+				repos, repoLabel = r, l
+				repoOverridden = true
+			}
+		}
+	}
+
+	if !repoOverridden && statsConfig != nil {
+		repos, repoLabel = getTeamRepos(repos[0], statsConfig, isFull)
+	}
+
+	opts.Repos = repos
+	opts.RepoLabel = repoLabel
+	if isFull {
+		opts.Mode = prStatsModeFull
+	} else {
+		opts.Mode = prStatsModeTeam
+	}
+	return opts
+}
+
+func defaultStatsOptions(cfg *PRStatsConfig) PRStatsOptions {
+	opts := PRStatsOptions{
+		SLAHours:       48,
+		ExcludedUsers:  make(map[string]bool),
+		ExcludedLabels: make(map[string]bool),
+	}
+	if cfg != nil {
+		for _, u := range cfg.Global.ExcludedUsers {
+			opts.ExcludedUsers[u] = true
+		}
+		for _, l := range cfg.Global.ExcludedLabels {
+			opts.ExcludedLabels[l] = true
+		}
+		opts.SLAHours = cfg.Global.SLAHours
+		opts.ExcludeDrafts = cfg.Global.ExcludeDrafts
+	}
+	return opts
+}
+
+func applyTeamFlag(
+	words []string, i int, cfg *PRStatsConfig, slow bool,
+) (repos []string, label string, ok bool) {
+	if i+1 >= len(words) || cfg == nil {
+		return nil, "", false
+	}
+	target := words[i+1]
+	for _, t := range cfg.Teams {
+		if strings.EqualFold(t.Name, target) {
+			repos = t.Repositories
+			label = t.Name + " Team"
+			if !slow {
+				repos = t.FastRepositories
+				label = t.Name + " Team (Fast Mode)"
+			}
+			return repos, label, true
+		}
+	}
+	return nil, "", false
 }
 
 // parsing `start client pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head
