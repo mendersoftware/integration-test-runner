@@ -76,10 +76,12 @@ type PRStatsConfig struct {
 }
 
 func loadPRStatsConfig(path string) (*PRStatsConfig, error) {
+	isDefaultPath := false
 	if path == "" {
 		path = os.Getenv("PR_STATS_CONFIG_PATH")
 		if path == "" {
 			path = "pr_stats_config.json"
+			isDefaultPath = true
 			if _, err := os.Stat(path); os.IsNotExist(err) {
 				path = "/pr_stats_config.json"
 			}
@@ -87,6 +89,10 @@ func loadPRStatsConfig(path string) (*PRStatsConfig, error) {
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
+		if isDefaultPath && os.IsNotExist(err) {
+			logrus.Infof("Optional config file %s not found, using defaults", path)
+			return nil, nil
+		}
 		logrus.Warnf("Could not read config file at %s: %s", path, err)
 		return nil, err
 	}
@@ -269,7 +275,7 @@ func getPRStats(
 	opts PRStatsOptions,
 ) (string, error) {
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
-	needReviews := opts.Mode == prStatsModeFull
+	needReviews := true
 
 	results := make([]repoResult, len(opts.Repos))
 
@@ -658,9 +664,9 @@ func writeReportTeamActivity(
 ) {
 	report.WriteString("\n### Team Activity\n")
 	if mode == prStatsModeTeam {
-		report.WriteString("| User | Opened (30d) | Closed (30d) | ")
+		report.WriteString("| User | Opened (30d) | Closed (30d) | Reviews (30d) | ")
 		report.WriteString("Median TTC | **Open Now** | **Assigned/Reviewing** |\n")
-		report.WriteString("|---|---|---|---|---|---|\n")
+		report.WriteString("|---|---|---|---|---|---|---|\n")
 	} else {
 		report.WriteString("| User | Opened (30d) | Closed (30d) | Reviews (30d) | ")
 		report.WriteString("Median TTC | Median TTRv | **Open Now** | **Assigned/Reviewing** |\n")
@@ -681,8 +687,8 @@ func writeReportTeamActivity(
 		_, ttcMed, _ := getStats(s.CloseTimes)
 		if mode == prStatsModeTeam {
 			report.WriteString(fmt.Sprintf(
-				"| %s | %d | %d | %s | **%d** | **%d** |\n",
-				s.Login, s.Opened, s.Closed, ttcMed,
+				"| %s | %d | %d | %d | %s | **%d** | **%d** |\n",
+				s.Login, s.Opened, s.Closed, s.Reviewed, ttcMed,
 				s.CurrentOpen, s.CurrentAssigned,
 			))
 		} else {
