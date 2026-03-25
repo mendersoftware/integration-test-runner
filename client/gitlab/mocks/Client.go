@@ -13,11 +13,11 @@ type Client struct {
 }
 
 // CancelPipelineBuild provides a mock function with given fields: path, id
-func (_m *Client) CancelPipelineBuild(path string, id int) error {
+func (_m *Client) CancelPipelineBuild(path string, id int64) error {
 	ret := _m.Called(path, id)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, int) error); ok {
+	if rf, ok := ret.Get(0).(func(string, int64) error); ok {
 		r0 = rf(path, id)
 	} else {
 		r0 = ret.Error(0)
@@ -53,15 +53,15 @@ func (_m *Client) CreatePipeline(path string, options *client_go.CreatePipelineO
 }
 
 // GetPipelineVariables provides a mock function with given fields: path, id
-func (_m *Client) GetPipelineVariables(path string, id int) ([]*client_go.PipelineVariable, error) {
+func (_m *Client) GetPipelineVariables(path string, id int64) ([]*client_go.PipelineVariable, error) {
 	ret := _m.Called(path, id)
 
 	var r0 []*client_go.PipelineVariable
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, int) ([]*client_go.PipelineVariable, error)); ok {
+	if rf, ok := ret.Get(0).(func(string, int64) ([]*client_go.PipelineVariable, error)); ok {
 		return rf(path, id)
 	}
-	if rf, ok := ret.Get(0).(func(string, int) []*client_go.PipelineVariable); ok {
+	if rf, ok := ret.Get(0).(func(string, int64) []*client_go.PipelineVariable); ok {
 		r0 = rf(path, id)
 	} else {
 		if ret.Get(0) != nil {
@@ -69,7 +69,7 @@ func (_m *Client) GetPipelineVariables(path string, id int) ([]*client_go.Pipeli
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, int) error); ok {
+	if rf, ok := ret.Get(1).(func(string, int64) error); ok {
 		r1 = rf(path, id)
 	} else {
 		r1 = ret.Error(1)
@@ -97,6 +97,136 @@ func (_m *Client) ListProjectPipelines(path string, options *client_go.ListProje
 
 	if rf, ok := ret.Get(1).(func(string, *client_go.ListProjectPipelinesOptions) error); ok {
 		r1 = rf(path, options)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListPipelineJobs provides a mock function with given fields: path, pipelineID, options
+func (_m *Client) ListPipelineJobs(path string, pipelineID int64, options *client_go.ListJobsOptions) ([]*client_go.Job, error) {
+	ret := _m.Called(path, pipelineID, options)
+
+	var r0 []*client_go.Job
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, int64, *client_go.ListJobsOptions) ([]*client_go.Job, error)); ok {
+		return rf(path, pipelineID, options)
+	}
+	if rf, ok := ret.Get(0).(func(string, int64, *client_go.ListJobsOptions) []*client_go.Job); ok {
+		r0 = rf(path, pipelineID, options)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*client_go.Job)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, int64, *client_go.ListJobsOptions) error); ok {
+		r1 = rf(path, pipelineID, options)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// PlayJob provides a mock function with given fields: path, jobID, options
+func (_m *Client) PlayJob(path string, jobID int64, options *client_go.PlayJobOptions) (*client_go.Job, error) {
+	ret := _m.Called(path, jobID, options)
+
+	var r0 *client_go.Job
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, int64, *client_go.PlayJobOptions) (*client_go.Job, error)); ok {
+		return rf(path, jobID, options)
+	}
+	if rf, ok := ret.Get(0).(func(string, int64, *client_go.PlayJobOptions) *client_go.Job); ok {
+		r0 = rf(path, jobID, options)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client_go.Job)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, int64, *client_go.PlayJobOptions) error); ok {
+		r1 = rf(path, jobID, options)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ProtectRepositoryBranches provides a mock function with given fields: path, options
+func (_m *Client) ProtectRepositoryBranches(path string, options *client_go.ProtectRepositoryBranchesOptions) (*client_go.ProtectedBranch, error) {
+	ret := _m.Called(path, options)
+
+	var r0 *client_go.ProtectedBranch
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, *client_go.ProtectRepositoryBranchesOptions) (*client_go.ProtectedBranch, error)); ok {
+		return rf(path, options)
+	}
+	if rf, ok := ret.Get(0).(func(string, *client_go.ProtectRepositoryBranchesOptions) *client_go.ProtectedBranch); ok {
+		r0 = rf(path, options)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client_go.ProtectedBranch)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, *client_go.ProtectRepositoryBranchesOptions) error); ok {
+		r1 = rf(path, options)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UnprotectRepositoryBranches provides a mock function with given fields: path, branch, options
+func (_m *Client) UnprotectRepositoryBranches(path string, branch string, options client_go.RequestOptionFunc) (*client_go.Response, error) {
+	ret := _m.Called(path, branch, options)
+
+	var r0 *client_go.Response
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, string, client_go.RequestOptionFunc) (*client_go.Response, error)); ok {
+		return rf(path, branch, options)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, client_go.RequestOptionFunc) *client_go.Response); ok {
+		r0 = rf(path, branch, options)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client_go.Response)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, client_go.RequestOptionFunc) error); ok {
+		r1 = rf(path, branch, options)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DeleteBranch provides a mock function with given fields: path, branch, options
+func (_m *Client) DeleteBranch(path string, branch string, options *client_go.RequestOptionFunc) (*client_go.Response, error) {
+	ret := _m.Called(path, branch, options)
+
+	var r0 *client_go.Response
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, string, *client_go.RequestOptionFunc) (*client_go.Response, error)); ok {
+		return rf(path, branch, options)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, *client_go.RequestOptionFunc) *client_go.Response); ok {
+		r0 = rf(path, branch, options)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client_go.Response)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, *client_go.RequestOptionFunc) error); ok {
+		r1 = rf(path, branch, options)
 	} else {
 		r1 = ret.Error(1)
 	}
