@@ -208,13 +208,10 @@ func deletePRBranch(
 	log *logrus.Entry,
 ) (*gitlab.Response, error) {
 
-	repoName := pr.GetRepo().GetName()
-
-	group, ok := gitHubOrganizationToGitLabGroup[conf.githubOrganization]
-	if !ok {
-		return nil, fmt.Errorf("Unrecognized organization %q", conf.githubOrganization)
+	path, err := getGitLabProjectPath(conf.githubOrganization, pr.GetRepo().GetName())
+	if err != nil {
+		return nil, err
 	}
-	path := "Northern.tech/" + group + "/" + repoName
 
 	client, err := clientgitlab.NewGitLabClient(
 		conf.gitlabToken,
