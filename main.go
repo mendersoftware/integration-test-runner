@@ -57,6 +57,12 @@ var gitHubRepoToGitLabProjectCustom = map[string]string{
 	"saas": "Northern.tech/MenderSaaS/saas",
 }
 
+// Mapping of GitHub repos to their review app domain
+var gitHubRepoToReviewAppDomain = map[string]string{
+	"mender-server":            "staging.hosted.mender.io",
+	"mender-server-enterprise": "staging.hosted.mender.io",
+}
+
 // Mender Client LTS components according to
 // https://docs.mender.io/release-information/supported-releases#subcomponents
 var clientRepositories = []string{
@@ -111,6 +117,8 @@ const (
 const (
 	commandStartIntegrationPipeline = "start integration pipeline"
 	commandStartClientPipeline      = "start client pipeline"
+	commandStartReviewApp           = "start review app"
+	commandStartReviewTests         = "start review tests"
 	commandCherryPickBranch         = "cherry-pick to:"
 	commandConventionalCommit       = "mark-pr as"
 	commandSyncRepos                = "sync"

@@ -231,6 +231,12 @@ func processGitHubPullRequest(
    - options: ` + "`" + `--repo <repo>` + "`" + `, ` + "`" + `--team <name>` + "`" + `, ` + "`" + `--all-repos` + "`" + `, ` + "`" + `--exclude-drafts` + "`" + `, ` + "`" + `--exclude-user <user>` + "`" + `
    - mentioning me and ` + "`" + commandPrintFullPRStats + ` --repo mender --all-repos --exclude-drafts` + "`" + `
 
+   You can deploy a review app with:
+   - mentioning me and ` + "`" + `start review app` + "`" + `
+
+   You can run e2e tests against a deployed review app with:
+   - mentioning me and ` + "`" + `start review tests` + "`" + `
+
    You can cherry pick to a given branch or branches with:
    - mentioning me and:
    ` + "```" + `
