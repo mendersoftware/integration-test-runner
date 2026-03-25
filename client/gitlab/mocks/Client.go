@@ -151,6 +151,58 @@ func (_m *Client) ListProjectPipelines(path string, options *client_go.ListProje
 	return r0, r1
 }
 
+// ListPipelineJobs provides a mock function with given fields: path, pipelineID, options
+func (_m *Client) ListPipelineJobs(path string, pipelineID int64, options *client_go.ListJobsOptions) ([]*client_go.Job, error) {
+	ret := _m.Called(path, pipelineID, options)
+
+	var r0 []*client_go.Job
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, int64, *client_go.ListJobsOptions) ([]*client_go.Job, error)); ok {
+		return rf(path, pipelineID, options)
+	}
+	if rf, ok := ret.Get(0).(func(string, int64, *client_go.ListJobsOptions) []*client_go.Job); ok {
+		r0 = rf(path, pipelineID, options)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*client_go.Job)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, int64, *client_go.ListJobsOptions) error); ok {
+		r1 = rf(path, pipelineID, options)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// PlayJob provides a mock function with given fields: path, jobID, options
+func (_m *Client) PlayJob(path string, jobID int64, options *client_go.PlayJobOptions) (*client_go.Job, error) {
+	ret := _m.Called(path, jobID, options)
+
+	var r0 *client_go.Job
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, int64, *client_go.PlayJobOptions) (*client_go.Job, error)); ok {
+		return rf(path, jobID, options)
+	}
+	if rf, ok := ret.Get(0).(func(string, int64, *client_go.PlayJobOptions) *client_go.Job); ok {
+		r0 = rf(path, jobID, options)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client_go.Job)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, int64, *client_go.PlayJobOptions) error); ok {
+		r1 = rf(path, jobID, options)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ProtectRepositoryBranches provides a mock function with given fields: path, options
 func (_m *Client) ProtectRepositoryBranches(path string, options *client_go.ProtectRepositoryBranchesOptions) (*client_go.ProtectedBranch, error) {
 	ret := _m.Called(path, options)
