@@ -37,8 +37,9 @@ func repoToBuildParameter(repo string) string {
 	return strings.Replace(repoRevision, "-", "_", -1)
 }
 
-// Use python script in order to determine which integration branches to test with
-func getIntegrationVersionsUsingMicroservice(
+// Legacy: Mender Client 5.0.x and below. Uses release_tool.py from the
+// integration repo. Remove when deprecating the old release process.
+func getIntegrationVersionsLegacy(
 	log *logrus.Entry,
 	repo, version string,
 	conf *config,
@@ -59,7 +60,7 @@ func getIntegrationVersionsUsingMicroservice(
 
 	if err != nil {
 		return nil, fmt.Errorf(
-			"getIntegrationVersionsUsingMicroservice: Error: %v (%s)",
+			"getIntegrationVersionsLegacy: Error: %v (%s)",
 			err,
 			integrations,
 		)

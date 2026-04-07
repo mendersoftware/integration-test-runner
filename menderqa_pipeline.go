@@ -87,7 +87,7 @@ func getClientBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEven
 				var err error
 				var integrationsToTest []string
 
-				if integrationsToTest, err = getIntegrationVersionsUsingMicroservice(
+				if integrationsToTest, err = getIntegrationVersionsLegacy(
 					log,
 					repo,
 					baseBranch,
@@ -147,7 +147,7 @@ func triggerClientBuild(
 		return err
 	}
 
-	buildParameters, err := getClientBuildParameters(log, conf, build, buildOptions)
+	buildParameters, err := getMenderClientBuildParametersLegacy(log, conf, build, buildOptions)
 	if err != nil {
 		return err
 	}
@@ -231,7 +231,9 @@ Hello :smiley_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}
 	return err
 }
 
-func getClientBuildParameters(
+// Legacy: Mender Client 5.0.x and below. Uses release_tool.py from the
+// integration repo. Remove when deprecating the old release process.
+func getMenderClientBuildParametersLegacy(
 	log *logrus.Entry,
 	conf *config,
 	build *buildOptions,
@@ -504,7 +506,12 @@ func stopBuildsOfStaleClientPRs(
 			return err
 		}
 
-		buildParams, err := getClientBuildParameters(log, conf, &build, NewBuildOptions())
+		buildParams, err := getMenderClientBuildParametersLegacy(
+			log,
+			conf,
+			&build,
+			NewBuildOptions(),
+		)
 		if err != nil {
 			log.Debug("stopBuildsOfStaleClientPRs: Failed to get the" +
 				"build-parameters for the build")
