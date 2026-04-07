@@ -222,6 +222,10 @@ func processGitHubPullRequest(
    You can trigger a client pipeline on multiple prs with:
    - mentioning me and ` + "`" + `start client pipeline --pr mender/127 --pr mender-connect/255` + "`" + `
 
+   You can trigger a client pipeline for a specific Mender Client release with:
+   - mentioning me and ` + "`" + `start client pipeline --release 6.0.x` + "`" + ` (can be given multiple times)
+   - by default, a pipeline is triggered for each supported release the component is a part of` + `
+
    You can trigger GitHub->GitLab branch sync with:
    - mentioning me and ` + "`" + `sync` + "`" + `
 
