@@ -84,41 +84,75 @@ func getClientBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEven
 				}
 				builds = append(builds, build)
 			} else {
-				var err error
+				// Legacy: Mender Client 5.0.x and below.
+				// Uses release_tool.py to find integration branches.
 				var integrationsToTest []string
-
+				var err error
 				if integrationsToTest, err = getIntegrationVersionsLegacy(
 					log,
 					repo,
 					baseBranch,
 					conf,
 				); err != nil {
-					log.Errorf(
-						"failed to get related microservices for repo: %s version: %s, failed "+
-							"with: %s\n",
+					// Non-fatal: release_tool.py may not know about repos
+					// that only exist in the new subcomponents process.
+					log.Warnf(
+						"legacy: failed to get integration versions for "+
+							"%s/%s: %s (continuing with new process)",
 						repo,
 						baseBranch,
 						err.Error(),
 					)
-					return nil
-				}
-				log.Infof(
-					"the following integration branches: %s are using %s/%s",
-					integrationsToTest,
-					repo,
-					baseBranch,
-				)
-
-				// one pull request can trigger multiple builds
-				for _, integrationBranch := range integrationsToTest {
-					buildOpts := buildOptions{
-						pr:         strconv.Itoa(pr.GetNumber()),
-						repo:       repo,
-						baseBranch: integrationBranch,
-						commitSHA:  commitSHA,
-						makeQEMU:   makeQEMU,
+				} else {
+					log.Infof(
+						"legacy: integration branches %s are using %s/%s",
+						integrationsToTest,
+						repo,
+						baseBranch,
+					)
+					for _, integrationBranch := range integrationsToTest {
+						builds = append(builds, buildOptions{
+							pr:         strconv.Itoa(pr.GetNumber()),
+							repo:       repo,
+							baseBranch: integrationBranch,
+							commitSHA:  commitSHA,
+							makeQEMU:   makeQEMU,
+						})
 					}
-					builds = append(builds, buildOpts)
+				}
+
+				// New process: Mender Client 6.0.x and above.
+				// Uses mender-client-subcomponents JSON to find releases.
+				if maintenanceBranchPattern.MatchString(baseBranch) {
+					releases, err := fetchMenderClientReleases(
+						context.Background(),
+						log,
+						githubClient,
+					)
+					if err != nil {
+						log.Errorf(
+							"failed to fetch subcomponent releases: %s",
+							err.Error(),
+						)
+						return nil
+					}
+					matched := findMatchingReleases(releases, repo, baseBranch)
+					log.Infof(
+						"subcomponents: %s/%s found in releases: %v",
+						repo, baseBranch,
+						releaseVersions(matched),
+					)
+					for _, release := range matched {
+						rel := release
+						builds = append(builds, buildOptions{
+							pr:          strconv.Itoa(pr.GetNumber()),
+							repo:        repo,
+							baseBranch:  release.Version,
+							commitSHA:   commitSHA,
+							makeQEMU:    makeQEMU,
+							releaseData: &rel,
+						})
+					}
 				}
 			}
 
@@ -147,7 +181,14 @@ func triggerClientBuild(
 		return err
 	}
 
-	buildParameters, err := getMenderClientBuildParametersLegacy(log, conf, build, buildOptions)
+	// Builds produced by the new release process carry releaseData;
+	// builds from the legacy release_tool path don't
+	var buildParameters []*gitlab.PipelineVariableOptions
+	if build.releaseData != nil {
+		buildParameters, err = getMenderClientBuildParameters(log, build, buildOptions)
+	} else {
+		buildParameters, err = getMenderClientBuildParametersLegacy(log, conf, build, buildOptions)
+	}
 	if err != nil {
 		return err
 	}
@@ -183,9 +224,13 @@ func triggerClientBuild(
 
 	// Add the build variable matrix to the pipeline comment under a
 	// drop-down tab
+	pipelineDescription := "a pipeline"
+	if build.releaseData != nil {
+		pipelineDescription = "a Mender Client " + build.releaseData.Version + " pipeline"
+	}
 	// nolint:lll
 	tmplString := `
-Hello :smiley_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}]({{.Pipeline.WebURL}})
+Hello :smiley_cat: I created {{.Description}} for you here: [Pipeline-{{.Pipeline.ID}}]({{.Pipeline.WebURL}})
 
 <details>
     <summary>Build Configuration Matrix</summary><p>
@@ -206,11 +251,13 @@ Hello :smiley_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}
 	}
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, struct {
-		BuildVars []*gitlab.PipelineVariableOptions
-		Pipeline  *gitlab.Pipeline
+		BuildVars   []*gitlab.PipelineVariableOptions
+		Pipeline    *gitlab.Pipeline
+		Description string
 	}{
-		BuildVars: filterOutEmptyVariables(*opt.Variables),
-		Pipeline:  pipeline,
+		BuildVars:   filterOutEmptyVariables(*opt.Variables),
+		Pipeline:    pipeline,
+		Description: pipelineDescription,
 	}); err != nil {
 		log.Errorf("Failed to execute the build matrix template. Error: %s\n", err.Error())
 		return err
@@ -229,6 +276,96 @@ Hello :smiley_cat: I created a pipeline for you here: [Pipeline-{{.Pipeline.ID}}
 	}
 
 	return err
+}
+
+// getMenderClientBuildParameters builds pipeline parameters from the
+// mender-client-subcomponents JSON release data. Used for Mender Client
+// 6.0.x and above.
+func getMenderClientBuildParameters(
+	log *logrus.Entry,
+	build *buildOptions,
+	buildOptions *BuildOptions,
+) ([]*gitlab.PipelineVariableOptions, error) {
+	readHead := "pull/" + build.pr + "/head"
+	var buildParameters []*gitlab.PipelineVariableOptions
+
+	// Set component versions from the release JSON, deduplicated by source
+	// repo (e.g., mender-auth and mender-update both come from "mender").
+	seen := make(map[string]bool)
+	for _, comp := range build.releaseData.Subcomponents {
+		repo := repoNameFromSource(comp.Source)
+		if seen[repo] || repo == build.repo {
+			continue
+		}
+		seen[repo] = true
+
+		repoKey := repoToBuildParameter(repo)
+		version := comp.Version
+		if prOverride, exists := buildOptions.PullRequests[repo]; exists {
+			version = prOverride
+		}
+		buildParameters = append(buildParameters,
+			&gitlab.PipelineVariableOptions{
+				Key:   &repoKey,
+				Value: &version,
+			})
+		log.Infof("%s version %s is being used in %s", repo, version, build.releaseData.Version)
+	}
+
+	// INTEGRATION_REV is always master for the new release process
+	integrationKey := repoToBuildParameter("integration")
+	integrationRev := "master"
+	if prOverride, exists := buildOptions.PullRequests["integration"]; exists {
+		integrationRev = prOverride
+	}
+	buildParameters = append(buildParameters,
+		&gitlab.PipelineVariableOptions{
+			Key:   &integrationKey,
+			Value: &integrationRev,
+		})
+
+	// MENDER_CLIENT_SUBCOMPONENTS_REV matches the release version
+	subcomponentsKey := repoToBuildParameter("mender-client-subcomponents")
+	subcomponentsRev := build.releaseData.Version
+	buildParameters = append(buildParameters,
+		&gitlab.PipelineVariableOptions{
+			Key:   &subcomponentsKey,
+			Value: &subcomponentsRev,
+		})
+
+	// Yocto params: same behavior as the legacy path for non-master builds
+	pokyBranch := LatestStableYoctoBranch
+	metaMenderBranch := pokyBranch
+	if prOverride, exists := buildOptions.PullRequests["meta-mender"]; exists {
+		metaMenderBranch = prOverride
+	}
+	metaMenderBranchKey := repoToBuildParameter("meta-mender")
+	buildParameters = append(buildParameters,
+		&gitlab.PipelineVariableOptions{
+			Key:   &metaMenderBranchKey,
+			Value: &metaMenderBranch,
+		})
+	pokyBranchKey := repoToBuildParameter("poky")
+	buildParameters = append(buildParameters,
+		&gitlab.PipelineVariableOptions{Key: &pokyBranchKey, Value: &pokyBranch})
+	metaOEKey := repoToBuildParameter("meta-openembedded")
+	buildParameters = append(buildParameters,
+		&gitlab.PipelineVariableOptions{Key: &metaOEKey, Value: &pokyBranch})
+	metaRPIKey := repoToBuildParameter("meta-raspberrypi")
+	buildParameters = append(buildParameters,
+		&gitlab.PipelineVariableOptions{Key: &metaRPIKey, Value: &pokyBranch})
+
+	// CI build parameters
+	runIntegrationTests := "true"
+	runIntegrationTestsKey := "RUN_INTEGRATION_TESTS"
+	buildParameters = append(buildParameters,
+		&gitlab.PipelineVariableOptions{Key: &runIntegrationTestsKey, Value: &runIntegrationTests})
+
+	buildRepoKey := repoToBuildParameter(build.repo)
+	buildParameters = append(buildParameters,
+		&gitlab.PipelineVariableOptions{Key: &buildRepoKey, Value: &readHead})
+
+	return getClientAcceptanceBuildParameters(buildParameters, build)
 }
 
 // Legacy: Mender Client 5.0.x and below. Uses release_tool.py from the
@@ -506,12 +643,21 @@ func stopBuildsOfStaleClientPRs(
 			return err
 		}
 
-		buildParams, err := getMenderClientBuildParametersLegacy(
-			log,
-			conf,
-			&build,
-			NewBuildOptions(),
-		)
+		var buildParams []*gitlab.PipelineVariableOptions
+		if build.releaseData != nil {
+			buildParams, err = getMenderClientBuildParameters(
+				log,
+				&build,
+				NewBuildOptions(),
+			)
+		} else {
+			buildParams, err = getMenderClientBuildParametersLegacy(
+				log,
+				conf,
+				&build,
+				NewBuildOptions(),
+			)
+		}
 		if err != nil {
 			log.Debug("stopBuildsOfStaleClientPRs: Failed to get the" +
 				"build-parameters for the build")

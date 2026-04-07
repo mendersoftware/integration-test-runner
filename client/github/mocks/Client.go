@@ -66,6 +66,38 @@ func (_m *Client) CreatePullRequest(ctx context.Context, org string, repo string
 	return r0, r1
 }
 
+// GetContents provides a mock function with given fields: ctx, owner, repo, path, opts
+func (_m *Client) GetContents(ctx context.Context, owner string, repo string, path string, opts *v28github.RepositoryContentGetOptions) (*v28github.RepositoryContent, []*v28github.RepositoryContent, error) {
+	ret := _m.Called(ctx, owner, repo, path, opts)
+
+	var r0 *v28github.RepositoryContent
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, *v28github.RepositoryContentGetOptions) *v28github.RepositoryContent); ok {
+		r0 = rf(ctx, owner, repo, path, opts)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*v28github.RepositoryContent)
+		}
+	}
+
+	var r1 []*v28github.RepositoryContent
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, *v28github.RepositoryContentGetOptions) []*v28github.RepositoryContent); ok {
+		r1 = rf(ctx, owner, repo, path, opts)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]*v28github.RepositoryContent)
+		}
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, string, string, string, *v28github.RepositoryContentGetOptions) error); ok {
+		r2 = rf(ctx, owner, repo, path, opts)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // DeleteComment provides a mock function with given fields: ctx, org, repo, commentID
 func (_m *Client) DeleteComment(ctx context.Context, org string, repo string, commentID int64) error {
 	ret := _m.Called(ctx, org, repo, commentID)

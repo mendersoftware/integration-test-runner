@@ -4,7 +4,9 @@ output:
 - 'info:Pull request event with action: opened'
 - 'git.Run: /usr/bin/git pull --rebase origin'
 - 'info:mender/3.1.x is being used in the following integration: [3.1.x]'
-- 'info:the following integration branches: [3.1.x] are using mender/3.1.x'
+- 'info:legacy: integration branches [3.1.x] are using mender/3.1.x'
+- 'info:fetchMenderClientReleases: loaded release 6.0.x'
+- 'info:subcomponents: mender/3.1.x found in releases: []'
 - info:mender:865 will trigger 1 builds
 - |+
   info:1: (main.buildOptions) {
@@ -12,7 +14,8 @@ output:
    repo: (string) (len=6) "mender",
    baseBranch: (string) (len=5) "3.1.x",
    commitSHA: (string) (len=40) "75ad5f739a6e0bd3367e92d846521a85a4e8bb35",
-   makeQEMU: (bool) true
+   makeQEMU: (bool) true,
+   releaseData: (*main.MenderClientRelease)(<nil>)
   }
 
 - info:auditlogs version 2.0.x is being used in 3.1.x

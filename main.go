@@ -38,11 +38,12 @@ type config struct {
 }
 
 type buildOptions struct {
-	pr         string
-	repo       string
-	baseBranch string
-	commitSHA  string
-	makeQEMU   bool
+	pr          string
+	repo        string
+	baseBranch  string
+	commitSHA   string
+	makeQEMU    bool
+	releaseData *MenderClientRelease
 }
 
 // Mapping https://github.com/<org> -> https://gitlab.com/Northern.tech/<group>
