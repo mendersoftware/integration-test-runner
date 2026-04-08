@@ -178,6 +178,24 @@ func processGitHubComment(
 		if err != nil {
 			log.Error(err)
 		}
+	case strings.Contains(commentBody, commandStartReviewApp):
+		prRequest := &github.PullRequestEvent{
+			Repo:        comment.GetRepo(),
+			Number:      github.Int(pr.GetNumber()),
+			PullRequest: pr,
+		}
+		if err := triggerReviewDeploy(log, conf, prRequest, comment.Sender.GetLogin()); err != nil {
+			log.Errorf("Could not start review deploy: %s", err.Error())
+		}
+	case strings.Contains(commentBody, commandStartReviewTests):
+		prRequest := &github.PullRequestEvent{
+			Repo:        comment.GetRepo(),
+			Number:      github.Int(pr.GetNumber()),
+			PullRequest: pr,
+		}
+		if err := triggerReviewE2E(log, conf, prRequest); err != nil {
+			log.Errorf("Could not start review e2e tests: %s", err.Error())
+		}
 	case strings.Contains(commentBody, commandSyncRepos):
 		syncPRBranch(ctx, comment, pr, log, conf)
 	case strings.Contains(commentBody, commandPrintFullPRStats) ||
