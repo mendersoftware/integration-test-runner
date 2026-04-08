@@ -5,7 +5,7 @@ output:
 - 'git.Run: /usr/bin/git pull --rebase origin'
 - 'info:mender-configure-module/master is being used in the following integration:
   [master]'
-- 'info:the following integration branches: [master] are using mender-configure-module/master'
+- 'info:legacy: integration branches [master] are using mender-configure-module/master'
 - info:mender-configure-module:145 will trigger 1 builds
 - |+
   info:1: (main.buildOptions) {
@@ -13,7 +13,8 @@ output:
    repo: (string) (len=23) "mender-configure-module",
    baseBranch: (string) (len=6) "master",
    commitSHA: (string) (len=40) "5ca6c70c8aec49182c885a264a31721d10951fc0",
-   makeQEMU: (bool) true
+   makeQEMU: (bool) true,
+   releaseData: (*main.MenderClientRelease)(<nil>)
   }
 
 - info:mender version master is being used in master

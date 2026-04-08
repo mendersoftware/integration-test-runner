@@ -70,6 +70,11 @@ type Client interface {
 		number int,
 		opts *github.ListOptions,
 	) ([]*github.Timeline, error)
+	GetContents(
+		ctx context.Context,
+		owner, repo, path string,
+		opts *github.RepositoryContentGetOptions,
+	) (*github.RepositoryContent, []*github.RepositoryContent, error)
 }
 
 type gitHubClient struct {
@@ -223,4 +228,19 @@ func (c *gitHubClient) ListTimeline(
 ) ([]*github.Timeline, error) {
 	timeline, _, err := c.client.Issues.ListIssueTimeline(ctx, owner, repo, number, opts)
 	return timeline, err
+}
+
+func (c *gitHubClient) GetContents(
+	ctx context.Context,
+	owner, repo, path string,
+	opts *github.RepositoryContentGetOptions,
+) (*github.RepositoryContent, []*github.RepositoryContent, error) {
+	fileContent, dirContents, _, err := c.client.Repositories.GetContents(
+		ctx,
+		owner,
+		repo,
+		path,
+		opts,
+	)
+	return fileContent, dirContents, err
 }

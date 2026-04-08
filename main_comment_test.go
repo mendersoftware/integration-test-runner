@@ -609,6 +609,29 @@ func TestParseBuildOptions(t *testing.T) {
 			},
 			ParseError: errors.New("parse error near 'some', I need, e.g.: start client pipeline --pr somerepo/pull/12/head --pr somerepo/1.0.x "),
 		},
+		"start client pipeline with --release": {
+			StartPipelineComment: "start client pipeline --release 6.0.x",
+			BuildOptions: &BuildOptions{
+				PullRequests: map[string]string{},
+				Releases:     []string{"6.0.x"},
+			},
+		},
+		"start client pipeline with multiple --release": {
+			StartPipelineComment: "start client pipeline --release 6.0.x --release 6.1.x",
+			BuildOptions: &BuildOptions{
+				PullRequests: map[string]string{},
+				Releases:     []string{"6.0.x", "6.1.x"},
+			},
+		},
+		"start client pipeline with --release and --pr": {
+			StartPipelineComment: "start client pipeline --release 6.0.x --pr mender/pull/123/head",
+			BuildOptions: &BuildOptions{
+				PullRequests: map[string]string{
+					"mender": "pull/123/head",
+				},
+				Releases: []string{"6.0.x"},
+			},
+		},
 	}
 
 	for name, tc := range testCases {

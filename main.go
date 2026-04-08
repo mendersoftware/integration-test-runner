@@ -38,11 +38,12 @@ type config struct {
 }
 
 type buildOptions struct {
-	pr         string
-	repo       string
-	baseBranch string
-	commitSHA  string
-	makeQEMU   bool
+	pr          string
+	repo        string
+	baseBranch  string
+	commitSHA   string
+	makeQEMU    bool
+	releaseData *MenderClientRelease
 }
 
 // Mapping https://github.com/<org> -> https://gitlab.com/Northern.tech/<group>
@@ -66,8 +67,7 @@ var clientRepositories = []string{
 	"monitor-client",
 	"mender-flash",
 	"mender-container-modules",
-	// TODO: QA-XXX: add when defining the new Mender Client release process
-	// "mender-binary-delta",
+	"mender-binary-delta",
 }
 
 // Repositories for which to build the Client Pipeline

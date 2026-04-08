@@ -9,7 +9,7 @@ output:
 - 'git.Run: /usr/bin/git pull --rebase origin'
 - 'info:mender-configure-module/master is being used in the following integration:
   [master]'
-- 'info:the following integration branches: [master] are using mender-configure-module/master'
+- 'info:legacy: integration branches [master] are using mender-configure-module/master'
 - info:mender version master is being used in master
 - info:mender-binary-delta version master is being used in master
 - info:mender-client-subcomponents version main is being used in master

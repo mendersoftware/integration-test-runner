@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -143,6 +144,13 @@ func processGitHubComment(
 			log.Infof("%d: "+spew.Sdump(build)+"\n", idx+1)
 			if build.repo == "meta-mender" && build.baseBranch == "master-next" {
 				log.Info("Skipping build targeting meta-mender:master-next")
+				continue
+			}
+			if len(buildOptions.Releases) > 0 && !slices.Contains(
+				buildOptions.Releases,
+				build.baseBranch,
+			) {
+				log.Infof("Skipping build for %s (not in --release)", build.baseBranch)
 				continue
 			}
 			if err := triggerClientBuild(log, conf, &build, prRequest, buildOptions); err != nil {
@@ -436,6 +444,8 @@ func parseBuildOptions(commentBody string) (*BuildOptions, error) {
 			}
 		} else if word == "--fast" {
 			buildOptions.Fast = true
+		} else if word == "--release" && id < (tokensCount-1) {
+			buildOptions.Releases = append(buildOptions.Releases, strings.TrimSpace(words[id+1]))
 		}
 	}
 
