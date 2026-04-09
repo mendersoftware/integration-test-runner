@@ -216,6 +216,40 @@ func protectBranch(conf *config, branchName string, pipelinePath string) error {
 	return nil
 }
 
+func unprotectBranch(conf *config, branchName string, pipelinePath string) error {
+	client, err := clientgitlab.NewGitLabClient(
+		conf.gitlabToken,
+		conf.gitlabBaseURL,
+		conf.dryRunMode,
+	)
+	if err != nil {
+		return err
+	}
+
+	response, err := client.UnprotectRepositoryBranches(pipelinePath, branchName, nil)
+	if err != nil {
+		// Ignore 404 — branch may not be protected (yet)
+		if response != nil && response.StatusCode == 404 {
+			return nil
+		}
+		return fmt.Errorf("failed to unprotect branch %s: %s", branchName, err.Error())
+	}
+	return nil
+}
+
+const (
+	// maxSyncRetries is the number of times to retry the unprotect+push cycle
+	// when force push fails due to branch protection not yet being removed.
+	maxSyncRetries = 3
+	// syncRetryDelay is the delay between retries to allow GitLab to propagate
+	// the branch unprotection.
+	syncRetryDelay = 3 * time.Second
+)
+
+func isProtectedBranchError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "protected branch")
+}
+
 func syncProtectedBranch(
 	log *logrus.Entry,
 	pr *github.PullRequestEvent,
@@ -224,25 +258,38 @@ func syncProtectedBranch(
 ) (string, error) {
 	prBranchName := "pr_" + strconv.Itoa(pr.GetNumber()) + "_protected"
 
-	// check if we have a protected branch and try to delete it
-	response, err := deletePRBranch(pr, conf, prBranchName, log)
-	if err != nil {
-		// Don't return error if the branch doesn't exist
-		if response.StatusCode != 404 {
-			return "", fmt.Errorf("Got response: %d. Failed to delete PR branch: %s",
-				response.StatusCode, err.Error())
+	var lastErr error
+	for attempt := 1; attempt <= maxSyncRetries; attempt++ {
+		// Unprotect the branch so that the force push is allowed.
+		// This is idempotent — if the branch is not protected, 404 is ignored.
+		if err := unprotectBranch(conf, prBranchName, pipelinePath); err != nil {
+			return "", fmt.Errorf("failed to unprotect branch before sync: %s", err.Error())
+		}
+
+		lastErr = syncBranch(prBranchName, log, pr, conf)
+		if lastErr == nil {
+			break
+		}
+
+		if !isProtectedBranchError(lastErr) {
+			mainErrMsg := "There was an error syncing branches"
+			return "", fmt.Errorf("%v returned error: %s: %s", lastErr, mainErrMsg, lastErr.Error())
+		}
+
+		if attempt < maxSyncRetries {
+			log.Warnf(
+				"Force push to %s failed due to branch protection (attempt %d/%d), retrying in %s",
+				prBranchName, attempt, maxSyncRetries, syncRetryDelay,
+			)
+			time.Sleep(syncRetryDelay)
 		}
 	}
-	// Arbitrary sleep to ensure the branch and protection
-	// is fully deleted before we sync
-	time.Sleep(time.Duration(5) * time.Second)
-	if err := syncBranch(prBranchName, log, pr, conf); err != nil {
+
+	if lastErr != nil {
 		mainErrMsg := "There was an error syncing branches"
-		return "", fmt.Errorf("%v returned error: %s: %s", err, mainErrMsg, err.Error())
+		return "", fmt.Errorf("%v returned error: %s: %s", lastErr, mainErrMsg, lastErr.Error())
 	}
-	// Arbitrary sleep to ensure the branch is
-	// created before we protect it
-	time.Sleep(time.Duration(5) * time.Second)
+
 	if err := protectBranch(conf, prBranchName, pipelinePath); err != nil {
 		return "", fmt.Errorf("%v returned error: %s", err, err.Error())
 	}
