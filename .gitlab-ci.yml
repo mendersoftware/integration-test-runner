@@ -30,6 +30,8 @@ default:
 
 
 test:unit:
+  variables:
+    GO_VERSION: "1.25"
   before_script:
     - !reference [.qa-common-network-git-clone-retry, before_script]
     - !reference [.qa-common-network-go-retry, before_script]
