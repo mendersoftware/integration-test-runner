@@ -27,6 +27,16 @@ type Client interface {
 		path string,
 		options *gitlab.ListProjectPipelinesOptions,
 	) ([]*gitlab.PipelineInfo, error)
+	ListPipelineJobs(
+		path string,
+		pipelineID int64,
+		options *gitlab.ListJobsOptions,
+	) ([]*gitlab.Job, error)
+	PlayJob(
+		path string,
+		jobID int64,
+		options *gitlab.PlayJobOptions,
+	) (*gitlab.Job, error)
 	DeleteBranch(path string,
 		branch string,
 		options *gitlab.RequestOptionFunc,
@@ -151,6 +161,42 @@ func (c *gitLabClient) UnprotectRepositoryBranches(
 		branch,
 		options)
 	return response, err
+}
+
+// ListPipelineJobs lists jobs for a pipeline
+func (c *gitLabClient) ListPipelineJobs(
+	path string,
+	pipelineID int64,
+	options *gitlab.ListJobsOptions,
+) ([]*gitlab.Job, error) {
+	if c.dryRunMode {
+		optionsJSON, _ := json.Marshal(options)
+		msg := fmt.Sprintf("gitlab.ListPipelineJobs: path=%s,pipelineID=%d,options=%s",
+			path, pipelineID, string(optionsJSON),
+		)
+		logger.GetRequestLogger().Push(msg)
+		return []*gitlab.Job{}, nil
+	}
+	jobs, _, err := c.client.Jobs.ListPipelineJobs(path, pipelineID, options, nil)
+	return jobs, err
+}
+
+// PlayJob triggers a manual job
+func (c *gitLabClient) PlayJob(
+	path string,
+	jobID int64,
+	options *gitlab.PlayJobOptions,
+) (*gitlab.Job, error) {
+	if c.dryRunMode {
+		optionsJSON, _ := json.Marshal(options)
+		msg := fmt.Sprintf("gitlab.PlayJob: path=%s,jobID=%d,options=%s",
+			path, jobID, string(optionsJSON),
+		)
+		logger.GetRequestLogger().Push(msg)
+		return &gitlab.Job{}, nil
+	}
+	job, _, err := c.client.Jobs.PlayJob(path, jobID, options, nil)
+	return job, err
 }
 
 // DeleteBranch deletes branches
