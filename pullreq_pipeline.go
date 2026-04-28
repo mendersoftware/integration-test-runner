@@ -147,7 +147,7 @@ func syncBranch(
 		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
-	gitcmd = git.Command("fetch", "github", "pull/"+prNum+"/head:"+prBranchName)
+	gitcmd = git.Command("fetch", "github", "pull/"+prNum+"/merge:"+prBranchName)
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
