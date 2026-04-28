@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/go-github/v28/github"
 	"github.com/sirupsen/logrus"
@@ -148,6 +149,55 @@ func syncBranch(
 	}
 
 	gitcmd = git.Command("fetch", "github", "pull/"+prNum+"/merge:"+prBranchName)
+	gitcmd.Dir = tmpdir
+	out, err = gitcmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
+	}
+
+	// GitHub computes pull/NNN/merge asynchronously, webhook can fire before
+	// ref is updated, retry if ^2 doesn't yet match the expected PR head SHA
+	expectedSHA := pr.GetPullRequest().GetHead().GetSHA()
+	for attempt := 1; attempt < 3; attempt++ {
+		gitcmd = git.Command("rev-parse", prBranchName+"^2")
+		gitcmd.Dir = tmpdir
+		actualSHABytes, _ := gitcmd.CombinedOutput()
+		actualSHA := strings.TrimSpace(string(actualSHABytes))
+		if actualSHA == "" || actualSHA == expectedSHA {
+			break
+		}
+		log.Infof("Merge ref pull/%s/merge is stale (got %s, want %s), retrying in 5s (%d/2)",
+			prNum, actualSHA, expectedSHA, attempt)
+		time.Sleep(5 * time.Second)
+		gitcmd = git.Command("fetch", "github", "-f", "pull/"+prNum+"/merge:"+prBranchName)
+		gitcmd.Dir = tmpdir
+		out, err = gitcmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
+		}
+	}
+
+	// The merge commit's second parent is the PR head commit — use its message so
+	// GitLab shows the original PR commit subject instead of "Merge <sha> into ..."
+	gitcmd = git.Command("log", "-1", "--format=%B", prBranchName+"^2")
+	gitcmd.Dir = tmpdir
+	headMsg, err := gitcmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, headMsg, err.Error())
+	}
+
+	gitcmd = git.Command("checkout", prBranchName)
+	gitcmd.Dir = tmpdir
+	out, err = gitcmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
+	}
+
+	gitcmd = git.Command(
+		"-c", "user.email=mender-test-bot@northern.tech",
+		"-c", "user.name=Mender Test Runner",
+		"commit", "--amend", "-m", strings.TrimSpace(string(headMsg)),
+	)
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
