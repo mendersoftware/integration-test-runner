@@ -548,8 +548,8 @@ func TestParseBuildOptions(t *testing.T) {
 			StartPipelineComment: "start client pipeline --pr mender-connect/pull/88 --pr deviceconnect/pull/12 --pr mender/3.1.x --pr deviceauth/feature-branch",
 			BuildOptions: &BuildOptions{
 				PullRequests: map[string]string{
-					"mender-connect": "pull/88/head",
-					"deviceconnect":  "pull/12/head",
+					"mender-connect": "pull/88/merge",
+					"deviceconnect":  "pull/12/merge",
 					"mender":         "3.1.x",
 					"deviceauth":     "feature-branch",
 				},
@@ -559,8 +559,8 @@ func TestParseBuildOptions(t *testing.T) {
 			StartPipelineComment: "start client pipeline --pr mender-connect/88 --pr deviceconnect/12 --pr mender/3.1.x",
 			BuildOptions: &BuildOptions{
 				PullRequests: map[string]string{
-					"mender-connect": "pull/88/head",
-					"deviceconnect":  "pull/12/head",
+					"mender-connect": "pull/88/merge",
+					"deviceconnect":  "pull/12/merge",
 					"mender":         "3.1.x",
 				},
 			},
