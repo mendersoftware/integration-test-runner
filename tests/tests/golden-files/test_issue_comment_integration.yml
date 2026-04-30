@@ -9,8 +9,7 @@ output:
 - 'git.Run: /usr/bin/git rev-parse pr_2725_protected^2'
 - 'git.Run: /usr/bin/git log -1 --format=%B pr_2725_protected^2'
 - 'git.Run: /usr/bin/git checkout pr_2725_protected'
-- 'git.Run: /usr/bin/git -c user.email=mender-test-bot@northern.tech -c user.name=Mender
-  Test Runner commit --amend -m '
+- 'git.Run: /usr/bin/git -c commit.gpgsign=false commit --amend -m '
 - 'git.Run: /usr/bin/git push -f -o ci.skip --set-upstream gitlab pr_2725_protected'
 - 'info:Created branch: integration:pr_2725_protected'
 - 'gitlab.ProtectedBranch: path=Northern.tech/Mender/integration,options={"name":"pr_2725_protected","allow_force_push":false}'
