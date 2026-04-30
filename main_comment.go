@@ -472,13 +472,13 @@ func parseBuildOptions(commentBody string) (*BuildOptions, error) {
 				case 2: // we can have both deviceauth/1 and mender/3.1.x syntax
 					// repo/<pr_number> syntax
 					if _, err := strconv.Atoi(userInputParts[1]); err == nil {
-						revision = "pull/" + userInputParts[1] + "/merge"
+						revision = "pull/" + userInputParts[1] + "/head"
 					} else {
 						// feature branch
 						revision = userInputParts[1]
 					}
 				case 3: // deviceconnect/pull/12 syntax
-					revision = strings.Join(userInputParts[1:], "/") + "/merge"
+					revision = strings.Join(userInputParts[1:], "/") + "/head"
 				case 4: // deviceauth/pull/1/head syntax
 					revision = strings.Join(userInputParts[1:], "/")
 				default:
