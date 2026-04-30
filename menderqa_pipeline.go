@@ -286,7 +286,7 @@ func getMenderClientBuildParameters(
 	build *buildOptions,
 	buildOptions *BuildOptions,
 ) ([]*gitlab.PipelineVariableOptions, error) {
-	readHead := "pull/" + build.pr + "/merge"
+	readHead := "pull/" + build.pr + "/head"
 	var buildParameters []*gitlab.PipelineVariableOptions
 
 	// Set component versions from the release JSON, deduplicated by source
@@ -377,7 +377,7 @@ func getMenderClientBuildParametersLegacy(
 	buildOptions *BuildOptions,
 ) ([]*gitlab.PipelineVariableOptions, error) {
 	var err error
-	readHead := "pull/" + build.pr + "/merge"
+	readHead := "pull/" + build.pr + "/head"
 	var buildParameters []*gitlab.PipelineVariableOptions
 
 	var versionedRepositories []string

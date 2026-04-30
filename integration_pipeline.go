@@ -143,7 +143,7 @@ func getIntegrationBuildParameters(
 	build *buildOptions,
 	buildOptions *BuildOptions,
 ) ([]*gitlab.PipelineVariableOptions, error) {
-	readHead := "pull/" + build.pr + "/merge"
+	readHead := "pull/" + build.pr + "/head"
 	var buildParameters []*gitlab.PipelineVariableOptions
 
 	runIntegrationTests := "true"
