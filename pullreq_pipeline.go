@@ -203,8 +203,7 @@ func syncBranch(
 		return fmt.Errorf("%v returned error: %s: %s", gitcmd.Args, out, err.Error())
 	}
 
-	// Push but not don't trigger CI (yet)
-	gitcmd = git.Command("push", "-f", "-o", "ci.skip", "--set-upstream", "gitlab", prBranchName)
+	gitcmd = git.Command("push", "-f", "--set-upstream", "gitlab", prBranchName)
 	gitcmd.Dir = tmpdir
 	out, err = gitcmd.CombinedOutput()
 	if err != nil {
