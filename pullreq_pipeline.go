@@ -194,8 +194,7 @@ func syncBranch(
 	}
 
 	gitcmd = git.Command(
-		"-c", "user.email=mender-test-bot@northern.tech",
-		"-c", "user.name=Mender Test Runner",
+		"-c", "commit.gpgsign=false",
 		"commit", "--amend", "-m", strings.TrimSpace(string(headMsg)),
 	)
 	gitcmd.Dir = tmpdir
