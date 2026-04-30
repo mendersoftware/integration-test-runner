@@ -8,8 +8,7 @@ output:
 - 'git.Run: /usr/bin/git rev-parse pr_550^2'
 - 'git.Run: /usr/bin/git log -1 --format=%B pr_550^2'
 - 'git.Run: /usr/bin/git checkout pr_550'
-- 'git.Run: /usr/bin/git -c user.email=mender-test-bot@northern.tech -c user.name=Mender
-  Test Runner commit --amend -m '
+- 'git.Run: /usr/bin/git -c commit.gpgsign=false commit --amend -m '
 - 'git.Run: /usr/bin/git push -f -o ci.skip --set-upstream gitlab pr_550'
 - 'info:Created branch: mender-qa:pr_550'
 - 'github.IsOrganizationMember: org=mendersoftware,user=Junglebobo'
