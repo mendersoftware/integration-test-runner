@@ -78,28 +78,21 @@ publish:acceptance:
   allow_failure: true
   rules:
     - if: $CI_COMMIT_BRANCH !~ /^saas-[a-zA-Z0-9.]+$/
-  image: registry.gitlab.com/northern.tech/mender/mender-test-containers:goveralls-master
+  image: curlimages/curl-base
   needs:
     - job: test:acceptance_tests
       artifacts: true
-  before_script:
-    # Coveralls env variables:
-    #  According to https://docs.coveralls.io/supported-ci-services
-    #  we should set CI_NAME, CI_BUILD_NUMBER, etc. But according
-    #  to goveralls source code (https://github.com/mattn/goveralls)
-    #  many of these are not supported. Set CI_BRANCH,
-    #  and pass few others as command line arguments.
-    #  See also https://docs.coveralls.io/api-reference
-    - export CI_BRANCH=${CI_COMMIT_BRANCH}
   script:
-    - goveralls
-      -repotoken ${COVERALLS_TOKEN}
-      -service gitlab-ci
-      -jobid $CI_PIPELINE_ID
-      -covermode set
-      -flagname acceptance
-      -parallel
-      -coverprofile ./tests/coverage-acceptance.txt
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov
+    - chmod +x codecov
+    - ./codecov upload-process
+      --fail-on-error
+      --git-service github
+      --slug mendersoftware/${CI_PROJECT_NAME}
+      --sha ${CI_COMMIT_SHA}
+      --pr $(echo "${CI_COMMIT_BRANCH}" | sed 's/^pr_//')
+      --file ./tests/coverage-acceptance.txt
+      --flag acceptance
 
 sync:image:
   variables:
