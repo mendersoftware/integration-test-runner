@@ -74,6 +74,8 @@ var clientRepositories = []string{
 var clientPipelineRepositories = append(clientRepositories,
 	// Yocto layer
 	"meta-mender",
+	// Mender Client Inventory script
+	"mender-client-subcomponents",
 	// Independent tools that are still (partially) tested in the Client pipeline
 	// In the future we should move the yocto recipes testing to the individual
 	// pipeline of each tool and remove them from here.
