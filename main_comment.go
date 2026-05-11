@@ -304,9 +304,10 @@ func syncPRBranch(
 	conf *config,
 ) {
 	prEvent := &github.PullRequestEvent{
-		Repo:        comment.GetRepo(),
-		Number:      github.Int(pr.GetNumber()),
-		PullRequest: pr,
+		Repo:         comment.GetRepo(),
+		Number:       github.Int(pr.GetNumber()),
+		PullRequest:  pr,
+		Organization: &github.Organization{Login: github.String(conf.githubOrganization)},
 	}
 	if _, err := syncPullRequestBranch(log, prEvent, conf); err != nil {
 		mainErrMsg := "There was an error syncing branches"
