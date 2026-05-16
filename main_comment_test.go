@@ -37,8 +37,10 @@ func TestProcessGitHubWebhook(t *testing.T) {
 		pullRequest          *github.PullRequest
 		pullRequestErr       error
 
-		err           error
-		createComment bool
+		err                    error
+		createComment          bool
+		createStatus           bool
+		pipelineStatusContexts []string
 	}{
 		// Protect start integration pipeline using start client pipeline --pr integration/xxx
 		"comment from organization user, start the builds with integration pr flag": {
@@ -531,6 +533,46 @@ func TestProcessGitHubWebhook(t *testing.T) {
 			},
 			createComment: true,
 		},
+		"comment from organization user, skip pipeline": {
+			webhookType: "issue_comment",
+			webhookEvent: &github.IssueCommentEvent{
+				Action: github.String("created"),
+				Comment: &github.IssueComment{
+					Body: github.String("@" + githubBotName + " skip pipeline"),
+				},
+				Issue: &github.Issue{
+					PullRequestLinks: &github.PullRequestLinks{
+						URL: github.String("https://api.github.com/repos/mendersoftware/integration-test-runner/pulls/78"),
+					},
+				},
+				Repo: &github.Repository{
+					Name: github.String("integration-test-runner"),
+					Owner: &github.User{
+						Login: github.String(gitHubOrg),
+					},
+				},
+				Sender: &github.User{
+					Login: github.String("member"),
+				},
+			},
+
+			isCommentEventProcessingEnabled: true,
+			isOrganizationMember:            github.Bool(true),
+
+			repo:     "integration-test-runner",
+			prNumber: 78,
+
+			pullRequest: &github.PullRequest{
+				Number: github.Int(78),
+				Head: &github.PullRequestBranch{
+					SHA: github.String("abc123"),
+				},
+			},
+
+			pipelineStatusContexts: []string{"ci/mender-qa", "ci/integration"},
+			createStatus:           true,
+			createComment:          true,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -588,6 +630,18 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				).Return(nil)
 			}
 
+			if tc.createStatus {
+				mclient.On("CreateStatus",
+					mock.MatchedBy(func(ctx context.Context) bool {
+						return true
+					}),
+					gitHubOrg,
+					tc.repo,
+					mock.AnythingOfType("string"),
+					mock.AnythingOfType("*github.RepoStatus"),
+				).Return(nil).Times(len(tc.pipelineStatusContexts))
+			}
+
 			// Mock ListPullRequests for PR stats command
 			if tc.webhookType == "issue_comment" {
 				event := tc.webhookEvent.(*github.IssueCommentEvent)
@@ -604,6 +658,7 @@ func TestProcessGitHubWebhook(t *testing.T) {
 				isProcessCommentEvents: tc.isCommentEventProcessingEnabled,
 				isProcessPREvents:      tc.isPREventsProcessingEnabled,
 				isProcessPushEvents:    tc.isCommentEventsProcessingEnabled,
+				pipelineStatusContexts: tc.pipelineStatusContexts,
 			}
 
 			ctx := &gin.Context{}
