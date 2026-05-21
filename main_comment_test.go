@@ -3,15 +3,19 @@ package main
 import (
 	"context"
 	"errors"
+	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v28/github"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 
 	mock_github "github.com/mendersoftware/integration-test-runner/client/github/mocks"
+	mock_gitlab "github.com/mendersoftware/integration-test-runner/client/gitlab/mocks"
 )
 
 func TestProcessGitHubWebhook(t *testing.T) {
@@ -644,4 +648,113 @@ func TestParseBuildOptions(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSyncProtectedBranchWithClientProtectsBeforePush(t *testing.T) {
+	callOrder := []string{}
+
+	pr := &github.PullRequestEvent{
+		Number: github.Int(42),
+		Repo: &github.Repository{
+			Name: github.String("mender"),
+		},
+		PullRequest: &github.PullRequest{
+			Head: &github.PullRequestBranch{
+				SHA: github.String("abc123"),
+			},
+		},
+		Organization: &github.Organization{Login: github.String("mendersoftware")},
+	}
+	conf := &config{}
+	pipelinePath := "Northern.tech/Mender/mender"
+	branchName := "pr_42_protected"
+
+	gitlabClient := mock_gitlab.NewClient(t)
+
+	gitlabClient.On("ProtectRepositoryBranches", pipelinePath, mock.MatchedBy(func(opts *gitlab.ProtectRepositoryBranchesOptions) bool {
+		return opts.AllowForcePush != nil && *opts.AllowForcePush == true
+	})).Run(func(args mock.Arguments) {
+		callOrder = append(callOrder, "protect:allow-force")
+	}).Return(&gitlab.ProtectedBranch{}, nil).Once()
+
+	syncer := func(branchName string, log *logrus.Entry, pr *github.PullRequestEvent, conf *config) error {
+		callOrder = append(callOrder, "push")
+		return nil
+	}
+
+	log := logrus.WithField("test", true)
+	name, err := syncProtectedBranchWithClient(log, pr, conf, pipelinePath, gitlabClient, syncer)
+
+	assert.NoError(t, err)
+	assert.Equal(t, branchName, name)
+	assert.Equal(t, []string{"protect:allow-force", "push"}, callOrder)
+}
+
+func TestSyncProtectedBranchWithClientAlreadyProtected409(t *testing.T) {
+	pr := &github.PullRequestEvent{
+		Number: github.Int(42),
+		Repo: &github.Repository{
+			Name: github.String("mender"),
+		},
+		PullRequest: &github.PullRequest{
+			Head: &github.PullRequestBranch{
+				SHA: github.String("abc123"),
+			},
+		},
+		Organization: &github.Organization{Login: github.String("mendersoftware")},
+	}
+	conf := &config{}
+	pipelinePath := "Northern.tech/Mender/mender"
+
+	gitlabClient := mock_gitlab.NewClient(t)
+
+	gitlabClient.On("ProtectRepositoryBranches", pipelinePath, mock.Anything).
+		Return(nil, &gitlab.ErrorResponse{
+			Response: &http.Response{StatusCode: 409},
+		}).Once()
+
+	pushed := false
+	syncer := func(branchName string, log *logrus.Entry, pr *github.PullRequestEvent, conf *config) error {
+		pushed = true
+		return nil
+	}
+
+	log := logrus.WithField("test", true)
+	_, err := syncProtectedBranchWithClient(log, pr, conf, pipelinePath, gitlabClient, syncer)
+
+	assert.NoError(t, err)
+	assert.True(t, pushed, "syncer should be called even when protect returns 409")
+}
+
+func TestSyncProtectedBranchWithClientPushFailurePropagated(t *testing.T) {
+	pr := &github.PullRequestEvent{
+		Number: github.Int(7),
+		Repo: &github.Repository{
+			Name: github.String("mender"),
+		},
+		PullRequest: &github.PullRequest{
+			Head: &github.PullRequestBranch{
+				SHA: github.String("def456"),
+			},
+		},
+		Organization: &github.Organization{Login: github.String("mendersoftware")},
+	}
+	conf := &config{}
+	pipelinePath := "Northern.tech/Mender/mender"
+
+	gitlabClient := mock_gitlab.NewClient(t)
+
+	gitlabClient.On("ProtectRepositoryBranches", pipelinePath, mock.MatchedBy(func(opts *gitlab.ProtectRepositoryBranchesOptions) bool {
+		return opts.AllowForcePush != nil && *opts.AllowForcePush == true
+	})).Return(&gitlab.ProtectedBranch{}, nil).Once()
+
+	pushErr := errors.New("git push failed")
+	syncer := func(branchName string, log *logrus.Entry, pr *github.PullRequestEvent, conf *config) error {
+		return pushErr
+	}
+
+	log := logrus.WithField("test", true)
+	_, err := syncProtectedBranchWithClient(log, pr, conf, pipelinePath, gitlabClient, syncer)
+
+	assert.ErrorContains(t, err, "git push failed")
 }
