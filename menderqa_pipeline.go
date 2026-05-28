@@ -334,8 +334,8 @@ func getMenderClientBuildParameters(
 		})
 
 	// Yocto params: same behavior as the legacy path for non-master builds
-	pokyBranch := LatestStableYoctoBranch
-	metaMenderBranch := pokyBranch
+	yoctoBranch := LatestStableYoctoBranch
+	metaMenderBranch := yoctoBranch
 	if prOverride, exists := buildOptions.PullRequests["meta-mender"]; exists {
 		metaMenderBranch = prOverride
 	}
@@ -345,15 +345,15 @@ func getMenderClientBuildParameters(
 			Key:   &metaMenderBranchKey,
 			Value: &metaMenderBranch,
 		})
-	pokyBranchKey := repoToBuildParameter("poky")
+	yoctoBranchKey := repoToBuildParameter("yocto")
 	buildParameters = append(buildParameters,
-		&gitlab.PipelineVariableOptions{Key: &pokyBranchKey, Value: &pokyBranch})
+		&gitlab.PipelineVariableOptions{Key: &yoctoBranchKey, Value: &yoctoBranch})
 	metaOEKey := repoToBuildParameter("meta-openembedded")
 	buildParameters = append(buildParameters,
-		&gitlab.PipelineVariableOptions{Key: &metaOEKey, Value: &pokyBranch})
+		&gitlab.PipelineVariableOptions{Key: &metaOEKey, Value: &yoctoBranch})
 	metaRPIKey := repoToBuildParameter("meta-raspberrypi")
 	buildParameters = append(buildParameters,
-		&gitlab.PipelineVariableOptions{Key: &metaRPIKey, Value: &pokyBranch})
+		&gitlab.PipelineVariableOptions{Key: &metaRPIKey, Value: &yoctoBranch})
 
 	// CI build parameters
 	runIntegrationTests := "true"
@@ -460,19 +460,19 @@ func getMenderClientBuildParametersLegacy(
 		}
 	}
 
-	// Set poky (& friends) and meta-mender revisions:
+	// Set Yocto (& friends) and meta-mender revisions:
 	// - If building a master PR, leave everything at defaults, which generally means
-	//   meta-mender/master and poky/LatestStableYoctoBranch.
-	// - If building meta-mender @ non-master, set poky branches to its baseBranch.
-	// - If building any other repo @ non-master, set both meta-mender and poky to
+	//   meta-mender/master and YOCTO_REV/LatestStableYoctoBranch.
+	// - If building meta-mender @ non-master, set Yocto branches to its baseBranch.
+	// - If building any other repo @ non-master, set both meta-mender and Yocto to
 	//   LatestStableYoctoBranch.
 	if build.baseBranch != "master" {
-		var pokyBranch string
+		var yoctoBranch string
 		if build.repo == "meta-mender" {
-			pokyBranch = build.baseBranch
+			yoctoBranch = build.baseBranch
 		} else {
-			pokyBranch = LatestStableYoctoBranch
-			metaMenderBranch := pokyBranch
+			yoctoBranch = LatestStableYoctoBranch
+			metaMenderBranch := yoctoBranch
 			metaMenderBranchKey := repoToBuildParameter("meta-mender")
 			buildParameters = append(
 				buildParameters,
@@ -482,25 +482,25 @@ func getMenderClientBuildParametersLegacy(
 				},
 			)
 		}
-		pokyBranchKey := repoToBuildParameter("poky")
+		yoctoBranchKey := repoToBuildParameter("yocto")
 		buildParameters = append(
 			buildParameters,
-			&gitlab.PipelineVariableOptions{Key: &pokyBranchKey, Value: &pokyBranch},
+			&gitlab.PipelineVariableOptions{Key: &yoctoBranchKey, Value: &yoctoBranch},
 		)
-		metaOEPokyBranchKey := repoToBuildParameter("meta-openembedded")
+		metaOEYoctoBranchKey := repoToBuildParameter("meta-openembedded")
 		buildParameters = append(
 			buildParameters,
 			&gitlab.PipelineVariableOptions{
-				Key:   &metaOEPokyBranchKey,
-				Value: &pokyBranch,
+				Key:   &metaOEYoctoBranchKey,
+				Value: &yoctoBranch,
 			},
 		)
-		metaRPIPokyBranchKey := repoToBuildParameter("meta-raspberrypi")
+		metaRPIYoctoBranchKey := repoToBuildParameter("meta-raspberrypi")
 		buildParameters = append(
 			buildParameters,
 			&gitlab.PipelineVariableOptions{
-				Key:   &metaRPIPokyBranchKey,
-				Value: &pokyBranch,
+				Key:   &metaRPIYoctoBranchKey,
+				Value: &yoctoBranch,
 			},
 		)
 	}
