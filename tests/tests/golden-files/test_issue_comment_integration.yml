@@ -1,6 +1,7 @@
 input: issue_comment_integration.json
 output:
 - 'github.IsOrganizationMember: org=mendersoftware,user=lluiscampos'
+- 'gitlab.UnprotectedBranch: path=Northern.tech/Mender/integration,branch=pr_2725_protected'
 - 'gitlab.ProtectedBranch: path=Northern.tech/Mender/integration,options={"name":"pr_2725_protected","allow_force_push":true}'
 - 'git.Run: /usr/bin/git init .'
 - 'git.Run: /usr/bin/git remote add github git@github.com:/mendersoftware/integration.git'

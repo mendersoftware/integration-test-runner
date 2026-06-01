@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
@@ -190,6 +191,18 @@ func processGitHubComment(
 	return nil
 }
 
+func unprotectBranch(client clientgitlab.Client, branchName string, pipelinePath string) error {
+	response, err := client.UnprotectRepositoryBranches(pipelinePath, branchName, nil)
+	if err != nil {
+		// branch may not be protected yet
+		if response != nil && response.StatusCode == 404 {
+			return nil
+		}
+		return fmt.Errorf("failed to unprotect branch %s: %s", branchName, err.Error())
+	}
+	return nil
+}
+
 func protectBranch(
 	client clientgitlab.Client, branchName string, pipelinePath string,
 ) error {
@@ -200,10 +213,6 @@ func protectBranch(
 	}
 	_, err := client.ProtectRepositoryBranches(pipelinePath, opt)
 	if err != nil {
-		// 409 means the branch is already protected with allow-force-push; continue
-		if errResp, ok := err.(*gitlab.ErrorResponse); ok && errResp.HasStatusCode(409) {
-			return nil
-		}
 		return fmt.Errorf("%v returned error: %s", err, err.Error())
 	}
 	return nil
@@ -212,6 +221,15 @@ func protectBranch(
 type branchSyncer func(
 	branchName string, log *logrus.Entry, pr *github.PullRequestEvent, conf *config,
 ) error
+
+const (
+	maxSyncRetries = 3
+	syncRetryDelay = 3 * time.Second
+)
+
+func isProtectedBranchError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "protected branch")
+}
 
 // syncProtectedBranchWithClient is the testable core of syncProtectedBranch.
 // The branch is kept permanently protected with allow-force-push so that
@@ -228,15 +246,36 @@ func syncProtectedBranchWithClient(
 ) (string, error) {
 	prBranchName := "pr_" + strconv.Itoa(pr.GetNumber()) + "_protected"
 
-	// Protect with allow-force-push so the pipeline triggered by the push
-	// sees the branch as protected and receives CI secrets. 409 is ignored
-	// since the branch may already be protected from a previous run.
+	// Unprotect first (idempotent — 404 ignored) then re-protect with
+	// allow-force-push so the pipeline sees the branch as protected and
+	// receives CI secrets. Unprotecting first ensures we don't silently
+	// skip re-protection when the branch was previously protected without
+	// allow-force-push.
+	if err := unprotectBranch(client, prBranchName, pipelinePath); err != nil {
+		return "", fmt.Errorf("failed to unprotect branch before sync: %s", err.Error())
+	}
 	if err := protectBranch(client, prBranchName, pipelinePath); err != nil {
 		return "", fmt.Errorf("failed to protect branch before sync: %s", err.Error())
 	}
 
-	if err := syncer(prBranchName, log, pr, conf); err != nil {
-		return "", fmt.Errorf("There was an error syncing branches: %s", err.Error())
+	// Retry the push: GitLab may take a moment to propagate the updated
+	// protection rule, causing the first push attempt to be rejected.
+	var lastErr error
+	for attempt := 1; attempt <= maxSyncRetries; attempt++ {
+		lastErr = syncer(prBranchName, log, pr, conf)
+		if lastErr == nil || !isProtectedBranchError(lastErr) {
+			break
+		}
+		if attempt < maxSyncRetries {
+			log.Warnf(
+				"push to %s rejected due to branch protection (attempt %d/%d), retrying in %s",
+				prBranchName, attempt, maxSyncRetries, syncRetryDelay,
+			)
+			time.Sleep(syncRetryDelay)
+		}
+	}
+	if lastErr != nil {
+		return "", fmt.Errorf("There was an error syncing branches: %s", lastErr.Error())
 	}
 
 	return prBranchName, nil

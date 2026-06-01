@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"net/http"
 	"strings"
 	"testing"
 
@@ -671,6 +670,10 @@ func TestSyncProtectedBranchWithClientProtectsBeforePush(t *testing.T) {
 
 	gitlabClient := mock_gitlab.NewClient(t)
 
+	gitlabClient.On("UnprotectRepositoryBranches", pipelinePath, branchName, mock.Anything).
+		Run(func(args mock.Arguments) { callOrder = append(callOrder, "unprotect") }).
+		Return(nil, nil).Once()
+
 	gitlabClient.On("ProtectRepositoryBranches", pipelinePath, mock.MatchedBy(func(opts *gitlab.ProtectRepositoryBranchesOptions) bool {
 		return opts.AllowForcePush != nil && *opts.AllowForcePush == true
 	})).Run(func(args mock.Arguments) {
@@ -687,19 +690,17 @@ func TestSyncProtectedBranchWithClientProtectsBeforePush(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, branchName, name)
-	assert.Equal(t, []string{"protect:allow-force", "push"}, callOrder)
+	assert.Equal(t, []string{"unprotect", "protect:allow-force", "push"}, callOrder)
 }
 
-func TestSyncProtectedBranchWithClientAlreadyProtected409(t *testing.T) {
+// TestSyncProtectedBranchWithClientPushRetry verifies that a "protected branch"
+// push error is retried, handling GitLab's propagation delay after re-protection.
+func TestSyncProtectedBranchWithClientPushRetry(t *testing.T) {
 	pr := &github.PullRequestEvent{
 		Number: github.Int(42),
-		Repo: &github.Repository{
-			Name: github.String("mender"),
-		},
+		Repo:   &github.Repository{Name: github.String("mender")},
 		PullRequest: &github.PullRequest{
-			Head: &github.PullRequestBranch{
-				SHA: github.String("abc123"),
-			},
+			Head: &github.PullRequestBranch{SHA: github.String("abc123")},
 		},
 		Organization: &github.Organization{Login: github.String("mendersoftware")},
 	}
@@ -707,15 +708,17 @@ func TestSyncProtectedBranchWithClientAlreadyProtected409(t *testing.T) {
 	pipelinePath := "Northern.tech/Mender/mender"
 
 	gitlabClient := mock_gitlab.NewClient(t)
-
+	gitlabClient.On("UnprotectRepositoryBranches", pipelinePath, "pr_42_protected", mock.Anything).
+		Return(nil, nil).Once()
 	gitlabClient.On("ProtectRepositoryBranches", pipelinePath, mock.Anything).
-		Return(nil, &gitlab.ErrorResponse{
-			Response: &http.Response{StatusCode: 409},
-		}).Once()
+		Return(&gitlab.ProtectedBranch{}, nil).Once()
 
-	pushed := false
+	attempts := 0
 	syncer := func(branchName string, log *logrus.Entry, pr *github.PullRequestEvent, conf *config) error {
-		pushed = true
+		attempts++
+		if attempts < 2 {
+			return errors.New("push failed: protected branch")
+		}
 		return nil
 	}
 
@@ -723,7 +726,7 @@ func TestSyncProtectedBranchWithClientAlreadyProtected409(t *testing.T) {
 	_, err := syncProtectedBranchWithClient(log, pr, conf, pipelinePath, gitlabClient, syncer)
 
 	assert.NoError(t, err)
-	assert.True(t, pushed, "syncer should be called even when protect returns 409")
+	assert.Equal(t, 2, attempts, "should retry once after protected branch error")
 }
 
 func TestSyncProtectedBranchWithClientPushFailurePropagated(t *testing.T) {
@@ -744,6 +747,8 @@ func TestSyncProtectedBranchWithClientPushFailurePropagated(t *testing.T) {
 
 	gitlabClient := mock_gitlab.NewClient(t)
 
+	gitlabClient.On("UnprotectRepositoryBranches", pipelinePath, "pr_7_protected", mock.Anything).
+		Return(nil, nil).Once()
 	gitlabClient.On("ProtectRepositoryBranches", pipelinePath, mock.MatchedBy(func(opts *gitlab.ProtectRepositoryBranchesOptions) bool {
 		return opts.AllowForcePush != nil && *opts.AllowForcePush == true
 	})).Return(&gitlab.ProtectedBranch{}, nil).Once()
