@@ -13,6 +13,7 @@ variables:
   DOCKER_CERT_PATH:
     value: "$DOCKER_TLS_CERTDIR/client"
     description: "Used for docker entrypoints. See https://gitlab.com/gitlab-org/gitlab-runner/-/issues/4125"
+  GO_VERSION: "1.25"
 
 stages:
   - test
@@ -42,8 +43,6 @@ default:
 
 
 test:unit:
-  variables:
-    GO_VERSION: "1.25"
   before_script:
     - !reference [.qa-common-network-git-clone-retry, before_script]
     - !reference [.qa-common-network-go-retry, before_script]
