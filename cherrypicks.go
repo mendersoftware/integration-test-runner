@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -26,6 +27,7 @@ import (
 var versionsUrl = "https://docs.mender.io/releases/versions.json"
 
 var errorCherryPickConflict = errors.New("Cherry pick had conflicts")
+var errorCherryPickFeature = errors.New("A feature commit should not be cherry-picked")
 
 type versions struct {
 	Releases map[string]map[string]interface{} `json:"releases"`
@@ -258,6 +260,21 @@ func tryCherryPickToBranch(
 	)
 	if err != nil {
 		return "", state, err
+	}
+
+	if pr.Commits != nil {
+		firstPRCommit := fmt.Sprintf("%s~%d", pr.GetHead().GetSHA(), *pr.Commits)
+		out, err := git.Command("log", "--pretty=format:%s",
+			firstPRCommit+".."+pr.GetHead().GetSHA()).With(state).CombinedOutput()
+		if err != nil {
+			return "", state, err
+		}
+		lines := bytes.Split(out, []byte("\n"))
+		for _, line := range lines {
+			if bytes.HasPrefix(line, []byte("feat:")) || bytes.HasPrefix(line, []byte("feat(")) {
+				return "", state, errorCherryPickFeature
+			}
+		}
 	}
 
 	if err = git.Command("cherry-pick", "-x", "--allow-empty",
