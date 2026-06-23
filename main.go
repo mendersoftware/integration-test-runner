@@ -33,8 +33,9 @@ type config struct {
 	integrationDirectory   string
 	isProcessPushEvents    bool
 	isProcessPREvents      bool
-	isProcessCommentEvents bool
-	reposSyncList          []string
+	isProcessCommentEvents  bool
+	reposSyncList           []string
+	pipelineStatusContexts  []string
 }
 
 type buildOptions struct {
@@ -118,6 +119,7 @@ const (
 	commandSyncRepos                = "sync"
 	commandPrintPRStats             = "print fast pr stats"
 	commandPrintFullPRStats         = "print full pr stats"
+	commandSkipPipeline             = "skip pipeline"
 )
 
 func getConfig() (*config, error) {
@@ -167,6 +169,12 @@ func getConfig() (*config, error) {
 		reposSyncList = strings.Split(reposSyncListRaw, ",")
 	}
 
+	var pipelineStatusContexts []string
+	pipelineStatusContextsRaw, found := os.LookupEnv("PIPELINE_STATUS_CONTEXTS")
+	if found {
+		pipelineStatusContexts = strings.Split(pipelineStatusContextsRaw, ",")
+	}
+
 	switch {
 	case githubSecret == "" && !dryRunMode:
 		return &config{}, fmt.Errorf("set GITHUB_SECRET")
@@ -189,9 +197,10 @@ func getConfig() (*config, error) {
 		gitlabBaseURL:          gitlabBaseURL,
 		integrationDirectory:   integrationDirectory,
 		isProcessPushEvents:    isProcessPushEvents,
-		isProcessPREvents:      isProcessPREvents,
-		isProcessCommentEvents: isProcessCommentEvents,
-		reposSyncList:          reposSyncList,
+		isProcessPREvents:       isProcessPREvents,
+		isProcessCommentEvents:  isProcessCommentEvents,
+		reposSyncList:           reposSyncList,
+		pipelineStatusContexts:  pipelineStatusContexts,
 	}, nil
 }
 
