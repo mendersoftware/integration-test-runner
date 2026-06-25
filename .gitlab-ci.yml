@@ -1,6 +1,18 @@
 variables:
   DOCKER_REPOSITORY: mendersoftware/integration-test-runner
   DOCKER_VERSION: "27.3"
+  DOCKER_HOST:
+    value: "tcp://docker:2376"
+    description: "Required to run dind inside k8s runners with TLS"
+  DOCKER_TLS_CERTDIR:
+    value: "/certs"
+    description: "The cert dir inside the gitlab runner. Don't change this."
+  DOCKER_TLS_VERIFY:
+    value: 1
+    description: "Enable TLS verification for docker in dind"
+  DOCKER_CERT_PATH:
+    value: "$DOCKER_TLS_CERTDIR/client"
+    description: "Used for docker entrypoints. See https://gitlab.com/gitlab-org/gitlab-runner/-/issues/4125"
 
 stages:
   - test
@@ -55,10 +67,7 @@ test:acceptance_tests:
     - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:${DOCKER_VERSION}-dind
       alias: docker
   variables:
-    DOCKER_HOST: "tcp://docker:2376"
     DOCKER_CERT_PATH: "/certs/client"
-    DOCKER_TLS_VERIFY: "1"
-    DOCKER_TLS_CERTDIR: "/certs"
   script:
     - make acceptance-testing-build
     - make acceptance-testing-up
