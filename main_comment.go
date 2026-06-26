@@ -177,6 +177,40 @@ func processGitHubComment(
 		if err != nil {
 			log.Error(err)
 		}
+	case strings.Contains(commentBody, commandStartReviewApp):
+		prRequest := &github.PullRequestEvent{
+			Repo:        comment.GetRepo(),
+			Number:      github.Int(pr.GetNumber()),
+			PullRequest: pr,
+		}
+		enterprise := parseReviewAppEnterprise(commentBody)
+		sender := comment.Sender.GetLogin()
+		if err := triggerReviewDeploy(
+			log, conf, prRequest, sender, enterprise, githubClient,
+		); err != nil {
+			log.Errorf("Could not start review deploy: %s", err.Error())
+			errBody := fmt.Sprintf("Failed to start review app deploy: %s", err.Error())
+			errComment := github.IssueComment{Body: &errBody}
+			_ = githubClient.CreateComment(ctx, conf.githubOrganization,
+				comment.GetRepo().GetName(), pr.GetNumber(), &errComment)
+		}
+	case strings.Contains(commentBody, commandStartReviewTests):
+		prRequest := &github.PullRequestEvent{
+			Repo:        comment.GetRepo(),
+			Number:      github.Int(pr.GetNumber()),
+			PullRequest: pr,
+		}
+		testEnvironment := parseReviewTestEnvironment(commentBody)
+		err := triggerReviewE2E(
+			log, conf, prRequest, testEnvironment, githubClient,
+		)
+		if err != nil {
+			log.Errorf("Could not start review e2e tests: %s", err.Error())
+			errBody := fmt.Sprintf("Failed to start review e2e tests: %s", err.Error())
+			errComment := github.IssueComment{Body: &errBody}
+			_ = githubClient.CreateComment(ctx, conf.githubOrganization,
+				comment.GetRepo().GetName(), pr.GetNumber(), &errComment)
+		}
 	case strings.Contains(commentBody, commandSyncRepos):
 		syncPRBranch(ctx, comment, pr, log, conf)
 	case strings.Contains(commentBody, commandPrintFullPRStats) ||
@@ -461,4 +495,34 @@ func parseBuildOptions(commentBody string) (*BuildOptions, error) {
 	}
 
 	return buildOptions, err
+}
+
+func parseReviewAppEnterprise(commentBody string) (isEnterprise bool) {
+	idx := strings.Index(commentBody, commandStartReviewApp)
+	if idx < 0 {
+		return false
+	}
+	rest := strings.TrimSpace(commentBody[idx+len(commandStartReviewApp):])
+	if rest == "" {
+		return false
+	}
+	return strings.Fields(rest)[0] == "enterprise"
+}
+
+func parseReviewTestEnvironment(commentBody string) string {
+	idx := strings.Index(commentBody, commandStartReviewTests)
+	if idx < 0 {
+		return defaultTestEnvironment
+	}
+	rest := strings.TrimSpace(commentBody[idx+len(commandStartReviewTests):])
+	if rest == "" {
+		return defaultTestEnvironment
+	}
+	env := strings.Fields(rest)[0]
+	switch env {
+	case "enterprise", "os":
+		return env
+	default:
+		return defaultTestEnvironment
+	}
 }

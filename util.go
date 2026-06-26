@@ -22,19 +22,27 @@ func getRemoteURLGitHub(proto gitProtocol, org, repo string) string {
 	return ""
 }
 
-func getRemoteURLGitLab(org, repo string) (string, error) {
+func getGitLabProjectPath(org, repo string) (string, error) {
 	// By default, the GitLab project is Northern.tech/<group>/<repo>
 	group, ok := gitHubOrganizationToGitLabGroup[org]
 	if !ok {
 		return "", fmt.Errorf("Unrecognized organization %q", org)
 	}
-	remoteURL := "git@gitlab.com:Northern.tech/" + group + "/" + repo
+	path := "Northern.tech/" + group + "/" + repo
 
-	// Override for some specific repos have custom GitLab group/project
+	// Override for some specific repos that have a custom GitLab group/project
 	if v, ok := gitHubRepoToGitLabProjectCustom[repo]; ok {
-		remoteURL = "git@gitlab.com:" + v
+		path = v
 	}
-	return remoteURL, nil
+	return path, nil
+}
+
+func getRemoteURLGitLab(org, repo string) (string, error) {
+	path, err := getGitLabProjectPath(org, repo)
+	if err != nil {
+		return "", err
+	}
+	return "git@gitlab.com:" + path, nil
 }
 
 func getGitHubOrganization(webhookType string, webhookEvent interface{}) (string, error) {
