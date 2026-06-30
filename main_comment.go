@@ -130,6 +130,24 @@ func processGitHubComment(
 				prRequest)
 			return err
 		}
+
+		// Logic for protected pipeline when we have --pr integration/xxx
+		if _, hasIntegration := buildOptions.PullRequests["integration"]; hasIntegration {
+			_, err = syncProtectedBranch(log, prRequest, conf, integrationPipelinePath)
+			if err != nil {
+				_ = say(ctx, "There was an error while parsing arguments: {{.ErrorMessage}}",
+					struct {
+						ErrorMessage string
+					}{
+						ErrorMessage: err.Error(),
+					},
+					log,
+					conf,
+					prRequest)
+				return err
+			}
+		}
+
 		builds := parseClientPullRequest(log, conf, "opened", prRequest)
 		log.Infof(
 			"%s:%d will trigger %d builds",

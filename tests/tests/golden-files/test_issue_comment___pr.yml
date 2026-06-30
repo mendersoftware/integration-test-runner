@@ -1,6 +1,13 @@
 input: issue_comment___pr.json
 output:
 - 'github.IsOrganizationMember: org=mendersoftware,user=lluiscampos'
+- 'gitlab.ProtectedBranch: path=Northern.tech/Mender/integration,options={"name":"pr_145_protected","allow_force_push":true}'
+- 'git.Run: /usr/bin/git init .'
+- 'git.Run: /usr/bin/git remote add github git@github.com:/mendersoftware/mender-configure-module.git'
+- 'git.Run: /usr/bin/git remote add gitlab git@gitlab.com:Northern.tech/Mender/mender-configure-module'
+- 'git.Run: /usr/bin/git fetch github pull/145/head:pr_145_protected'
+- 'git.Run: /usr/bin/git push -f -o ci.skip --set-upstream gitlab pr_145_protected'
+- 'info:Created branch: mender-configure-module:pr_145_protected'
 - 'info:Pull request event with action: opened'
 - 'git.Run: /usr/bin/git pull --rebase origin'
 - 'info:mender-configure-module/master is being used in the following integration:

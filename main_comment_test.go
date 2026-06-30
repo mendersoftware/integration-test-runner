@@ -584,6 +584,15 @@ func TestParseBuildOptions(t *testing.T) {
 		BuildOptions         *BuildOptions
 		ParseError           error
 	}{
+		"start client pipeline with integration --pr flag": {
+			StartPipelineComment: "start client pipeline --pr integration/pull/123/head --pr mender/3.1.x",
+			BuildOptions: &BuildOptions{
+				PullRequests: map[string]string{
+					"integration": "pull/123/head",
+					"mender":      "3.1.x",
+				},
+			},
+		},
 		"start client pipeline with --pr flags": {
 			StartPipelineComment: "start client pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head --pr mender/3.1.x",
 			BuildOptions: &BuildOptions{
