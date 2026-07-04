@@ -44,20 +44,28 @@ func findAndPlayJob(
 	jobName string,
 	jobVars []*gitlab.JobVariableOptions,
 ) (*gitlab.Job, error) {
-	// Find the latest pipeline for this ref
+	// Find the latest pipeline for this ref. Duplicate-triggered pipelines
+	// end up skipped or canceled, so fetch a small page and pick the newest
+	// pipeline that actually ran (the API has no negative status filter).
 	pipelines, err := client.ListProjectPipelines(projectPath, &gitlab.ListProjectPipelinesOptions{
 		Ref: &ref,
 		ListOptions: gitlab.ListOptions{
-			PerPage: 1,
+			PerPage: 5,
 		},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list pipelines for ref %s: %w", ref, err)
 	}
-	if len(pipelines) == 0 {
-		return nil, fmt.Errorf("no pipelines found for ref %s in project %s", ref, projectPath)
+	var latestPipeline *gitlab.PipelineInfo
+	for _, pipeline := range pipelines {
+		if pipeline.Status != string(gitlab.Skipped) && pipeline.Status != string(gitlab.Canceled) {
+			latestPipeline = pipeline
+			break
+		}
 	}
-	latestPipeline := pipelines[0]
+	if latestPipeline == nil {
+		return nil, fmt.Errorf("no eligible (non-skipped) pipelines found")
+	}
 	log.Infof(
 		"Found latest pipeline %d for ref %s in project %s",
 		latestPipeline.ID,
