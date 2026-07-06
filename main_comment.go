@@ -130,6 +130,64 @@ func processGitHubComment(
 				prRequest)
 			return err
 		}
+
+		// Logic for protected pipeline when we have --pr integration/xxx
+		integrationRev, hasIntegration := buildOptions.PullRequests["integration"]
+		if hasIntegration {
+
+			// Split pull/xxx/head
+			parts := strings.Split(integrationRev, "/")
+
+			// Get the xxx part
+			integrationPRNum, err := strconv.Atoi(parts[1])
+			if err != nil {
+				log.Errorf("Failed to convert String to int: %s", err.Error())
+				return err
+			}
+
+			// Get the PR from integration
+			integrationPR, err := githubClient.GetPullRequest(
+				ctx,
+				conf.githubOrganization,
+				"integration",
+				integrationPRNum,
+			)
+			if err != nil {
+				log.Errorf("Unable to retrieve the pull request: %s", err.Error())
+				return err
+			}
+
+			// Create the PR request
+			integrationPRRequest := &github.PullRequestEvent{
+				Repo: &github.Repository{
+					Name: github.String("integration"),
+				},
+				Number:      github.Int(integrationPRNum),
+				PullRequest: integrationPR,
+			}
+
+			build := getIntegrationBuild(log, conf, integrationPRRequest)
+
+			_, err = syncProtectedBranch(log, integrationPRRequest, conf, integrationPipelinePath)
+			if err != nil {
+				_ = say(ctx, "There was an error while syncing branhces: {{.ErrorMessage}}",
+					struct {
+						ErrorMessage string
+					}{
+						ErrorMessage: err.Error(),
+					},
+					log,
+					conf,
+					prRequest) // Report failure at the comment repo
+				return err
+			}
+
+			err = triggerIntegrationBuild(log, conf, &build, integrationPRRequest, nil)
+			if err != nil {
+				log.Errorf("Could not start build: %s", err.Error())
+			}
+		}
+
 		builds := parseClientPullRequest(log, conf, "opened", prRequest)
 		log.Infof(
 			"%s:%d will trigger %d builds",

@@ -21,6 +21,26 @@ stages:
   - publish
   - sync
 
+# excludes non multiplatform build job
+build:docker:
+  rules:
+    - when: never
+
+# excludes non multiplatform build job
+publish:image:
+  rules:
+    - when: never
+
+# excludes non multiplatform build job
+publish:image:mender:
+  rules:
+    - when: never
+
+# excludes non multiplatform build job
+publish:image:saas:
+  rules:
+    - when: never
+
 include:
   - project: Northern.tech/Mender/mendertesting
     file:

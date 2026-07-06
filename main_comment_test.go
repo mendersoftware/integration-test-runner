@@ -40,6 +40,47 @@ func TestProcessGitHubWebhook(t *testing.T) {
 		err           error
 		createComment bool
 	}{
+		// Protect start integration pipeline using start client pipeline --pr integration/xxx
+		"comment from organization user, start the builds with integration pr flag": {
+			webhookType: "issue_comment",
+			webhookEvent: &github.IssueCommentEvent{
+				Action: github.String("created"),
+				Comment: &github.IssueComment{
+					Body: github.String("@" + githubBotName + " start client pipeline --pr integration/pull/123/head --pr mender/3.1.x"),
+				},
+				Issue: &github.Issue{
+					PullRequestLinks: &github.PullRequestLinks{
+						URL: github.String("https://api.github.com/repos/mendersoftware/integration-test-runner/pulls/78"),
+					},
+				},
+				Repo: &github.Repository{
+					Name: github.String("integration-test-runner"),
+					Owner: &github.User{
+						Login: github.String("mendersoftware"), // Matches gitHubOrg in test
+					},
+				},
+				Sender: &github.User{
+					Login: github.String("member"),
+				},
+			},
+
+			isCommentEventProcessingEnabled: true,
+			isOrganizationMember:            github.Bool(true),
+
+			repo:     "integration-test-runner",
+			prNumber: 78,
+
+			pullRequest: &github.PullRequest{
+				Number: github.Int(78),
+				Base: &github.PullRequestBranch{
+					Label: github.String("user:branch"),
+				},
+			},
+			// If syncProtectedBranch fails (e.g., due to dummy gitlab config in tests),
+			// it calls say(), which creates a GitHub comment.
+			createComment: true,
+			err: errors.New("failed to protect branch before sync: Post \"/api/v4/projects/Northern%2Etech%2FMender%2Fintegration/protected_branches\": unsupported protocol scheme \"\" returned error: Post \"/api/v4/projects/Northern%2Etech%2FMender%2Fintegration/protected_branches\": unsupported protocol scheme \"\""),
+		},
 		"comment updated, ignore": {
 			webhookType: "issue_comment",
 			webhookEvent: &github.IssueCommentEvent{
@@ -530,8 +571,8 @@ func TestProcessGitHubWebhook(t *testing.T) {
 						return true
 					}),
 					gitHubOrg,
-					tc.repo,
-					tc.prNumber,
+					mock.Anything,
+					mock.Anything,
 				).Return(tc.pullRequest, tc.pullRequestErr)
 			}
 
@@ -584,6 +625,15 @@ func TestParseBuildOptions(t *testing.T) {
 		BuildOptions         *BuildOptions
 		ParseError           error
 	}{
+		"start client pipeline with integration --pr flag": {
+			StartPipelineComment: "start client pipeline --pr integration/123 --pr mender/3.1.x",
+			BuildOptions: &BuildOptions{
+				PullRequests: map[string]string{
+					"integration": "pull/123/head",
+					"mender":      "3.1.x",
+				},
+			},
+		},
 		"start client pipeline with --pr flags": {
 			StartPipelineComment: "start client pipeline --pr mender-connect/pull/88/head --pr deviceconnect/pull/12/head --pr mender/3.1.x",
 			BuildOptions: &BuildOptions{
