@@ -91,6 +91,13 @@ func getIntegrationVersionsLegacy(
 		if version == "master" && branch == "staging" {
 			continue
 		}
+
+		// Quick fix to prevent non supported pipelines until support for 5.0.x ends
+		if branch == "3.6.x" || branch == "3.7.x" {
+			log.Infof("Skipping legacy integration branch: %s", branch)
+			continue
+		}
+
 		branches[i] = branch
 		i++
 
