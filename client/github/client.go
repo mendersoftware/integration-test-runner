@@ -75,6 +75,12 @@ type Client interface {
 		owner, repo, path string,
 		opts *github.RepositoryContentGetOptions,
 	) (*github.RepositoryContent, []*github.RepositoryContent, error)
+
+	CreateStatus(
+		ctx context.Context,
+		owner, repo, sha string,
+		status *github.RepoStatus,
+	) error
 }
 
 type gitHubClient struct {
@@ -243,4 +249,21 @@ func (c *gitHubClient) GetContents(
 		opts,
 	)
 	return fileContent, dirContents, err
+}
+
+func (c *gitHubClient) CreateStatus(
+	ctx context.Context,
+	owner, repo, sha string,
+	status *github.RepoStatus,
+) error {
+	if c.dryRunMode {
+		statusJSON, _ := json.Marshal(status)
+		msg := fmt.Sprintf("github.CreateStatus: owner=%s,repo=%s,sha=%s,status=%s",
+			owner, repo, sha, string(statusJSON),
+		)
+		logger.GetRequestLogger().Push(msg)
+		return nil
+	}
+	_, _, err := c.client.Repositories.CreateStatus(ctx, owner, repo, sha, status)
+	return err
 }

@@ -98,6 +98,20 @@ func (_m *Client) GetContents(ctx context.Context, owner string, repo string, pa
 	return r0, r1, r2
 }
 
+// CreateStatus provides a mock function with given fields: ctx, owner, repo, sha, status
+func (_m *Client) CreateStatus(ctx context.Context, owner string, repo string, sha string, status *v28github.RepoStatus) error {
+	ret := _m.Called(ctx, owner, repo, sha, status)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, *v28github.RepoStatus) error); ok {
+		r0 = rf(ctx, owner, repo, sha, status)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DeleteComment provides a mock function with given fields: ctx, org, repo, commentID
 func (_m *Client) DeleteComment(ctx context.Context, org string, repo string, commentID int64) error {
 	ret := _m.Called(ctx, org, repo, commentID)
