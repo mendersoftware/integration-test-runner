@@ -455,6 +455,41 @@ func TestProcessGitHubWebhook(t *testing.T) {
 			},
 			createComment: true,
 		},
+		"comment from non-organization user, start review app enterprise, ignored": {
+			webhookType: "issue_comment",
+			webhookEvent: &github.IssueCommentEvent{
+				Action: github.String("created"),
+				Comment: &github.IssueComment{
+					Body: github.String("@" + githubBotName + " start review app enterprise"),
+				},
+				Issue: &github.Issue{
+					PullRequestLinks: &github.PullRequestLinks{
+						URL: github.String("https://api.github.com/repos/mendersoftware/mender-server/pulls/78"),
+					},
+				},
+				Repo: &github.Repository{
+					Name: github.String("mender-server"),
+					Owner: &github.User{
+						Login: github.String(gitHubOrg),
+					},
+				},
+				Sender: &github.User{
+					Login: github.String("not-member"),
+				},
+			},
+
+			isCommentEventProcessingEnabled: true,
+
+			isOrganizationMember: github.Bool(false),
+
+			// No pullRequest/createComment set: the org-membership check in
+			// processGitHubComment happens before the PR is even fetched, so
+			// neither GetPullRequest nor CreateComment should be called at
+			// all. Since no mock expectations are registered for them, the
+			// deferred mclient.AssertExpectations(t) (and testify's normal
+			// "unexpected call" panic if either were invoked) enforces that
+			// a non-member can't reach the review app deploy dispatch at all.
+		},
 		"comment from organization user, start review tests": {
 			webhookType: "issue_comment",
 			webhookEvent: &github.IssueCommentEvent{
