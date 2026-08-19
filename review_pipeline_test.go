@@ -109,7 +109,17 @@ func TestFindAndPlayJob(t *testing.T) {
 				c.On("ListProjectPipelines", projectPath, mock.Anything).
 					Return([]*gitlab.PipelineInfo{}, nil)
 			},
-			expectedErr: "no pipelines found for ref pr_42 in project Northern.tech/Mender/mender-server",
+			expectedErr: "no eligible (non-skipped) pipelines found",
+		},
+		"all pipelines skipped or canceled": {
+			setupMock: func(c *gitlabmocks.Client) {
+				c.On("ListProjectPipelines", projectPath, mock.Anything).
+					Return([]*gitlab.PipelineInfo{
+						{ID: 102, Status: "skipped"},
+						{ID: 101, Status: "canceled"},
+					}, nil)
+			},
+			expectedErr: "no eligible (non-skipped) pipelines found",
 		},
 		"job not found": {
 			setupMock: func(c *gitlabmocks.Client) {
@@ -146,6 +156,26 @@ func TestFindAndPlayJob(t *testing.T) {
 					Return(nil, fmt.Errorf("play error"))
 			},
 			expectedErr: `failed to play job "review:deploy" (ID: 5): play error`,
+		},
+		"skipped duplicate pipeline is bypassed": {
+			setupMock: func(c *gitlabmocks.Client) {
+				c.On("ListProjectPipelines", projectPath, mock.Anything).
+					Return([]*gitlab.PipelineInfo{
+						{ID: 101, Status: "skipped"},
+						{ID: 100, Status: "success"},
+					}, nil)
+				c.On("ListPipelineJobs", projectPath, int64(100), mock.Anything).
+					Return([]*gitlab.Job{
+						{ID: 5, Name: "review:deploy", Status: "manual"},
+					}, nil)
+				c.On("PlayJob", projectPath, int64(5), mock.Anything).
+					Return(&gitlab.Job{
+						ID:     5,
+						Name:   "review:deploy",
+						Status: "pending",
+						WebURL: "https://gitlab.com/job/5",
+					}, nil)
+			},
 		},
 		"happy path": {
 			setupMock: func(c *gitlabmocks.Client) {
@@ -281,7 +311,7 @@ func TestTriggerReviewDeployWithClient(t *testing.T) {
 					Return([]*gitlab.PipelineInfo{}, nil)
 			},
 			setupGH:    func(c *githubmocks.Client) {},
-			errContain: "no pipelines found",
+			errContain: "no eligible (non-skipped) pipelines found",
 		},
 	}
 
