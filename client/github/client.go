@@ -27,6 +27,13 @@ type Client interface {
 		commentID int64,
 	) error
 	IsOrganizationMember(ctx context.Context, org string, user string) bool
+	AddLabelsToPullRequest(
+		ctx context.Context,
+		org string,
+		repo string,
+		number int,
+		labels []string,
+	) error
 	CreatePullRequest(
 		ctx context.Context,
 		org string,
@@ -140,6 +147,24 @@ func (c *gitHubClient) IsOrganizationMember(ctx context.Context, org string, use
 	}
 	res, _, _ := c.client.Organizations.IsMember(ctx, org, user)
 	return res
+}
+
+func (c *gitHubClient) AddLabelsToPullRequest(
+	ctx context.Context,
+	org string,
+	repo string,
+	number int,
+	labels []string,
+) error {
+	if c.dryRunMode {
+		msg := fmt.Sprintf("github.AddLabelsToPullRequest: org=%s,repo=%s,number=%d,labels=%v",
+			org, repo, number, labels,
+		)
+		logger.GetRequestLogger().Push(msg)
+		return nil
+	}
+	_, _, err := c.client.Issues.AddLabelsToIssue(ctx, org, repo, number, labels)
+	return err
 }
 
 func (c *gitHubClient) CreatePullRequest(
