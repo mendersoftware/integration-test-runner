@@ -25,6 +25,8 @@ var (
 		"project=gp-kubernetes-269000\">logs</a> for details."
 )
 
+const externalContributionLabel = "external contribution"
+
 type retryParams struct {
 	retryFunc func() error
 	compFunc  func(error) bool
@@ -175,6 +177,12 @@ func processGitHubPullRequest(
 			"%s is making a pullrequest, but he/she is not a member of our organization, ignoring",
 			pr.Sender.GetLogin(),
 		)
+		if conf.githubOrganization == "mendersoftware" {
+			switch action {
+			case "opened", "reopened", "ready_for_review":
+				labelPR(ctx, log, githubClient, pr, conf, externalContributionLabel)
+			}
+		}
 		return nil
 	}
 
@@ -261,6 +269,25 @@ func processGitHubPullRequest(
 	}
 
 	return nil
+}
+
+func labelPR(
+	ctx context.Context,
+	log *logrus.Entry,
+	githubClient clientgithub.Client,
+	pr *github.PullRequestEvent,
+	conf *config,
+	label string,
+) {
+	if err := githubClient.AddLabelsToPullRequest(
+		ctx,
+		conf.githubOrganization,
+		pr.GetRepo().GetName(),
+		pr.GetNumber(),
+		[]string{label},
+	); err != nil {
+		log.Errorf("Failed to add the %q label to the PR: %s", label, err.Error())
+	}
 }
 
 func postGitHubMessage(

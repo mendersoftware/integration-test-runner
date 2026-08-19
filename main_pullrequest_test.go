@@ -458,3 +458,25 @@ func TestGetTitleOptions(t *testing.T) {
 		})
 	}
 }
+
+func TestLabelPR(t *testing.T) {
+	conf := &config{githubOrganization: "mendersoftware"}
+	pr := &github.PullRequestEvent{
+		Repo: &github.Repository{
+			Name: github.String("mender"),
+		},
+		Number: github.Int(42),
+	}
+	log := logrus.NewEntry(logrus.New())
+
+	mclient := &mock_github.Client{}
+	mclient.On("AddLabelsToPullRequest",
+		mock.Anything,
+		"mendersoftware",
+		"mender",
+		42,
+		[]string{externalContributionLabel},
+	).Return(nil).Once()
+	labelPR(context.Background(), log, mclient, pr, conf, externalContributionLabel)
+	mclient.AssertExpectations(t)
+}

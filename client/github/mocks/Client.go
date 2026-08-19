@@ -15,6 +15,20 @@ type Client struct {
 	mock.Mock
 }
 
+// AddLabelsToPullRequest provides a mock function with given fields: ctx, org, repo, number, labels
+func (_m *Client) AddLabelsToPullRequest(ctx context.Context, org string, repo string, number int, labels []string) error {
+	ret := _m.Called(ctx, org, repo, number, labels)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, int, []string) error); ok {
+		r0 = rf(ctx, org, repo, number, labels)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // AssignPullRequest provides a mock function with given fields: ctx, owner, repo, prNumber, assignees
 func (_m *Client) AssignPullRequest(ctx context.Context, owner string, repo string, prNumber int, assignees []string) error {
 	ret := _m.Called(ctx, owner, repo, prNumber, assignees)
