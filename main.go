@@ -91,6 +91,8 @@ var clientPipelineRepositories = append(clientRepositories,
 	// pipeline of each tool and remove them from here.
 	"mender-artifact",
 	"mender-snapshot",
+	// The pipeline repository itself (see getMenderQARef)
+	"mender-qa",
 )
 
 // Repositories with opt-in pipelines

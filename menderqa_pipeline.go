@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"regexp"
 	"strconv"
 	"strings"
 	"text/template"
@@ -161,7 +162,18 @@ func getClientBuilds(log *logrus.Entry, conf *config, pr *github.PullRequestEven
 	return builds
 }
 
-func getMenderQARef(build *buildOptions, buildParameters []*gitlab.PipelineVariableOptions) string {
+func getMenderQARef(build *buildOptions, buildOptions *BuildOptions) string {
+	// Explicit override: --pr mender-qa/NNN (or a branch name) from any repo's PR
+	if rev, exists := buildOptions.PullRequests["mender-qa"]; exists {
+		if matches := regexp.MustCompile(`^pull/(\d+)/`).FindStringSubmatch(rev); matches != nil {
+			return "pr_" + matches[1]
+		}
+		return rev
+	}
+	// The pipeline was started from a mender-qa PR: run it on the PR's own code
+	if build.repo == "mender-qa" {
+		return "pr_" + build.pr
+	}
 	return "master"
 }
 
@@ -198,7 +210,7 @@ func triggerClientBuild(
 
 	// trigger the new pipeline
 	clientPipelinePath := "Northern.tech/Mender/mender-qa"
-	ref := getMenderQARef(build, buildParameters)
+	ref := getMenderQARef(build, buildOptions)
 	opt := &gitlab.CreatePipelineOptions{
 		Ref:       &ref,
 		Variables: &buildParameters,
