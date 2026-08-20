@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"slices"
+	"strings"
 
 	"github.com/google/go-github/v28/github"
 	"golang.org/x/oauth2"
@@ -143,7 +146,9 @@ func (c *gitHubClient) IsOrganizationMember(ctx context.Context, org string, use
 	if c.dryRunMode {
 		msg := fmt.Sprintf("github.IsOrganizationMember: org=%s,user=%s", org, user)
 		logger.GetRequestLogger().Push(msg)
-		return true
+		// Let the acceptance tests exercise the non-member paths
+		return !slices.Contains(
+			strings.Split(os.Getenv("DRY_RUN_NON_ORG_MEMBERS"), ","), user)
 	}
 	res, _, _ := c.client.Organizations.IsMember(ctx, org, user)
 	return res

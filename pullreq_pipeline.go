@@ -36,7 +36,7 @@ func startPRPipeline(
 	repo := event.GetRepo()
 	if repo.GetName() == "mender-qa" {
 		// Verify that the pipe is started by a member of the organization
-		if isOrgMember() {
+		if !isOrgMember() {
 			log.Warnf(
 				"%s is making a pullrequest, but he/she is not a member of our organization, "+
 					"ignoring",

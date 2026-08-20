@@ -19,29 +19,7 @@ output:
 - info:Changelog is empty, and there is no previous changelog comment. Stay 
   silent.
 - 'github.IsOrganizationMember: org=mendersoftware,user=Junglebobo'
-- "debug:stopBuildsOfStaleClientPRs: PR not closed, therefore not stopping it's pipeline"
-- 'info:Pull request event with action: opened'
-- 'git.Run: /usr/bin/git pull --rebase origin'
-- info:mender-qa:550 would trigger 1 builds
-- 'github.CreateComment: org=mendersoftware,repo=mender-qa,number=550,comment={"body":"@Junglebobo,
-  start a full client pipeline with:\n   - mentioning me and `start client pipeline`\n\n   ---\n\n   \u003cdetails\u003e\n   \u003csummary\u003emy
-  commands and options\u003c/summary\u003e\n   \u003cbr /\u003e\n\n   You can prevent
-  me from automatically starting CI pipelines:\n   - if your pull request title starts
-  with \"[NoCI] ...\"\n\n   You can trigger a client pipeline on multiple prs with:\n   -
-  mentioning me and `start client pipeline --pr mender/127 --pr mender-connect/255`\n\n   You
-  can trigger a client pipeline for a specific Mender Client release with:\n   - mentioning
-  me and `start client pipeline --release 6.0.x` (can be given multiple times)\n   -
-  by default, a pipeline is triggered for each supported release the component is
-  a part of\n\n   You can trigger GitHub-\u003eGitLab branch sync with:\n   - mentioning
-  me and `sync`\n\n   You can print PR statistics for a repository with:\n   - mentioning
-  me and `print fast pr stats` (Team stats only)\n   - mentioning me and `print full
-  pr stats` (Detailed report)\n   - options: `--repo \u003crepo\u003e`, `--team \u003cname\u003e`,
-  `--all-repos`, `--exclude-drafts`, `--exclude-user \u003cuser\u003e`\n   - mentioning
-  me and `print full pr stats --repo mender --all-repos --exclude-drafts`\n\n   You
-  can deploy a review app with:\n   - mentioning me and `start review app` (OS environment)\n   -
-  mentioning me and `start review app enterprise` (Enterprise environment)\n\n   You
-  can run e2e tests against a deployed review app with:\n   - mentioning me and `start
-  review tests` (defaults to `os` environment)\n   - mentioning me and `start review
-  tests enterprise` (for enterprise environment)\n\n   You can cherry pick to a given
-  branch or branches with:\n   - mentioning me and:\n   ```\n    cherry-pick to:\n    *
-  1.0.x\n    * 2.0.x\n   ```\n   \u003c/details\u003e\n   "}'
+- warning:Junglebobo is making a pullrequest, but he/she is not a member of our 
+  organization, ignoring
+- 'github.AddLabelsToPullRequest: org=mendersoftware,repo=mender-qa,number=550,labels=[external
+  contribution]'
