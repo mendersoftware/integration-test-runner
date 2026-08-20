@@ -8,8 +8,8 @@ output:
 - 'git.Run: /usr/bin/git push -f -o ci.skip --set-upstream gitlab pr_550'
 - 'info:Created branch: mender-qa:pr_550'
 - 'github.IsOrganizationMember: org=mendersoftware,user=Junglebobo'
-- 'gitlab.CreatePipeline: path=Northern.tech/Mender/mender-qa,options={"ref":"pr_550","variables":[{"key":"CI_EXTERNAL_PULL_REQUEST_IID","value":"550"},{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_REPOSITORY","value":"Junglebobo/mender-qa"},{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_REPOSITORY","value":"mendersoftware/mender-qa"},{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME","value":"master"},{"key":"CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_SHA","value":"180514685919be95ebf7fc49c5a7feb5e64933f0"},{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME","value":"master"},{"key":"CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_SHA","value":"2c62b8a1d398021a76174565c56a3ba42b8fe20b"}]}'
-- 'debug:started pipeline for PR: '
+- warning:Junglebobo is making a pullrequest, but he/she is not a member of our 
+  organization, ignoring
 - debug:Getting changelog for repo (mender-qa) and range 
   (2c62b8a1d398021a76174565c56a3ba42b8fe20b..180514685919be95ebf7fc49c5a7feb5e64933f0)
 - |+
