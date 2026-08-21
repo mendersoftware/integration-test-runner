@@ -170,6 +170,21 @@ func triggerReviewDeployWithClient(
 		{Key: &requestedByKey, Value: &sender},
 	}
 
+	entOnOS := enterprise && repoName == "mender-server"
+	if entOnOS {
+		entOnOSKey := "REVIEW_APPS_ENT_ON_OS"
+		entOnOSVal := "true"
+		registryUsernameKey := "REGISTRY_MENDER_IO_USERNAME"
+		registryTokenKey := "REGISTRY_MENDER_IO_PASSWORD"
+		registryUsername := getEnvOrDefault(registryUsernameKey, "")
+		registryToken := getEnvOrDefault(registryTokenKey, "")
+		jobVars = append(jobVars,
+			&gitlab.JobVariableOptions{Key: &entOnOSKey, Value: &entOnOSVal},
+			&gitlab.JobVariableOptions{Key: &registryUsernameKey, Value: &registryUsername},
+			&gitlab.JobVariableOptions{Key: &registryTokenKey, Value: &registryToken},
+		)
+	}
+
 	job, err := findAndPlayJob(log, gitlabClient, projectPath, ref, reviewDeployJobName, jobVars)
 	if err != nil {
 		return err

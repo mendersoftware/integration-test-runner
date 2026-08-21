@@ -206,6 +206,7 @@ func TestTriggerReviewDeployWithClient(t *testing.T) {
 		prNumber   int
 		sender     string
 		enterprise bool
+		setupEnv   func(*testing.T)
 		setupGL    func(*gitlabmocks.Client)
 		setupGH    func(*githubmocks.Client)
 		errContain string
@@ -272,6 +273,48 @@ func TestTriggerReviewDeployWithClient(t *testing.T) {
 					})).Return(nil)
 			},
 		},
+		"happy path enterprise ent-on-os": {
+			repoName:   "mender-server",
+			prNumber:   42,
+			sender:     "testuser",
+			enterprise: true,
+			setupEnv: func(t *testing.T) {
+				t.Setenv("REGISTRY_MENDER_IO_USERNAME", "test-registry-user")
+				t.Setenv("REGISTRY_MENDER_IO_PASSWORD", "test-registry-token")
+			},
+			setupGL: func(c *gitlabmocks.Client) {
+				c.On("ListProjectPipelines", mock.Anything, mock.Anything).
+					Return([]*gitlab.PipelineInfo{{ID: 200}}, nil)
+				c.On("ListPipelineJobs", mock.Anything, int64(200), mock.Anything).
+					Return([]*gitlab.Job{
+						{ID: 10, Name: reviewDeployJobName, Status: "manual"},
+					}, nil)
+				c.On("PlayJob", mock.Anything, int64(10), mock.MatchedBy(func(opt *gitlab.PlayJobOptions) bool {
+					if opt.JobVariablesAttributes == nil {
+						return false
+					}
+					vars := map[string]string{}
+					for _, v := range *opt.JobVariablesAttributes {
+						vars[*v.Key] = *v.Value
+					}
+					return vars["REVIEW_APPS_ENT_ON_OS"] == "true" &&
+						vars["REGISTRY_MENDER_IO_USERNAME"] == "test-registry-user" &&
+						vars["REGISTRY_MENDER_IO_PASSWORD"] == "test-registry-token"
+				})).Return(&gitlab.Job{
+					ID:     10,
+					Name:   reviewDeployJobName,
+					Status: "pending",
+					WebURL: "https://gitlab.com/job/10",
+				}, nil)
+			},
+			setupGH: func(c *githubmocks.Client) {
+				c.On("CreateComment", mock.Anything, "mendersoftware", "mender-server", 42,
+					mock.MatchedBy(func(comment *github.IssueComment) bool {
+						return comment.Body != nil &&
+							assert.Contains(t, *comment.Body, "Review app deploy triggered (Enterprise)")
+					})).Return(nil)
+			},
+		},
 		"findAndPlayJob fails": {
 			repoName: "mender-server",
 			prNumber: 42,
@@ -287,6 +330,9 @@ func TestTriggerReviewDeployWithClient(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			if tc.setupEnv != nil {
+				tc.setupEnv(t)
+			}
 			glClient := gitlabmocks.NewClient(t)
 			ghClient := githubmocks.NewClient(t)
 			tc.setupGL(glClient)
