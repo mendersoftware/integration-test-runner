@@ -57,6 +57,43 @@ func (_m *Client) CreateComment(ctx context.Context, org string, repo string, nu
 	return r0
 }
 
+// CompareCommits provides a mock function with given fields: ctx, owner, repo, base, head
+func (_m *Client) CompareCommits(ctx context.Context, owner string, repo string, base string, head string) (*v28github.CommitsComparison, error) {
+	ret := _m.Called(ctx, owner, repo, base, head)
+
+	var r0 *v28github.CommitsComparison
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) *v28github.CommitsComparison); ok {
+		r0 = rf(ctx, owner, repo, base, head)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*v28github.CommitsComparison)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string) error); ok {
+		r1 = rf(ctx, owner, repo, base, head)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CreateStatus provides a mock function with given fields: ctx, org, repo, ref, status
+func (_m *Client) CreateStatus(ctx context.Context, org string, repo string, ref string, status *v28github.RepoStatus) error {
+	ret := _m.Called(ctx, org, repo, ref, status)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, *v28github.RepoStatus) error); ok {
+		r0 = rf(ctx, org, repo, ref, status)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // CreatePullRequest provides a mock function with given fields: ctx, org, repo, pr
 func (_m *Client) CreatePullRequest(ctx context.Context, org string, repo string, pr *v28github.NewPullRequest) (*v28github.PullRequest, error) {
 	ret := _m.Called(ctx, org, repo, pr)

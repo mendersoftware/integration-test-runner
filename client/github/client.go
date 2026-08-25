@@ -49,6 +49,13 @@ type Client interface {
 		prNumber int,
 		assignees []string,
 	) error
+	CreateStatus(
+		ctx context.Context,
+		org string,
+		repo string,
+		ref string,
+		status *github.RepoStatus,
+	) error
 
 	GetPullRequest(
 		ctx context.Context,
@@ -85,6 +92,11 @@ type Client interface {
 		owner, repo, path string,
 		opts *github.RepositoryContentGetOptions,
 	) (*github.RepositoryContent, []*github.RepositoryContent, error)
+	CompareCommits(
+		ctx context.Context,
+		owner, repo string,
+		base, head string,
+	) (*github.CommitsComparison, error)
 }
 
 type gitHubClient struct {
@@ -211,6 +223,24 @@ func (c *gitHubClient) AssignPullRequest(
 	return nil
 }
 
+func (c *gitHubClient) CreateStatus(
+	ctx context.Context,
+	org string,
+	repo string,
+	ref string,
+	status *github.RepoStatus,
+) error {
+	if c.dryRunMode {
+		msg := fmt.Sprintf("github.CreateStatus: org=%s,repo=%s,ref=%s,state=%s,context=%s",
+			org, repo, ref, status.GetState(), status.GetContext(),
+		)
+		logger.GetRequestLogger().Push(msg)
+		return nil
+	}
+	_, _, err := c.client.Repositories.CreateStatus(ctx, org, repo, ref, status)
+	return err
+}
+
 func (c *gitHubClient) GetPullRequest(
 	ctx context.Context,
 	org string,
@@ -273,4 +303,13 @@ func (c *gitHubClient) GetContents(
 		opts,
 	)
 	return fileContent, dirContents, err
+}
+
+func (c *gitHubClient) CompareCommits(
+	ctx context.Context,
+	owner, repo string,
+	base, head string,
+) (*github.CommitsComparison, error) {
+	comparison, _, err := c.client.Repositories.CompareCommits(ctx, owner, repo, base, head)
+	return comparison, err
 }
