@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v28/github"
 	"github.com/sirupsen/logrus"
@@ -35,6 +34,41 @@ type config struct {
 	isProcessPREvents      bool
 	isProcessCommentEvents bool
 	reposSyncList          []string
+}
+
+// String keeps secrets out of the logs whatever formatter or dumper reaches a
+// config. New secret fields go here, not in the log call sites.
+//
+// %#v uses GoString and bypasses this method: never format a config with %#v.
+func (c *config) String() string {
+	return fmt.Sprintf(
+		"config{dryRunMode:%t githubProtocol:%d githubOrganization:%q "+
+			"gitlabBaseURL:%q integrationDirectory:%q "+
+			"isProcessPushEvents:%t isProcessPREvents:%t isProcessCommentEvents:%t "+
+			"reposSyncList:%v "+
+			"githubSecret:%s githubToken:%s gitlabToken:%s}",
+		c.dryRunMode,
+		c.githubProtocol,
+		c.githubOrganization,
+		c.gitlabBaseURL,
+		c.integrationDirectory,
+		c.isProcessPushEvents,
+		c.isProcessPREvents,
+		c.isProcessCommentEvents,
+		c.reposSyncList,
+		redactedSecret(string(c.githubSecret)),
+		redactedSecret(c.githubToken),
+		redactedSecret(c.gitlabToken),
+	)
+}
+
+// redactedSecret reports whether a secret is set, and its length, without
+// disclosing it.
+func redactedSecret(secret string) string {
+	if secret == "" {
+		return "<unset>"
+	}
+	return fmt.Sprintf("<set,%d bytes>", len(secret))
 }
 
 type buildOptions struct {
@@ -313,7 +347,7 @@ func doMain() {
 	setupLogging(conf, requestLogger)
 	git.SetDryRunMode(conf.dryRunMode)
 
-	logrus.Infoln("using settings: ", spew.Sdump(conf))
+	logrus.Infoln("using settings: ", conf)
 
 	githubClient = clientgithub.NewGitHubClient(conf.githubToken, conf.dryRunMode)
 
