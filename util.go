@@ -63,3 +63,24 @@ func getGitHubOrganization(webhookType string, webhookEvent interface{}) (string
 	)
 
 }
+
+func getGitHubRepoName(webhookType string, webhookEvent interface{}) (string, error) {
+	switch webhookType {
+	case "pull_request":
+		if pr, ok := webhookEvent.(*github.PullRequestEvent); ok {
+			return pr.GetRepo().GetName(), nil
+		}
+	case "push":
+		if push, ok := webhookEvent.(*github.PushEvent); ok {
+			return push.GetRepo().GetName(), nil
+		}
+	case "issue_comment":
+		if comment, ok := webhookEvent.(*github.IssueCommentEvent); ok {
+			return comment.GetRepo().GetName(), nil
+		}
+	}
+	return "", fmt.Errorf(
+		"getGitHubRepoName cannot get repository from webhook type %q",
+		webhookType,
+	)
+}

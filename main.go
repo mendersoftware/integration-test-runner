@@ -301,6 +301,20 @@ func processGitHubWebhook(
 		logrus.Warnln("ignoring event: ", err.Error())
 		return nil
 	}
+	repoName, err := getGitHubRepoName(webhookType, webhookEvent)
+	if err != nil {
+		logrus.Warnln("ignoring event: ", err.Error())
+		return nil
+	}
+	// The webhook is configured per organization, so opt-in deployments receive
+	// events for repositories they must not touch.
+	if !conf.isRepoInSyncList(repoName) {
+		logrus.WithFields(logrus.Fields{
+			"repo":  repoName,
+			"event": webhookType,
+		}).Info("repository is not in SYNC_REPOS_LIST, ignoring event")
+		return nil
+	}
 	conf.githubOrganization = githubOrganization
 	switch webhookType {
 	case "pull_request":

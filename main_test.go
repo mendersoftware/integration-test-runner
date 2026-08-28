@@ -4,10 +4,18 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/gin-gonic/gin"
+	"github.com/google/go-github/v28/github"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+
+	mock_github "github.com/mendersoftware/integration-test-runner/client/github/mocks"
+	"github.com/mendersoftware/integration-test-runner/git"
+	"github.com/mendersoftware/integration-test-runner/logger"
 )
 
 var runAcceptanceTests bool
@@ -170,4 +178,100 @@ func TestIsRepoInSyncList(t *testing.T) {
 			assert.Equal(t, tc.expected, conf.isRepoInSyncList(tc.repo))
 		})
 	}
+}
+
+func TestProcessGitHubWebhookGatesPushEvents(t *testing.T) {
+	push := &github.PushEvent{
+		Ref: github.String("refs/heads/master"),
+		Repo: &github.PushEventRepository{
+			Name:         github.String("libntech"),
+			Organization: github.String("NorthernTechHQ"),
+		},
+	}
+
+	testCases := map[string]struct {
+		reposSyncList []string
+		expectSync    bool
+	}{
+		"repo outside the list is ignored": {
+			reposSyncList: []string{"nt-connect"},
+			expectSync:    false,
+		},
+		"repo inside the list is synced": {
+			reposSyncList: []string{"nt-connect", "libntech"},
+			expectSync:    true,
+		},
+		"empty list syncs everything": {
+			reposSyncList: nil,
+			expectSync:    true,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			requestLogger := logger.NewRequestLogger()
+			logger.SetRequestLogger(requestLogger)
+			git.SetDryRunMode(true)
+			defer git.SetDryRunMode(false)
+
+			conf := &config{
+				githubProtocol:      gitProtocolHTTP,
+				isProcessPushEvents: true,
+				reposSyncList:       tc.reposSyncList,
+			}
+			ctx := &gin.Context{}
+			ctx.Set("delivery", "dummy")
+
+			err := processGitHubWebhook(ctx, "push", push, &mock_github.Client{}, conf)
+			assert.NoError(t, err)
+
+			var ranGit bool
+			for _, entry := range requestLogger.Get() {
+				if strings.HasPrefix(entry, "git.Run:") {
+					ranGit = true
+				}
+			}
+			assert.Equal(t, tc.expectSync, ranGit)
+		})
+	}
+}
+
+func TestProcessGitHubWebhookGatesCommentEvents(t *testing.T) {
+	comment := &github.IssueCommentEvent{
+		Action: github.String("created"),
+		Repo: &github.Repository{
+			Name:  github.String("libntech"),
+			Owner: &github.User{Login: github.String("NorthernTechHQ")},
+		},
+		Sender:  &github.User{Login: github.String("someone")},
+		Comment: &github.IssueComment{Body: github.String("@mender-test-bot sync")},
+	}
+
+	t.Run("repo outside the list never reaches the handler", func(t *testing.T) {
+		client := &mock_github.Client{}
+		conf := &config{
+			isProcessCommentEvents: true,
+			reposSyncList:          []string{"nt-connect"},
+		}
+		ctx := &gin.Context{}
+		ctx.Set("delivery", "dummy")
+
+		assert.NoError(t, processGitHubWebhook(ctx, "issue_comment", comment, client, conf))
+		client.AssertNotCalled(t, "IsOrganizationMember", mock.Anything, mock.Anything, mock.Anything)
+	})
+
+	t.Run("repo inside the list reaches the handler", func(t *testing.T) {
+		client := &mock_github.Client{}
+		client.On("IsOrganizationMember", mock.Anything, "NorthernTechHQ", "someone").
+			Return(false)
+		conf := &config{
+			isProcessCommentEvents: true,
+			reposSyncList:          []string{"nt-connect", "libntech"},
+		}
+		ctx := &gin.Context{}
+		ctx.Set("delivery", "dummy")
+
+		assert.NoError(t, processGitHubWebhook(ctx, "issue_comment", comment, client, conf))
+		client.AssertExpectations(t)
+	})
 }
