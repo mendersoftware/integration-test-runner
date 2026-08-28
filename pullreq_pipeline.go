@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -12,6 +14,16 @@ import (
 
 	clientgitlab "github.com/mendersoftware/integration-test-runner/client/gitlab"
 	"github.com/mendersoftware/integration-test-runner/git"
+)
+
+// errNoPipelineToRun means the project has no CI config or pipelines disabled,
+// which is valid and must not be reported on the pull request.
+var errNoPipelineToRun = errors.New("no GitLab pipeline to run")
+
+// GitLab only signals this in the message body of a 400. Keep it narrow:
+// anything matched here is swallowed silently.
+var noPipelineToRunPattern = regexp.MustCompile(
+	"Missing CI config file|No stages / jobs for this pipeline",
 )
 
 func startPRPipeline(
@@ -29,6 +41,17 @@ func startPRPipeline(
 	if err != nil {
 		return err
 	}
+	return startPRPipelineWithClient(log, ref, event, isOrgMember, client)
+}
+
+// startPRPipelineWithClient is the testable core of startPRPipeline.
+func startPRPipelineWithClient(
+	log *logrus.Entry,
+	ref string,
+	event *github.PullRequestEvent,
+	isOrgMember func() bool,
+	client clientgitlab.Client,
+) error {
 	pr := event.GetPullRequest()
 	org := event.GetOrganization().GetLogin()
 	head := pr.GetHead()
@@ -82,13 +105,15 @@ func startPRPipeline(
 			{Key: &ciTargetBranchShaKey, Value: &ciTargetBranchSha},
 		},
 	})
-	if err != nil {
-		return err
-	} else {
+	switch {
+	case err == nil:
 		log.Debugf("started pipeline for PR: %s", pipeline.WebURL)
+		return nil
+	case noPipelineToRunPattern.MatchString(err.Error()):
+		return fmt.Errorf("%s: %w", gitlabPath, errNoPipelineToRun)
+	default:
+		return err
 	}
-
-	return nil
 }
 
 func syncPullRequestBranch(

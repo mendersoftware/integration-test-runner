@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -41,16 +40,16 @@ type retryParams struct {
 	decide    func(error) retryDecision
 }
 
-// noPipelineToRunPattern matches the GitLab errors that mean the project has
-// nothing to run, which is not a failure worth retrying.
-var noPipelineToRunPattern = regexp.MustCompile(
-	"Missing CI config file|No stages / jobs for this pipeline",
-)
-
 const retryMaxAttempts = 7
 
 // sleep is a variable so that tests do not have to wait out the backoff.
 var sleep = time.Sleep
+
+// shouldReportPipelineFailure decides whether a pipeline error is worth telling
+// the pull request author about. A project with nothing to run is not.
+func shouldReportPipelineFailure(err error) bool {
+	return err != nil && !errors.Is(err, errNoPipelineToRun)
+}
 
 func retryOnError(args retryParams) error {
 	var err error
@@ -149,7 +148,7 @@ func processGitHubPullRequest(
 						switch {
 						case compareError == nil:
 							return retryStop
-						case noPipelineToRunPattern.MatchString(compareError.Error()):
+						case errors.Is(compareError, errNoPipelineToRun):
 							log.Infof("start client pipeline for PR '%d' is skipped", pr.Number)
 							return retryStop
 						default:
@@ -159,7 +158,7 @@ func processGitHubPullRequest(
 					},
 				})
 			}
-			if err != nil {
+			if shouldReportPipelineFailure(err) {
 				msg := "There was an error running your pipeline, " + msgDetailsKubernetesLog
 				postGitHubMessage(ctx, pr, log, msg)
 			}
