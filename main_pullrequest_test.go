@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v28/github"
@@ -479,4 +480,86 @@ func TestLabelPR(t *testing.T) {
 	).Return(nil).Once()
 	labelPR(context.Background(), log, mclient, pr, conf, externalContributionLabel)
 	mclient.AssertExpectations(t)
+}
+
+func TestRetryOnError(t *testing.T) {
+	boom := errors.New("boom")
+
+	testCases := map[string]struct {
+		results          []error
+		decide           func(error) retryDecision
+		expectedErr      error
+		expectedAttempts int
+		expectedSleeps   []time.Duration
+	}{
+		"stops on the first success": {
+			results:          []error{nil, boom},
+			decide:           func(e error) retryDecision { return retryStop },
+			expectedErr:      nil,
+			expectedAttempts: 1,
+		},
+		"stops without retrying when told to": {
+			results:          []error{boom, nil},
+			decide:           func(e error) retryDecision { return retryStop },
+			expectedErr:      boom,
+			expectedAttempts: 1,
+		},
+		"retries until the decision changes": {
+			results: []error{boom, boom, nil},
+			decide: func(e error) retryDecision {
+				if e == nil {
+					return retryStop
+				}
+				return retryAgain
+			},
+			expectedErr:      nil,
+			expectedAttempts: 3,
+			expectedSleeps:   []time.Duration{2 * time.Second, 4 * time.Second},
+		},
+		"gives up after retryMaxAttempts and returns the last error": {
+			decide:           func(e error) retryDecision { return retryAgain },
+			expectedErr:      boom,
+			expectedAttempts: retryMaxAttempts,
+			expectedSleeps: []time.Duration{
+				2 * time.Second, 4 * time.Second, 8 * time.Second,
+				16 * time.Second, 32 * time.Second, 64 * time.Second,
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			var slept []time.Duration
+			realSleep := sleep
+			sleep = func(d time.Duration) { slept = append(slept, d) }
+			defer func() { sleep = realSleep }()
+
+			attempts := 0
+			err := retryOnError(retryParams{
+				retryFunc: func() error {
+					attempts++
+					if attempts <= len(tc.results) {
+						return tc.results[attempts-1]
+					}
+					return boom
+				},
+				decide: tc.decide,
+			})
+
+			assert.Equal(t, tc.expectedErr, err)
+			assert.Equal(t, tc.expectedAttempts, attempts)
+			assert.Equal(t, tc.expectedSleeps, slept)
+			assert.Len(t, slept, tc.expectedAttempts-1,
+				"there must be no sleep after the final attempt")
+		})
+	}
+}
+
+func TestNoPipelineToRunPattern(t *testing.T) {
+	assert.True(t, noPipelineToRunPattern.MatchString(
+		`POST .../pipeline: 400 {message: {base: [Missing CI config file]}}`))
+	assert.True(t, noPipelineToRunPattern.MatchString(
+		"No stages / jobs for this pipeline"))
+	assert.False(t, noPipelineToRunPattern.MatchString(
+		"403 Forbidden"))
 }

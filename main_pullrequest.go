@@ -27,24 +27,41 @@ var (
 
 const externalContributionLabel = "external contribution"
 
-type retryParams struct {
-	retryFunc func() error
-	compFunc  func(error) bool
-}
+type retryDecision int
 
 const (
-	doRetry bool = true
-	noRetry      = false
+	// retryStop ends the loop. Whatever retryFunc returned is final, and
+	// classifying it is the caller's job.
+	retryStop retryDecision = iota
+	retryAgain
 )
 
+type retryParams struct {
+	retryFunc func() error
+	decide    func(error) retryDecision
+}
+
+// noPipelineToRunPattern matches the GitLab errors that mean the project has
+// nothing to run, which is not a failure worth retrying.
+var noPipelineToRunPattern = regexp.MustCompile(
+	"Missing CI config file|No stages / jobs for this pipeline",
+)
+
+const retryMaxAttempts = 7
+
+// sleep is a variable so that tests do not have to wait out the backoff.
+var sleep = time.Sleep
+
 func retryOnError(args retryParams) error {
-	var maxBackoff int = 8 * 8
-	err := args.retryFunc()
-	i := 1
-	for i <= maxBackoff && args.compFunc(err) {
+	var err error
+	for attempt := 1; attempt <= retryMaxAttempts; attempt++ {
 		err = args.retryFunc()
-		i = i * 2
-		time.Sleep(time.Duration(i) * time.Second)
+		if args.decide(err) == retryStop {
+			return err
+		}
+		if attempt < retryMaxAttempts {
+			sleep(time.Duration(1<<attempt) * time.Second)
+		}
 	}
 	return err
 }
@@ -128,18 +145,16 @@ func processGitHubPullRequest(
 					retryFunc: func() error {
 						return startPRPipeline(log, prBranchName, pr, conf, isOrgMember)
 					},
-					compFunc: func(compareError error) bool {
-						re := regexp.MustCompile("Missing CI config file|" +
-							"No stages / jobs for this pipeline")
+					decide: func(compareError error) retryDecision {
 						switch {
 						case compareError == nil:
-							return noRetry
-						case re.MatchString(compareError.Error()):
+							return retryStop
+						case noPipelineToRunPattern.MatchString(compareError.Error()):
 							log.Infof("start client pipeline for PR '%d' is skipped", pr.Number)
-							return noRetry
+							return retryStop
 						default:
 							log.Errorf("failed to start client pipeline for PR: %s", compareError)
-							return doRetry
+							return retryAgain
 						}
 					},
 				})
