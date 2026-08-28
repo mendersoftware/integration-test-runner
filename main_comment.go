@@ -367,7 +367,7 @@ func syncPRBranch(
 	if _, err := syncPullRequestBranch(log, prEvent, conf); err != nil {
 		mainErrMsg := "There was an error syncing branches"
 		log.Errorf(mainErrMsg+": %s", err.Error())
-		msg := mainErrMsg + ", " + msgDetailsKubernetesLog
+		msg := mainErrMsg + ", " + conf.msgDetailsLogs(getDeliveryID(ctx))
 		postGitHubMessage(ctx, prEvent, log, msg)
 	}
 }

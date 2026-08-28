@@ -35,6 +35,11 @@ type config struct {
 	isProcessPREvents      bool
 	isProcessCommentEvents bool
 	reposSyncList          []string
+	// Logs Explorer deep-link parameters, all optional.
+	gcpProject     string
+	gkeCluster     string
+	k8sNamespace   string
+	k8sPodLabelRun string
 }
 
 // String keeps secrets out of the logs whatever formatter or dumper reaches a
@@ -229,6 +234,10 @@ func getConfig() (*config, error) {
 	}
 
 	return &config{
+		gcpProject:             os.Getenv("GCP_PROJECT"),
+		gkeCluster:             os.Getenv("GKE_CLUSTER"),
+		k8sNamespace:           os.Getenv("K8S_NAMESPACE"),
+		k8sPodLabelRun:         os.Getenv("K8S_POD_LABEL_RUN"),
 		dryRunMode:             dryRunMode,
 		githubSecret:           []byte(githubSecret),
 		githubProtocol:         gitProtocolSSH,
@@ -261,21 +270,23 @@ func (c *config) isRepoInSyncList(repo string) bool {
 	return len(c.reposSyncList) == 0 || slices.Contains(c.reposSyncList, repo)
 }
 
-func getCustomLoggerFromContext(ctx *gin.Context) *logrus.Entry {
+func getDeliveryID(ctx *gin.Context) string {
 	deliveryID, ok := ctx.Get("delivery")
-	if !ok || !isStringType(deliveryID) {
+	if !ok {
+		return ""
+	}
+	if s, ok := deliveryID.(string); ok {
+		return s
+	}
+	return ""
+}
+
+func getCustomLoggerFromContext(ctx *gin.Context) *logrus.Entry {
+	deliveryID := getDeliveryID(ctx)
+	if deliveryID == "" {
 		return logrus.WithField("delivery", "nil")
 	}
 	return logrus.WithField("delivery", deliveryID)
-}
-
-func isStringType(i interface{}) bool {
-	switch i.(type) {
-	case string:
-		return true
-	default:
-		return false
-	}
 }
 
 func processGitHubWebhookRequest(

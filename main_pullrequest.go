@@ -18,10 +18,6 @@ import (
 var (
 	changelogPrefix = "Merging these commits will result in the following changelog entries:\n\n"
 	warningHeader   = "\n\n## Warning\n\nGenerating changelogs also resulted in these warnings:\n\n"
-
-	msgDetailsKubernetesLog = "see <a href=\"https://console.cloud.google.com/kubernetes/" +
-		"deployment/us-east1/company-websites/default/test-runner-mender-io/logs?" +
-		"project=gp-kubernetes-269000\">logs</a> for details."
 )
 
 const externalContributionLabel = "external contribution"
@@ -123,7 +119,8 @@ func processGitHubPullRequest(
 		// We always create a pr_* branch
 		if prRef, err = syncPullRequestBranch(log, pr, conf); err != nil {
 			log.Errorf("Could not create PR branch: %s", err.Error())
-			msg := "There was an error syncing branches, " + msgDetailsKubernetesLog
+			msg := "There was an error syncing branches, " +
+				conf.msgDetailsLogs(getDeliveryID(ctx))
 			postGitHubMessage(ctx, pr, log, msg)
 		}
 		//and we run a pipeline only for the pr_* branch
@@ -159,7 +156,8 @@ func processGitHubPullRequest(
 				})
 			}
 			if shouldReportPipelineFailure(err) {
-				msg := "There was an error running your pipeline, " + msgDetailsKubernetesLog
+				msg := "There was an error running your pipeline, " +
+					conf.msgDetailsLogs(getDeliveryID(ctx))
 				postGitHubMessage(ctx, pr, log, msg)
 			}
 		}
