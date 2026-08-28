@@ -2,7 +2,7 @@ variables:
   MULTIPLATFORM_BUILD: "true"
   MULTIPLATFORM_PLATFORMS: "linux/amd64"
   DOCKER_REPOSITORY: mendersoftware/integration-test-runner
-  DOCKER_VERSION: "27.3"
+  DOCKER_VERSION: "29.7"
   DOCKER_HOST:
     value: "tcp://docker:2376"
     description: "Required to run dind inside k8s runners with TLS"
