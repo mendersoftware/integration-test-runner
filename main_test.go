@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -10,8 +12,10 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v28/github"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	mock_github "github.com/mendersoftware/integration-test-runner/client/github/mocks"
 	"github.com/mendersoftware/integration-test-runner/git"
@@ -274,4 +278,26 @@ func TestProcessGitHubWebhookGatesCommentEvents(t *testing.T) {
 		assert.NoError(t, processGitHubWebhook(ctx, "issue_comment", comment, client, conf))
 		client.AssertExpectations(t)
 	})
+}
+
+func TestSetupLoggingEmitsSeverity(t *testing.T) {
+	defer logrus.SetOutput(os.Stdout)
+	defer logrus.SetFormatter(&logrus.TextFormatter{})
+
+	requestLogger := logger.NewRequestLogger()
+	setupLogging(&config{dryRunMode: true}, requestLogger)
+
+	var buf bytes.Buffer
+	logrus.SetOutput(&buf)
+	logrus.WithField("delivery", "abc").Warn("something happened")
+
+	var entry map[string]interface{}
+	require.NoError(t, json.Unmarshal(buf.Bytes(), &entry))
+
+	// GKE reads "severity"; "level" is ignored and would leave the entry at
+	// DEFAULT, so a severity filter would match nothing.
+	assert.Equal(t, "warning", entry["severity"])
+	assert.NotContains(t, entry, "level")
+	assert.Equal(t, "something happened", entry["message"])
+	assert.Equal(t, "abc", entry["delivery"])
 }

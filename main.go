@@ -343,11 +343,14 @@ func processGitHubWebhook(
 }
 
 func setupLogging(conf *config, requestLogger logger.RequestLogger) {
-	// Log to stdout and with JSON format; suitable for GKE
+	// Log to stdout and with JSON format; suitable for GKE. The GKE logging
+	// agent promotes "severity", "message" and "time" out of the JSON payload;
+	// it does not read "level", so naming the field "level" left every entry at
+	// severity DEFAULT and made severity filters match nothing.
 	formatter := &logrus.JSONFormatter{
 		FieldMap: logrus.FieldMap{
 			logrus.FieldKeyTime:  "time",
-			logrus.FieldKeyLevel: "level",
+			logrus.FieldKeyLevel: "severity",
 			logrus.FieldKeyMsg:   "message",
 		},
 	}

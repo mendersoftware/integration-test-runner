@@ -39,9 +39,10 @@ func (r *RequestLoggerObject) Clear() {
 
 // Write parses a JSON log message and add it to the logs (io.Writer interface)
 func (r *RequestLoggerObject) Write(p []byte) (n int, err error) {
+	// Field names must track the JSONFormatter FieldMap in setupLogging.
 	log := &struct {
 		Time    string `json:"time"`
-		Level   string `json:"level"`
+		Level   string `json:"severity"`
 		Message string `json:"message"`
 	}{}
 	if err := json.Unmarshal(p, log); err == nil {
