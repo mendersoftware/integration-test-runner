@@ -13,6 +13,9 @@ services:
       GITLAB_BASE_URL: https://gitlab.com/api/v4
       GITLAB_TOKEN: ${GITLAB_TOKEN}
       INTEGRATION_TEST_RUNNER_LOG_LEVEL: debug
+      # Every repository used by a payload must be listed, otherwise its events
+      # are ignored and the golden file collapses to one "ignoring event" line.
+      SYNC_REPOS_LIST: integration,mender,mender-configure-module,mender-docs,mender-qa,website,workflows,workflows-enterprise
     volumes:
       - ".:/testing"
     networks:

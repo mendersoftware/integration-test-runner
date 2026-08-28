@@ -1,0 +1,3 @@
+input: pull_request_opened_not_in_sync_list.json
+output:
+- 'info:repository is not in SYNC_REPOS_LIST, ignoring event'
