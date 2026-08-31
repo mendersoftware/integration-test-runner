@@ -188,15 +188,28 @@ func (c *gitLabClient) PlayJob(
 	options *gitlab.PlayJobOptions,
 ) (*gitlab.Job, error) {
 	if c.dryRunMode {
-		optionsJSON, _ := json.Marshal(options)
-		msg := fmt.Sprintf("gitlab.PlayJob: path=%s,jobID=%d,options=%s",
-			path, jobID, string(optionsJSON),
+		msg := fmt.Sprintf("gitlab.PlayJob: path=%s,jobID=%d,variableKeys=%v",
+			path, jobID, jobVariableKeys(options),
 		)
 		logger.GetRequestLogger().Push(msg)
 		return &gitlab.Job{}, nil
 	}
 	job, _, err := c.client.Jobs.PlayJob(path, jobID, options, nil)
 	return job, err
+}
+
+func jobVariableKeys(options *gitlab.PlayJobOptions) []string {
+	if options == nil || options.JobVariablesAttributes == nil {
+		return nil
+	}
+	keys := make([]string, 0, len(*options.JobVariablesAttributes))
+	for _, variable := range *options.JobVariablesAttributes {
+		if variable == nil || variable.Key == nil {
+			continue
+		}
+		keys = append(keys, *variable.Key)
+	}
+	return keys
 }
 
 // DeleteBranch deletes branches
