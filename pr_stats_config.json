@@ -1,7 +1,7 @@
 {
   "global": {
     "excluded_users": ["mender-test-bot", "dependabot[bot]"],
-    "excluded_labels": ["dependencies", "onhold", "question", "autorelease: pending", "external contribution"],
+    "excluded_labels": ["dependencies", "onhold", "question", "autorelease: pending", "release:pending", "external contribution"],
     "exclude_drafts": true,
     "sla_hours": 48
   },
