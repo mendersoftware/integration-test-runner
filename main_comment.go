@@ -274,6 +274,8 @@ func processGitHubComment(
 	case strings.Contains(commentBody, commandPrintFullPRStats) ||
 		strings.Contains(commentBody, commandPrintPRStats):
 		handlePRStatsCommand(ctx, comment, pr, githubClient, conf, log, commentBody)
+	case strings.Contains(commentBody, commandSkipPipeline):
+		skipPipelines(ctx, comment, pr, githubClient, conf, log)
 	default:
 		log.Warnf("no command found: %s", commentBody)
 		return nil
@@ -582,5 +584,44 @@ func parseReviewTestEnvironment(commentBody string) string {
 		return env
 	default:
 		return defaultTestEnvironment
+	}
+}
+
+func skipPipelines(
+	ctx *gin.Context,
+	comment *github.IssueCommentEvent,
+	pr *github.PullRequest,
+	githubClient clientgithub.Client,
+	conf *config,
+	log *logrus.Entry,
+) {
+	sha := pr.GetHead().GetSHA()
+	repo := comment.GetRepo().GetName()
+	org := conf.githubOrganization
+
+	successState := "success"
+	description := "Skipped by " + comment.GetSender().GetLogin()
+	for _, statusContext := range conf.pipelineStatusContexts {
+		sc := statusContext
+		status := &github.RepoStatus{
+			State:       &successState,
+			Description: &description,
+			Context:     &sc,
+		}
+		if err := githubClient.CreateStatus(ctx, org, repo, sha, status); err != nil {
+			log.Errorf("skipPipelines: failed to set status for context %s: %s", sc, err.Error())
+		}
+	}
+
+	msg := "Pipeline skipped by @" + comment.GetSender().GetLogin()
+	err := githubClient.CreateComment(
+		ctx,
+		org,
+		repo,
+		pr.GetNumber(),
+		&github.IssueComment{Body: &msg},
+	)
+	if err != nil {
+		log.Errorf("skipPipelines: failed to comment on PR: %s", err.Error())
 	}
 }
