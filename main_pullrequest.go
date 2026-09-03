@@ -121,7 +121,9 @@ func processGitHubPullRequest(
 					pr.Sender.GetLogin(),
 				)
 			}
-			if !options.SkipCI {
+			if !options.SkipCI &&
+				!skipPipelineForReleasePR(
+					ctx, log, githubClient, pr, conf.githubOrganization) {
 				err = retryOnError(retryParams{
 					retryFunc: func() error {
 						return startPRPipeline(log, prBranchName, pr, conf, isOrgMember)
