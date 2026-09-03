@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"slices"
 	"strings"
 	"time"
 
@@ -210,9 +211,8 @@ func getConfig() (*config, error) {
 	}
 
 	// Comma separated list of repos to sync (GitHub->GitLab)
-	reposSyncListRaw, found := os.LookupEnv("SYNC_REPOS_LIST")
-	if found {
-		reposSyncList = strings.Split(reposSyncListRaw, ",")
+	if reposSyncListRaw, found := os.LookupEnv("SYNC_REPOS_LIST"); found {
+		reposSyncList = splitReposSyncList(reposSyncListRaw)
 	}
 
 	switch {
@@ -241,6 +241,24 @@ func getConfig() (*config, error) {
 		isProcessCommentEvents: isProcessCommentEvents,
 		reposSyncList:          reposSyncList,
 	}, nil
+}
+
+// splitReposSyncList drops empty entries so that SYNC_REPOS_LIST="" means every
+// repository, not a list matching nothing.
+func splitReposSyncList(raw string) []string {
+	var repos []string
+	for _, repo := range strings.Split(raw, ",") {
+		if repo = strings.TrimSpace(repo); repo != "" {
+			repos = append(repos, repo)
+		}
+	}
+	return repos
+}
+
+// isRepoInSyncList reports whether this deployment acts on repo. An empty list
+// means every repository.
+func (c *config) isRepoInSyncList(repo string) bool {
+	return len(c.reposSyncList) == 0 || slices.Contains(c.reposSyncList, repo)
 }
 
 func getCustomLoggerFromContext(ctx *gin.Context) *logrus.Entry {
@@ -281,6 +299,20 @@ func processGitHubWebhook(
 	githubOrganization, err := getGitHubOrganization(webhookType, webhookEvent)
 	if err != nil {
 		logrus.Warnln("ignoring event: ", err.Error())
+		return nil
+	}
+	repoName, err := getGitHubRepoName(webhookType, webhookEvent)
+	if err != nil {
+		logrus.Warnln("ignoring event: ", err.Error())
+		return nil
+	}
+	// The webhook is configured per organization, so opt-in deployments receive
+	// events for repositories they must not touch.
+	if !conf.isRepoInSyncList(repoName) {
+		logrus.WithFields(logrus.Fields{
+			"repo":  repoName,
+			"event": webhookType,
+		}).Info("repository is not in SYNC_REPOS_LIST, ignoring event")
 		return nil
 	}
 	conf.githubOrganization = githubOrganization

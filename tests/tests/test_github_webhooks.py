@@ -281,3 +281,41 @@ def test_issue_comment_integration(golden, integration_test_runner_url):
     res = requests.get(integration_test_runner_url + "/logs")
     assert res.status_code == 200
     assert res.json() == golden.out["output"]
+
+
+@pytest.mark.golden_test("golden-files/test_push_not_in_sync_list.yml")
+def test_push_not_in_sync_list(golden, integration_test_runner_url):
+    """A push on a repo absent from SYNC_REPOS_LIST must not sync anything."""
+    res = requests.post(
+        integration_test_runner_url + "/",
+        data=load_payload(golden["input"]),
+        headers={
+            "Content-Type": "application/json",
+            "X-Github-Event": "push",
+            "X-Github-Delivery": "delivery",
+        },
+    )
+    assert res.status_code == 202
+    #
+    res = requests.get(integration_test_runner_url + "/logs")
+    assert res.status_code == 200
+    assert res.json() == golden.out["output"]
+
+
+@pytest.mark.golden_test("golden-files/test_pull_request_not_in_sync_list.yml")
+def test_pull_request_not_in_sync_list(golden, integration_test_runner_url):
+    """A pull request on a repo absent from SYNC_REPOS_LIST must not be touched."""
+    res = requests.post(
+        integration_test_runner_url + "/",
+        data=load_payload(golden["input"]),
+        headers={
+            "Content-Type": "application/json",
+            "X-Github-Event": "pull_request",
+            "X-Github-Delivery": "delivery",
+        },
+    )
+    assert res.status_code == 202
+    #
+    res = requests.get(integration_test_runner_url + "/logs")
+    assert res.status_code == 200
+    assert res.json() == golden.out["output"]
