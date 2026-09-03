@@ -96,7 +96,17 @@ func findAndPlayJob(
 		return nil, fmt.Errorf("job %q not found in pipeline %d", jobName, latestPipeline.ID)
 	}
 
-	if targetJob.Status != "manual" {
+	switch targetJob.Status {
+	case string(gitlab.Failed), string(gitlab.Success), string(gitlab.Canceled):
+		retriedJob, err := client.RetryJob(projectPath, targetJob.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to retry job %q (ID: %d): %w",
+				jobName, targetJob.ID, err)
+		}
+		return retriedJob, nil
+	}
+
+	if targetJob.Status != string(gitlab.Manual) {
 		return nil, fmt.Errorf(
 			"job %q in pipeline %d has status %q"+
 				" (expected \"manual\"); builds may still be running",
