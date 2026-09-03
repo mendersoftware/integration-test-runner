@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/google/go-github/v28/github"
@@ -88,11 +89,21 @@ func TestParseReviewTestEnvironment(t *testing.T) {
 	}
 }
 
+// pendingJob is the job GitLab hands back once a deploy job is played or retried.
+func pendingJob(id int64) *gitlab.Job {
+	return &gitlab.Job{
+		ID:     id,
+		Name:   reviewDeployJobName,
+		Status: "pending",
+		WebURL: fmt.Sprintf("https://gitlab.com/job/%d", id),
+	}
+}
+
 func TestFindAndPlayJob(t *testing.T) {
 	log := logrus.NewEntry(logrus.New())
 	projectPath := "Northern.tech/Mender/mender-server"
 	ref := "pr_42"
-	jobName := "review:deploy"
+	jobName := reviewDeployJobName
 
 	requestedByKey := "REVIEW_REQUESTED_BY"
 	sender := "testuser"
@@ -100,87 +111,132 @@ func TestFindAndPlayJob(t *testing.T) {
 		{Key: &requestedByKey, Value: &sender},
 	}
 
+	const pipelineID, jobID = int64(100), int64(5)
+	eligiblePipelines := []*gitlab.PipelineInfo{{ID: pipelineID}}
+	targetJob := func(status string) []*gitlab.Job {
+		return []*gitlab.Job{{ID: jobID, Name: jobName, Status: status}}
+	}
+
 	testCases := map[string]struct {
-		setupMock   func(*gitlabmocks.Client)
-		expectedErr string
+		pipelines     []*gitlab.PipelineInfo
+		pipelinesErr  error
+		jobs          []*gitlab.Job
+		jobsErr       error
+		playedJob     *gitlab.Job
+		playErr       error
+		retriedJob    *gitlab.Job
+		retryErr      error
+		expectedErr   string
+		expectedJobID int64
 	}{
+		"list pipelines error": {
+			pipelinesErr: fmt.Errorf("list error"),
+			expectedErr:  "failed to list pipelines for ref pr_42: list error",
+		},
 		"no pipelines found": {
-			setupMock: func(c *gitlabmocks.Client) {
-				c.On("ListProjectPipelines", projectPath, mock.Anything).
-					Return([]*gitlab.PipelineInfo{}, nil)
+			pipelines: []*gitlab.PipelineInfo{},
+			expectedErr: "no eligible (non-skipped) pipelines found for ref pr_42 " +
+				"in project " + projectPath,
+		},
+		"all pipelines skipped or canceled": {
+			pipelines: []*gitlab.PipelineInfo{
+				{ID: 102, Status: "skipped"},
+				{ID: 101, Status: "canceled"},
 			},
-			expectedErr: "no pipelines found for ref pr_42 in project Northern.tech/Mender/mender-server",
+			expectedErr: "no eligible (non-skipped) pipelines found for ref pr_42 " +
+				"in project " + projectPath,
+		},
+		"skipped duplicate pipeline is bypassed": {
+			pipelines: []*gitlab.PipelineInfo{
+				{ID: 101, Status: "skipped"},
+				{ID: pipelineID, Status: "success"},
+			},
+			jobs:          targetJob("manual"),
+			playedJob:     pendingJob(jobID),
+			expectedJobID: jobID,
+		},
+		"list jobs error": {
+			pipelines:   eligiblePipelines,
+			jobsErr:     fmt.Errorf("jobs error"),
+			expectedErr: "failed to list jobs for pipeline 100: jobs error",
 		},
 		"job not found": {
-			setupMock: func(c *gitlabmocks.Client) {
-				c.On("ListProjectPipelines", projectPath, mock.Anything).
-					Return([]*gitlab.PipelineInfo{{ID: 100}}, nil)
-				c.On("ListPipelineJobs", projectPath, int64(100), mock.Anything).
-					Return([]*gitlab.Job{
-						{ID: 1, Name: "build:backend:docker", Status: "success"},
-					}, nil)
-			},
+			pipelines:   eligiblePipelines,
+			jobs:        []*gitlab.Job{{ID: 1, Name: "build:backend:docker", Status: "success"}},
 			expectedErr: `job "review:deploy" not found in pipeline 100`,
 		},
 		"job not manual": {
-			setupMock: func(c *gitlabmocks.Client) {
-				c.On("ListProjectPipelines", projectPath, mock.Anything).
-					Return([]*gitlab.PipelineInfo{{ID: 100}}, nil)
-				c.On("ListPipelineJobs", projectPath, int64(100), mock.Anything).
-					Return([]*gitlab.Job{
-						{ID: 5, Name: "review:deploy", Status: "running"},
-					}, nil)
-			},
+			pipelines: eligiblePipelines,
+			jobs:      targetJob("running"),
 			expectedErr: `job "review:deploy" in pipeline 100 has status ` +
 				`"running" (expected "manual"); builds may still be running`,
 		},
 		"play job error": {
-			setupMock: func(c *gitlabmocks.Client) {
-				c.On("ListProjectPipelines", projectPath, mock.Anything).
-					Return([]*gitlab.PipelineInfo{{ID: 100}}, nil)
-				c.On("ListPipelineJobs", projectPath, int64(100), mock.Anything).
-					Return([]*gitlab.Job{
-						{ID: 5, Name: "review:deploy", Status: "manual"},
-					}, nil)
-				c.On("PlayJob", projectPath, int64(5), mock.Anything).
-					Return(nil, fmt.Errorf("play error"))
-			},
+			pipelines:   eligiblePipelines,
+			jobs:        targetJob("manual"),
+			playErr:     fmt.Errorf("play error"),
 			expectedErr: `failed to play job "review:deploy" (ID: 5): play error`,
 		},
 		"happy path": {
-			setupMock: func(c *gitlabmocks.Client) {
-				c.On("ListProjectPipelines", projectPath, mock.Anything).
-					Return([]*gitlab.PipelineInfo{{ID: 100}}, nil)
-				c.On("ListPipelineJobs", projectPath, int64(100), mock.Anything).
-					Return([]*gitlab.Job{
-						{ID: 5, Name: "review:deploy", Status: "manual"},
-					}, nil)
-				c.On("PlayJob", projectPath, int64(5), mock.Anything).
-					Return(&gitlab.Job{
-						ID:     5,
-						Name:   "review:deploy",
-						Status: "pending",
-						WebURL: "https://gitlab.com/job/5",
-					}, nil)
-			},
+			pipelines:     eligiblePipelines,
+			jobs:          targetJob("manual"),
+			playedJob:     pendingJob(jobID),
+			expectedJobID: jobID,
+		},
+		"failed job is retried": {
+			pipelines:     eligiblePipelines,
+			jobs:          targetJob("failed"),
+			retriedJob:    pendingJob(6),
+			expectedJobID: 6,
+		},
+		"succeeded job is retried": {
+			pipelines:     eligiblePipelines,
+			jobs:          targetJob("success"),
+			retriedJob:    pendingJob(7),
+			expectedJobID: 7,
+		},
+		"canceled job is retried": {
+			pipelines:     eligiblePipelines,
+			jobs:          targetJob("canceled"),
+			retriedJob:    pendingJob(8),
+			expectedJobID: 8,
+		},
+		"retry job error": {
+			pipelines:   eligiblePipelines,
+			jobs:        targetJob("failed"),
+			retryErr:    fmt.Errorf("retry error"),
+			expectedErr: `failed to retry job "review:deploy" (ID: 5): retry error`,
 		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			client := gitlabmocks.NewClient(t)
-			tc.setupMock(client)
+			client.On("ListProjectPipelines", projectPath, mock.Anything).
+				Return(tc.pipelines, tc.pipelinesErr)
+			if tc.jobs != nil || tc.jobsErr != nil {
+				client.On("ListPipelineJobs", projectPath, pipelineID, mock.Anything).
+					Return(tc.jobs, tc.jobsErr)
+			}
+			if tc.playedJob != nil || tc.playErr != nil {
+				client.On("PlayJob", projectPath, jobID, mock.Anything).
+					Return(tc.playedJob, tc.playErr)
+			}
+			if tc.retriedJob != nil || tc.retryErr != nil {
+				client.On("RetryJob", projectPath, jobID).
+					Return(tc.retriedJob, tc.retryErr)
+			}
 
 			job, err := findAndPlayJob(log, client, projectPath, ref, jobName, jobVars)
 
 			if tc.expectedErr != "" {
 				assert.EqualError(t, err, tc.expectedErr)
 				assert.Nil(t, job)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, job)
-				assert.Equal(t, int64(5), job.ID)
+				return
 			}
+			assert.NoError(t, err)
+			assert.NotNil(t, job)
+			assert.Equal(t, tc.expectedJobID, job.ID)
 		})
 	}
 }
@@ -200,6 +256,23 @@ func makePREvent(repo string, prNumber int) *github.PullRequestEvent {
 func TestTriggerReviewDeployWithClient(t *testing.T) {
 	log := logrus.NewEntry(logrus.New())
 	conf := &config{githubOrganization: "mendersoftware"}
+
+	const pipelineID, jobID = int64(200), int64(10)
+
+	expectJobLookup := func(c *gitlabmocks.Client, status string) {
+		c.On("ListProjectPipelines", mock.Anything, mock.Anything).
+			Return([]*gitlab.PipelineInfo{{ID: pipelineID}}, nil)
+		c.On("ListPipelineJobs", mock.Anything, pipelineID, mock.Anything).
+			Return([]*gitlab.Job{
+				{ID: jobID, Name: reviewDeployJobName, Status: status},
+			}, nil)
+	}
+	expectComment := func(c *githubmocks.Client, prNumber int, contains string) {
+		c.On("CreateComment", mock.Anything, "mendersoftware", "mender-server", prNumber,
+			mock.MatchedBy(func(comment *github.IssueComment) bool {
+				return comment.Body != nil && strings.Contains(*comment.Body, contains)
+			})).Return(nil)
+	}
 
 	testCases := map[string]struct {
 		repoName   string
@@ -223,26 +296,12 @@ func TestTriggerReviewDeployWithClient(t *testing.T) {
 			prNumber: 42,
 			sender:   "testuser",
 			setupGL: func(c *gitlabmocks.Client) {
-				c.On("ListProjectPipelines", mock.Anything, mock.Anything).
-					Return([]*gitlab.PipelineInfo{{ID: 200}}, nil)
-				c.On("ListPipelineJobs", mock.Anything, int64(200), mock.Anything).
-					Return([]*gitlab.Job{
-						{ID: 10, Name: reviewDeployJobName, Status: "manual"},
-					}, nil)
-				c.On("PlayJob", mock.Anything, int64(10), mock.Anything).
-					Return(&gitlab.Job{
-						ID:     10,
-						Name:   reviewDeployJobName,
-						Status: "pending",
-						WebURL: "https://gitlab.com/job/10",
-					}, nil)
+				expectJobLookup(c, "manual")
+				c.On("PlayJob", mock.Anything, jobID, mock.Anything).
+					Return(pendingJob(jobID), nil)
 			},
 			setupGH: func(c *githubmocks.Client) {
-				c.On("CreateComment", mock.Anything, "mendersoftware", "mender-server", 42,
-					mock.MatchedBy(func(comment *github.IssueComment) bool {
-						return comment.Body != nil &&
-							assert.Contains(t, *comment.Body, "Review app deploy triggered (OS)")
-					})).Return(nil)
+				expectComment(c, 42, "Review app deploy triggered (OS)")
 			},
 		},
 		"happy path enterprise": {
@@ -251,26 +310,12 @@ func TestTriggerReviewDeployWithClient(t *testing.T) {
 			sender:     "testuser",
 			enterprise: true,
 			setupGL: func(c *gitlabmocks.Client) {
-				c.On("ListProjectPipelines", mock.Anything, mock.Anything).
-					Return([]*gitlab.PipelineInfo{{ID: 200}}, nil)
-				c.On("ListPipelineJobs", mock.Anything, int64(200), mock.Anything).
-					Return([]*gitlab.Job{
-						{ID: 10, Name: reviewDeployJobName, Status: "manual"},
-					}, nil)
-				c.On("PlayJob", mock.Anything, int64(10), mock.Anything).
-					Return(&gitlab.Job{
-						ID:     10,
-						Name:   reviewDeployJobName,
-						Status: "pending",
-						WebURL: "https://gitlab.com/job/10",
-					}, nil)
+				expectJobLookup(c, "manual")
+				c.On("PlayJob", mock.Anything, jobID, mock.Anything).
+					Return(pendingJob(jobID), nil)
 			},
 			setupGH: func(c *githubmocks.Client) {
-				c.On("CreateComment", mock.Anything, "mendersoftware", "mender-server", 42,
-					mock.MatchedBy(func(comment *github.IssueComment) bool {
-						return comment.Body != nil &&
-							assert.Contains(t, *comment.Body, "Review app deploy triggered (Enterprise)")
-					})).Return(nil)
+				expectComment(c, 42, "Review app deploy triggered (Enterprise)")
 			},
 		},
 		"happy path enterprise ent-on-os": {
@@ -283,36 +328,49 @@ func TestTriggerReviewDeployWithClient(t *testing.T) {
 				t.Setenv("REGISTRY_MENDER_IO_PASSWORD", "test-registry-token")
 			},
 			setupGL: func(c *gitlabmocks.Client) {
-				c.On("ListProjectPipelines", mock.Anything, mock.Anything).
-					Return([]*gitlab.PipelineInfo{{ID: 200}}, nil)
-				c.On("ListPipelineJobs", mock.Anything, int64(200), mock.Anything).
-					Return([]*gitlab.Job{
-						{ID: 10, Name: reviewDeployJobName, Status: "manual"},
-					}, nil)
-				c.On("PlayJob", mock.Anything, int64(10), mock.MatchedBy(func(opt *gitlab.PlayJobOptions) bool {
-					if opt.JobVariablesAttributes == nil {
-						return false
-					}
-					vars := map[string]string{}
-					for _, v := range *opt.JobVariablesAttributes {
-						vars[*v.Key] = *v.Value
-					}
-					return vars["REVIEW_APPS_ENT_ON_OS"] == "true" &&
-						vars["REGISTRY_MENDER_IO_USERNAME"] == "test-registry-user" &&
-						vars["REGISTRY_MENDER_IO_PASSWORD"] == "test-registry-token"
-				})).Return(&gitlab.Job{
-					ID:     10,
-					Name:   reviewDeployJobName,
-					Status: "pending",
-					WebURL: "https://gitlab.com/job/10",
-				}, nil)
+				expectJobLookup(c, "manual")
+				c.On("PlayJob", mock.Anything, jobID,
+					mock.MatchedBy(func(opt *gitlab.PlayJobOptions) bool {
+						if opt.JobVariablesAttributes == nil {
+							return false
+						}
+						vars := map[string]string{}
+						for _, v := range *opt.JobVariablesAttributes {
+							vars[*v.Key] = *v.Value
+						}
+						return vars["REVIEW_APPS_ENT_ON_OS"] == "true" &&
+							vars["REGISTRY_MENDER_IO_USERNAME"] == "test-registry-user" &&
+							vars["REGISTRY_MENDER_IO_PASSWORD"] == "test-registry-token"
+					})).Return(pendingJob(jobID), nil)
 			},
 			setupGH: func(c *githubmocks.Client) {
-				c.On("CreateComment", mock.Anything, "mendersoftware", "mender-server", 42,
-					mock.MatchedBy(func(comment *github.IssueComment) bool {
-						return comment.Body != nil &&
-							assert.Contains(t, *comment.Body, "Review app deploy triggered (Enterprise)")
-					})).Return(nil)
+				expectComment(c, 42, "Review app deploy triggered (Enterprise)")
+			},
+		},
+		"prior job is retried": {
+			repoName: "mender-server",
+			prNumber: 42,
+			sender:   "testuser",
+			setupGL: func(c *gitlabmocks.Client) {
+				expectJobLookup(c, "success")
+				c.On("RetryJob", mock.Anything, jobID).Return(pendingJob(11), nil)
+			},
+			setupGH: func(c *githubmocks.Client) {
+				expectComment(c, 42, "https://gitlab.com/job/11")
+			},
+		},
+		"github comment fails silently": {
+			repoName: "mender-server",
+			prNumber: 42,
+			sender:   "testuser",
+			setupGL: func(c *gitlabmocks.Client) {
+				expectJobLookup(c, "manual")
+				c.On("PlayJob", mock.Anything, jobID, mock.Anything).
+					Return(pendingJob(jobID), nil)
+			},
+			setupGH: func(c *githubmocks.Client) {
+				c.On("CreateComment", mock.Anything, mock.Anything, mock.Anything,
+					mock.Anything, mock.Anything).Return(fmt.Errorf("github comment error"))
 			},
 		},
 		"findAndPlayJob fails": {
@@ -324,7 +382,7 @@ func TestTriggerReviewDeployWithClient(t *testing.T) {
 					Return([]*gitlab.PipelineInfo{}, nil)
 			},
 			setupGH:    func(c *githubmocks.Client) {},
-			errContain: "no pipelines found",
+			errContain: "no eligible (non-skipped) pipelines found",
 		},
 	}
 
