@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -19,32 +18,45 @@ import (
 var (
 	changelogPrefix = "Merging these commits will result in the following changelog entries:\n\n"
 	warningHeader   = "\n\n## Warning\n\nGenerating changelogs also resulted in these warnings:\n\n"
-
-	msgDetailsKubernetesLog = "see <a href=\"https://console.cloud.google.com/kubernetes/" +
-		"deployment/us-east1/company-websites/default/test-runner-mender-io/logs?" +
-		"project=gp-kubernetes-269000\">logs</a> for details."
 )
 
 const externalContributionLabel = "external contribution"
 
-type retryParams struct {
-	retryFunc func() error
-	compFunc  func(error) bool
-}
+type retryDecision int
 
 const (
-	doRetry bool = true
-	noRetry      = false
+	// retryStop ends the loop. Whatever retryFunc returned is final, and
+	// classifying it is the caller's job.
+	retryStop retryDecision = iota
+	retryAgain
 )
 
+type retryParams struct {
+	retryFunc func() error
+	decide    func(error) retryDecision
+}
+
+const retryMaxAttempts = 7
+
+// sleep is a variable so that tests do not have to wait out the backoff.
+var sleep = time.Sleep
+
+// shouldReportPipelineFailure decides whether a pipeline error is worth telling
+// the pull request author about. A project with nothing to run is not.
+func shouldReportPipelineFailure(err error) bool {
+	return err != nil && !errors.Is(err, errNoPipelineToRun)
+}
+
 func retryOnError(args retryParams) error {
-	var maxBackoff int = 8 * 8
-	err := args.retryFunc()
-	i := 1
-	for i <= maxBackoff && args.compFunc(err) {
+	var err error
+	for attempt := 1; attempt <= retryMaxAttempts; attempt++ {
 		err = args.retryFunc()
-		i = i * 2
-		time.Sleep(time.Duration(i) * time.Second)
+		if args.decide(err) == retryStop {
+			return err
+		}
+		if attempt < retryMaxAttempts {
+			sleep(time.Duration(1<<attempt) * time.Second)
+		}
 	}
 	return err
 }
@@ -107,7 +119,8 @@ func processGitHubPullRequest(
 		// We always create a pr_* branch
 		if prRef, err = syncPullRequestBranch(log, pr, conf); err != nil {
 			log.Errorf("Could not create PR branch: %s", err.Error())
-			msg := "There was an error syncing branches, " + msgDetailsKubernetesLog
+			msg := "There was an error syncing branches, " +
+				conf.msgDetailsLogs(getDeliveryID(ctx))
 			postGitHubMessage(ctx, pr, log, msg)
 		}
 		//and we run a pipeline only for the pr_* branch
@@ -128,24 +141,23 @@ func processGitHubPullRequest(
 					retryFunc: func() error {
 						return startPRPipeline(log, prBranchName, pr, conf, isOrgMember)
 					},
-					compFunc: func(compareError error) bool {
-						re := regexp.MustCompile("Missing CI config file|" +
-							"No stages / jobs for this pipeline")
+					decide: func(compareError error) retryDecision {
 						switch {
 						case compareError == nil:
-							return noRetry
-						case re.MatchString(compareError.Error()):
+							return retryStop
+						case errors.Is(compareError, errNoPipelineToRun):
 							log.Infof("start client pipeline for PR '%d' is skipped", pr.Number)
-							return noRetry
+							return retryStop
 						default:
 							log.Errorf("failed to start client pipeline for PR: %s", compareError)
-							return doRetry
+							return retryAgain
 						}
 					},
 				})
 			}
-			if err != nil {
-				msg := "There was an error running your pipeline, " + msgDetailsKubernetesLog
+			if shouldReportPipelineFailure(err) {
+				msg := "There was an error running your pipeline, " +
+					conf.msgDetailsLogs(getDeliveryID(ctx))
 				postGitHubMessage(ctx, pr, log, msg)
 			}
 		}
