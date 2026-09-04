@@ -46,3 +46,19 @@ func TestJobVariableKeys(t *testing.T) {
 		},
 	}))
 }
+
+func TestRetryJobDryRun(t *testing.T) {
+	requestLogger := logger.NewRequestLogger()
+	logger.SetRequestLogger(requestLogger)
+
+	client := &gitLabClient{dryRunMode: true}
+	job, err := client.RetryJob("Northern.tech/Mender/mender-server", 42)
+	assert.NoError(t, err)
+	assert.NotNil(t, job)
+
+	logs := requestLogger.Get()
+	assert.Len(t, logs, 1)
+	assert.Contains(t, logs[0], "gitlab.RetryJob")
+	assert.Contains(t, logs[0], "path=Northern.tech/Mender/mender-server")
+	assert.Contains(t, logs[0], "jobID=42")
+}

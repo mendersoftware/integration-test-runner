@@ -37,6 +37,10 @@ type Client interface {
 		jobID int64,
 		options *gitlab.PlayJobOptions,
 	) (*gitlab.Job, error)
+	RetryJob(
+		path string,
+		jobID int64,
+	) (*gitlab.Job, error)
 	DeleteBranch(path string,
 		branch string,
 		options *gitlab.RequestOptionFunc,
@@ -210,6 +214,19 @@ func jobVariableKeys(options *gitlab.PlayJobOptions) []string {
 		keys = append(keys, *variable.Key)
 	}
 	return keys
+}
+
+func (c *gitLabClient) RetryJob(
+	path string,
+	jobID int64,
+) (*gitlab.Job, error) {
+	if c.dryRunMode {
+		msg := fmt.Sprintf("gitlab.RetryJob: path=%s,jobID=%d", path, jobID)
+		logger.GetRequestLogger().Push(msg)
+		return &gitlab.Job{}, nil
+	}
+	job, _, err := c.client.Jobs.RetryJob(path, jobID, nil)
+	return job, err
 }
 
 // DeleteBranch deletes branches
