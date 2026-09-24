@@ -117,6 +117,7 @@ var clientRepositories = []string{
 	"monitor-client",
 	"mender-flash",
 	"mender-container-modules",
+	"mender-delta-container-modules",
 	"mender-binary-delta",
 }
 
