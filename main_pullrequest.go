@@ -22,6 +22,11 @@ var (
 
 const externalContributionLabel = "external contribution"
 
+// External contributors who are members of the organization for other reasons
+var externalOrganizationMembers = map[string]bool{
+	"aduskett": true,
+}
+
 type retryDecision int
 
 const (
@@ -181,22 +186,19 @@ func processGitHubPullRequest(
 		}
 	}
 
-	// Continue to the integration Pipeline only for organization members
-	if member := githubClient.IsOrganizationMember(
+	member := githubClient.IsOrganizationMember(
 		ctx,
 		conf.githubOrganization,
 		pr.Sender.GetLogin(),
-	); !member {
+	)
+	labelExternalContribution(ctx, log, githubClient, pr, conf, member)
+
+	// Continue to the integration Pipeline only for organization members
+	if !member {
 		log.Warnf(
 			"%s is making a pullrequest, but he/she is not a member of our organization, ignoring",
 			pr.Sender.GetLogin(),
 		)
-		if conf.githubOrganization == "mendersoftware" {
-			switch action {
-			case "opened", "reopened", "ready_for_review":
-				labelPR(ctx, log, githubClient, pr, conf, externalContributionLabel)
-			}
-		}
 		return nil
 	}
 
@@ -301,6 +303,24 @@ func labelPR(
 		[]string{label},
 	); err != nil {
 		log.Errorf("Failed to add the %q label to the PR: %s", label, err.Error())
+	}
+}
+
+// Label external contributions: non-members and external contributors who are org members
+func labelExternalContribution(
+	ctx context.Context,
+	log *logrus.Entry,
+	githubClient clientgithub.Client,
+	pr *github.PullRequestEvent,
+	conf *config,
+	member bool,
+) {
+	if conf.githubOrganization == "mendersoftware" &&
+		(!member || externalOrganizationMembers[pr.Sender.GetLogin()]) {
+		switch pr.GetAction() {
+		case "opened", "reopened", "ready_for_review":
+			labelPR(ctx, log, githubClient, pr, conf, externalContributionLabel)
+		}
 	}
 }
 
