@@ -19,7 +19,7 @@ output:
 - info:Changelog is empty, and there is no previous changelog comment. Stay 
   silent.
 - 'github.IsOrganizationMember: org=mendersoftware,user=Junglebobo'
-- warning:Junglebobo is making a pullrequest, but he/she is not a member of our 
-  organization, ignoring
 - 'github.AddLabelsToPullRequest: org=mendersoftware,repo=mender-qa,number=550,labels=[external
   contribution]'
+- warning:Junglebobo is making a pullrequest, but he/she is not a member of our 
+  organization, ignoring
