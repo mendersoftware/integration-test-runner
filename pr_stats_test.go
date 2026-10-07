@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -86,7 +87,7 @@ func TestGetPRStatsFull(t *testing.T) {
 	mclient.AssertExpectations(t)
 }
 
-func TestGetPRStatsTeamModeSkipsReviews(t *testing.T) {
+func TestGetPRStatsTeamModeIncludesReviews(t *testing.T) {
 	mclient := &mock_github.Client{}
 	ctx := context.Background()
 	org := "mendersoftware"
@@ -112,7 +113,14 @@ func TestGetPRStatsTeamModeSkipsReviews(t *testing.T) {
 		return opts.State == "closed"
 	})).Return([]*github.PullRequest{}, nil)
 
-	// ListReviews should NOT be called in team mode
+	// ListReviews SHOULD be called in team mode now
+	mclient.On("ListReviews", mock.Anything, org, repo, 1, mock.Anything).Return([]*github.PullRequestReview{
+		{
+			User:        &github.User{Login: github.String("reviewer1")},
+			SubmittedAt: &now,
+		},
+	}, nil)
+
 	opts := PRStatsOptions{
 		Repos: []string{repo},
 		Mode:  prStatsModeTeam,
@@ -123,12 +131,12 @@ func TestGetPRStatsTeamModeSkipsReviews(t *testing.T) {
 	assert.Contains(t, report, "Team Activity")
 	assert.NotContains(t, report, "Metrics Summary")
 	assert.NotContains(t, report, "PRs Needing Attention")
-	// Team mode should not show review columns
-	assert.NotContains(t, report, "Reviews (30d)")
+	// Team mode should show reviews column now
+	assert.Contains(t, report, "Reviews (30d)")
+	// But not Median TTRv (still only in full mode)
 	assert.NotContains(t, report, "Median TTRv")
 
 	mclient.AssertExpectations(t)
-	mclient.AssertNotCalled(t, "ListReviews", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 }
 
 func TestGetPRStatsExcludesUsers(t *testing.T) {
@@ -164,6 +172,9 @@ func TestGetPRStatsExcludesUsers(t *testing.T) {
 	mclient.On("ListPullRequests", mock.Anything, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
 		return opts.State == "closed"
 	})).Return([]*github.PullRequest{}, nil)
+
+	// ListReviews MUST be mocked now as it is always called
+	mclient.On("ListReviews", mock.Anything, org, repo, 2, mock.Anything).Return([]*github.PullRequestReview{}, nil)
 
 	opts := PRStatsOptions{
 		Repos:         []string{repo},
@@ -213,6 +224,9 @@ func TestGetPRStatsExcludesDrafts(t *testing.T) {
 		return opts.State == "closed"
 	})).Return([]*github.PullRequest{}, nil)
 
+	// ListReviews MUST be mocked now as it is always called
+	mclient.On("ListReviews", mock.Anything, org, repo, 2, mock.Anything).Return([]*github.PullRequestReview{}, nil)
+
 	opts := PRStatsOptions{
 		Repos:         []string{repo},
 		Mode:          prStatsModeTeam,
@@ -254,6 +268,9 @@ func TestGetPRStatsMultiRepo(t *testing.T) {
 		mclient.On("ListPullRequests", mock.Anything, org, repo, mock.MatchedBy(func(opts *github.PullRequestListOptions) bool {
 			return opts.State == "closed"
 		})).Return([]*github.PullRequest{}, nil)
+
+		// ListReviews MUST be mocked now as it is always called
+		mclient.On("ListReviews", mock.Anything, org, repo, 1, mock.Anything).Return([]*github.PullRequestReview{}, nil)
 	}
 
 	opts := PRStatsOptions{
@@ -267,6 +284,7 @@ func TestGetPRStatsMultiRepo(t *testing.T) {
 
 	mclient.AssertExpectations(t)
 }
+
 
 func TestCalculateWorkingTime(t *testing.T) {
 	tests := []struct {
@@ -464,6 +482,28 @@ func TestLoadPRStatsConfig(t *testing.T) {
 	t.Run("returns error for missing file", func(t *testing.T) {
 		config, err := loadPRStatsConfig("/nonexistent/path.json")
 		assert.Error(t, err)
+		assert.Nil(t, config)
+	})
+
+	t.Run("returns nil for missing default file", func(t *testing.T) {
+		// Create a temporary directory and change to it
+		tmpDir, err := os.MkdirTemp("", "pr_stats_test")
+		assert.NoError(t, err)
+		defer os.RemoveAll(tmpDir)
+
+		oldWd, err := os.Getwd()
+		assert.NoError(t, err)
+		err = os.Chdir(tmpDir)
+		assert.NoError(t, err)
+		defer os.Chdir(oldWd)
+
+		// Ensure environment variable is not set
+		oldEnv := os.Getenv("PR_STATS_CONFIG_PATH")
+		os.Unsetenv("PR_STATS_CONFIG_PATH")
+		defer os.Setenv("PR_STATS_CONFIG_PATH", oldEnv)
+
+		config, err := loadPRStatsConfig("")
+		assert.NoError(t, err)
 		assert.Nil(t, config)
 	})
 }
