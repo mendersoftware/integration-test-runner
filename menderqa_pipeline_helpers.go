@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os/exec"
 	"path"
@@ -113,7 +114,13 @@ func getListOfVersionedRepositories(inVersion string, conf *config) ([]string, e
 	c.Dir = conf.integrationDirectory + "/extra/"
 	output, err := c.Output()
 	if err != nil {
-		return nil, fmt.Errorf("getListOfVersionedRepositories: Error: %v (%s)", err, output)
+		var stderr []byte
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			stderr = exitErr.Stderr
+		}
+		return nil, fmt.Errorf(
+			"getListOfVersionedRepositories: Error: %v (%s %s)", err, output, stderr)
 	}
 
 	return strings.Split(strings.TrimSpace(string(output)), "\n"), nil

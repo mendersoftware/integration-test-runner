@@ -212,6 +212,19 @@ func processGitHubComment(
 			}
 			if err := triggerClientBuild(log, conf, &build, prRequest, buildOptions); err != nil {
 				log.Errorf("Could not start build: %s", err.Error())
+				_ = say(ctx,
+					"Could not start the client pipeline for {{.Branch}}:\n"+
+						"```\n{{.ErrorMessage}}\n```",
+					struct {
+						Branch       string
+						ErrorMessage string
+					}{
+						Branch:       build.baseBranch,
+						ErrorMessage: truncateError(err.Error()),
+					},
+					log,
+					conf,
+					prRequest)
 			}
 		}
 	case strings.Contains(commentBody, commandCherryPickBranch):
@@ -583,4 +596,12 @@ func parseReviewTestEnvironment(commentBody string) string {
 	default:
 		return defaultTestEnvironment
 	}
+}
+
+func truncateError(msg string) string {
+	const maxLen = 1500
+	if len(msg) <= maxLen {
+		return msg
+	}
+	return msg[:maxLen] + "... (truncated)"
 }
