@@ -163,6 +163,11 @@ func (c *gitHubClient) IsOrganizationMember(ctx context.Context, org string, use
 			strings.Split(os.Getenv("DRY_RUN_NON_ORG_MEMBERS"), ","), user)
 	}
 	res, _, _ := c.client.Organizations.IsMember(ctx, org, user)
+	// Apps owned by the organization, e.g. Renovate, count as members too
+	if slug, isApp := strings.CutSuffix(user, "[bot]"); !res && isApp {
+		app, _, err := c.client.Apps.Get(ctx, slug)
+		res = err == nil && app.GetOwner().GetLogin() == org
+	}
 	return res
 }
 
