@@ -6,6 +6,7 @@ output:
 - 'info:mender/3.1.x is being used in the following integration: [3.1.x]'
 - 'info:legacy: integration branches [3.1.x] are using mender/3.1.x'
 - 'info:fetchMenderClientReleases: loaded release 6.0.x'
+- 'info:fetchMenderClientReleases: loaded release 6.1.x'
 - 'info:subcomponents: mender/3.1.x found in releases: []'
 - info:mender:865 will trigger 1 builds
 - |+
